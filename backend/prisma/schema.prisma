@@ -1,0 +1,387 @@
+// Prisma Schema - Bus Ticket Booking System
+// Based on system requirements and ERD diagram
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// IDENTITY & ACCESS MANAGEMENT
+// ==========================================
+
+model User {
+  id           String   @id @default(uuid())
+  email        String?  @unique
+  phone        String?  @unique
+  passwordHash String   @map("password_hash")
+  isActive     Boolean  @default(true) @map("is_active")
+  isAnonymized Boolean  @default(false) @map("is_anonymized")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  userRoles    UserRole[]
+  customer     Customer?
+  busOperator  BusOperator?
+  staff        Staff?
+  auditLogs    AuditLog[]
+  otpCodes     OtpCode[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique // CUSTOMER, BUS_OPERATOR, STAFF, ADMIN
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userRoles UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId    String   @map("user_id")
+  roleId    String   @map("role_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  code      String
+  purpose   String   // REGISTER, RESET_PASSWORD, DELETE_ACCOUNT, PAYMENT
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("otp_codes")
+}
+
+// ==========================================
+// CUSTOMER
+// ==========================================
+
+model Customer {
+  id            String  @id @default(uuid())
+  userId        String  @unique @map("user_id")
+  fullName      String  @map("full_name")
+  dateOfBirth   DateTime? @map("date_of_birth")
+  avatarUrl     String? @map("avatar_url")
+  loyaltyPoints Int     @default(0) @map("loyalty_points")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders  Order[]
+  reviews Review[]
+
+  @@map("customers")
+}
+
+// ==========================================
+// BUS OPERATOR
+// ==========================================
+
+model BusOperator {
+  id              String  @id @default(uuid())
+  userId          String  @unique @map("user_id")
+  companyName     String  @map("company_name")
+  licenseNumber   String  @unique @map("license_number")
+  hotline         String
+  address         String
+  description     String? @db.Text
+  logoUrl         String? @map("logo_url")
+  isApproved      Boolean @default(false) @map("is_approved")
+  approvedAt      DateTime? @map("approved_at")
+  approvedBy      String? @map("approved_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles     Vehicle[]
+  routes       Route[]
+
+  @@map("bus_operators")
+}
+
+// ==========================================
+// STAFF / DRIVER
+// ==========================================
+
+model Staff {
+  id           String  @id @default(uuid())
+  userId       String  @unique @map("user_id")
+  operatorId   String  @map("operator_id")
+  fullName     String  @map("full_name")
+  role         String  // DRIVER, ASSISTANT
+  licenseNo    String? @map("license_no")
+  phone        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tripStaffs TripStaff[]
+
+  @@map("staffs")
+}
+
+// ==========================================
+// FLEET & ROUTE MANAGEMENT
+// ==========================================
+
+model VehicleType {
+  id          String @id @default(uuid())
+  name        String // VD: Limousine 22, Giường nằm 40
+  seatCount   Int    @map("seat_count")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  vehicles     Vehicle[]
+  seatLayouts  SeatLayout[]
+
+  @@map("vehicle_types")
+}
+
+model SeatLayout {
+  id            String @id @default(uuid())
+  vehicleTypeId String @map("vehicle_type_id")
+  seatCode      String @map("seat_code") // A1, A2, B1...
+  floor         Int    @default(1)
+  row           Int
+  col           Int
+  seatType      String @map("seat_type") // SINGLE, DOUBLE
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  vehicleType VehicleType @relation(fields: [vehicleTypeId], references: [id])
+  tripSeats   TripSeat[]
+
+  @@unique([vehicleTypeId, seatCode])
+  @@map("seat_layouts")
+}
+
+model Vehicle {
+  id             String @id @default(uuid())
+  operatorId     String @map("operator_id")
+  vehicleTypeId  String @map("vehicle_type_id")
+  licensePlate   String @unique @map("license_plate")
+  manufactureYear Int?  @map("manufacture_year")
+  isActive       Boolean @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  operator    BusOperator @relation(fields: [operatorId], references: [id])
+  vehicleType VehicleType @relation(fields: [vehicleTypeId], references: [id])
+  trips       Trip[]
+
+  @@map("vehicles")
+}
+
+model Route {
+  id             String  @id @default(uuid())
+  operatorId     String  @map("operator_id")
+  originCity     String  @map("origin_city")
+  destinationCity String @map("destination_city")
+  originAddress  String  @map("origin_address")
+  destinationAddress String @map("destination_address")
+  distanceKm     Float?  @map("distance_km")
+  durationMinutes Int?   @map("duration_minutes")
+  isActive       Boolean @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  operator BusOperator @relation(fields: [operatorId], references: [id])
+  trips    Trip[]
+
+  @@map("routes")
+}
+
+// ==========================================
+// TRIP OPERATIONS
+// ==========================================
+
+model Trip {
+  id              String   @id @default(uuid())
+  routeId         String   @map("route_id")
+  vehicleId       String   @map("vehicle_id")
+  departureTime   DateTime @map("departure_time")
+  estimatedArrival DateTime @map("estimated_arrival")
+  basePrice       Decimal  @map("base_price") @db.Decimal(12, 0)
+  status          String   @default("SCHEDULED")
+  // SCHEDULED | BOARDING | ON_ROUTE | COMPLETED | DELAYED | CANCELLED
+  cancelReason    String?  @map("cancel_reason") @db.Text
+  priceMultiplier Decimal  @default(1.0) @map("price_multiplier") @db.Decimal(4, 2)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  route      Route       @relation(fields: [routeId], references: [id])
+  vehicle    Vehicle     @relation(fields: [vehicleId], references: [id])
+  tripStaffs TripStaff[]
+  tripSeats  TripSeat[]
+
+  @@map("trips")
+}
+
+model TripStaff {
+  tripId    String   @map("trip_id")
+  staffId   String   @map("staff_id")
+  role      String   // DRIVER, ASSISTANT
+  createdAt DateTime @default(now()) @map("created_at")
+
+  trip  Trip  @relation(fields: [tripId], references: [id])
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  @@id([tripId, staffId])
+  @@map("trip_staffs")
+}
+
+// ==========================================
+// CORE SEAT INVENTORY
+// ==========================================
+
+model TripSeat {
+  id           String   @id @default(uuid())
+  tripId       String   @map("trip_id")
+  seatLayoutId String   @map("seat_layout_id")
+  status       String   @default("AVAILABLE")
+  // AVAILABLE | PROCESSING | BOOKED | UNAVAILABLE
+  lockedAt     DateTime? @map("locked_at")
+  lockedBy     String?  @map("locked_by") // customerId
+  lockExpiresAt DateTime? @map("lock_expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  trip        Trip         @relation(fields: [tripId], references: [id])
+  seatLayout  SeatLayout   @relation(fields: [seatLayoutId], references: [id])
+  ticketDetail TicketDetail?
+
+  @@unique([tripId, seatLayoutId])
+  @@map("trip_seats")
+}
+
+// ==========================================
+// TRANSACTIONS & PAYMENTS
+// ==========================================
+
+model Order {
+  id           String   @id @default(uuid())
+  customerId   String   @map("customer_id")
+  totalAmount  Decimal  @map("total_amount") @db.Decimal(12, 0)
+  status       String   @default("PENDING")
+  // PENDING | PAID | CANCELLED | REFUNDED
+  note         String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  customer      Customer       @relation(fields: [customerId], references: [id])
+  payments      Payment[]
+  ticketDetails TicketDetail[]
+
+  @@map("orders")
+}
+
+model Payment {
+  id              String   @id @default(uuid())
+  orderId         String   @map("order_id")
+  amount          Decimal  @db.Decimal(12, 0)
+  method          String   // E_WALLET | BANK_CARD | BANK_TRANSFER | CASH
+  gateway         String?  // VNPAY | MOMO | ...
+  gatewayTxnId    String?  @map("gateway_txn_id")
+  status          String   @default("PENDING")
+  // PENDING | SUCCESS | FAILED | REFUNDED
+  paidAt          DateTime? @map("paid_at")
+  refundedAt      DateTime? @map("refunded_at")
+  refundAmount    Decimal? @map("refund_amount") @db.Decimal(12, 0)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+model TicketDetail {
+  id           String   @id @default(uuid())
+  orderId      String   @map("order_id")
+  tripSeatId   String   @unique @map("trip_seat_id") // 1-1 ensures no double booking
+  passengerName String  @map("passenger_name")
+  passengerPhone String? @map("passenger_phone")
+  price        Decimal  @db.Decimal(12, 0)
+  qrCode       String?  @map("qr_code") @db.Text
+  status       String   @default("PENDING")
+  // PENDING | PAID | COMPLETED | CANCELLED | REFUNDED
+  checkedInAt  DateTime? @map("checked_in_at")
+  cancelledAt  DateTime? @map("cancelled_at")
+  cancelReason String?  @map("cancel_reason") @db.Text
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  order    Order    @relation(fields: [orderId], references: [id])
+  tripSeat TripSeat @relation(fields: [tripSeatId], references: [id])
+  review   Review?
+
+  @@map("ticket_details")
+}
+
+// ==========================================
+// REVIEWS
+// ==========================================
+
+model Review {
+  id             String  @id @default(uuid())
+  ticketDetailId String  @unique @map("ticket_detail_id") // 1-1: must have real ticket
+  customerId     String  @map("customer_id")
+  rating         Int     // 1–5
+  comment        String? @db.Text
+  isApproved     Boolean @default(false) @map("is_approved")
+  approvedBy     String? @map("approved_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  ticketDetail TicketDetail @relation(fields: [ticketDetailId], references: [id])
+  customer     Customer     @relation(fields: [customerId], references: [id])
+
+  @@map("reviews")
+}
+
+// ==========================================
+// AUDIT & SYSTEM CONFIG
+// ==========================================
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  details    Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedBy String?  @map("updated_by")
+
+  @@map("system_configs")
+}
