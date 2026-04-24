@@ -1,6 +1,6 @@
 // tripSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { tripAPI } from '../services/api';
+import { tripAPI } from '../../services/api';
 
 export const searchTrips = createAsyncThunk('trip/search', async (params, { rejectWithValue }) => {
   try {
