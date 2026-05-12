@@ -4,11 +4,13 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const swaggerUi = require('swagger-ui-express');
 const YAML = require('yamljs');
 const path = require('path');
 
 const { errorHandler } = require('./middlewares/errorHandler');
+const { csrfProtection } = require('./middlewares/csrf.middleware');
 const logger = require('./utils/logger');
 
 // Routes
@@ -26,6 +28,8 @@ const adminRoutes = require('./routes/admin.routes');
 const staffRoutes = require('./routes/staff.routes');
 
 const app = express();
+
+app.set('trust proxy', 1);
 
 // Security
 app.use(helmet());
@@ -54,6 +58,7 @@ app.use('/api/auth', authLimiter);
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Logging
 if (process.env.NODE_ENV !== 'test') {
@@ -72,6 +77,9 @@ try {
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// CSRF protection for state-changing requests
+app.use(csrfProtection);
 
 // API Routes
 app.use('/api/auth', authRoutes);

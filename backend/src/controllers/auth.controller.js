@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { validationResult } = require('express-validator');
 const otplib = require('otplib');
 const { redisClient } = require('../config/redis');
@@ -8,6 +9,50 @@ const { sendOtpEmail } = require('../services/email.service');
 const logger = require('../utils/logger');
 
 const prisma = new PrismaClient();
+
+const OTP_MAX_ATTEMPTS = parseInt(process.env.OTP_MAX_ATTEMPTS || '5', 10);
+const OTP_ATTEMPT_WINDOW_SECONDS = parseInt(process.env.OTP_ATTEMPT_WINDOW_SECONDS || '600', 10);
+const ACCESS_TOKEN_COOKIE_MAX_AGE_MS = parseInt(process.env.ACCESS_TOKEN_COOKIE_MAX_AGE_MS || '604800000', 10);
+const CSRF_COOKIE_MAX_AGE_MS = parseInt(process.env.CSRF_COOKIE_MAX_AGE_MS || '86400000', 10);
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+const getOtpAttemptsKey = (userId, purpose) => `otp_attempts:${userId}:${purpose}`;
+
+const incrementOtpAttempts = async (userId, purpose) => {
+  const attemptsKey = getOtpAttemptsKey(userId, purpose);
+  const attempts = await redisClient.incr(attemptsKey);
+  if (attempts === 1) {
+    await redisClient.expire(attemptsKey, OTP_ATTEMPT_WINDOW_SECONDS);
+  }
+  return attempts;
+};
+
+const clearOtpAttempts = async (userId, purpose) => {
+  await redisClient.del(getOtpAttemptsKey(userId, purpose));
+};
+
+const setAuthCookie = (res, token) => {
+  res.cookie('access_token', token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    maxAge: ACCESS_TOKEN_COOKIE_MAX_AGE_MS,
+    path: '/',
+  });
+};
+
+const setCsrfCookie = (res) => {
+  const token = crypto.randomBytes(32).toString('hex');
+  res.cookie('csrf_token', token, {
+    httpOnly: false,
+    secure: isProduction,
+    sameSite: 'lax',
+    maxAge: CSRF_COOKIE_MAX_AGE_MS,
+    path: '/',
+  });
+  return token;
+};
 
 /**
  * POST /api/auth/register
@@ -20,9 +65,16 @@ const register = async (req, res, next) => {
 
     const { email, phone, password, fullName } = req.body;
 
+    const orConditions = [];
+    if (email) orConditions.push({ email });
+    if (phone) orConditions.push({ phone });
+    if (orConditions.length === 0) {
+      return res.status(400).json({ success: false, message: 'Email hoặc số điện thoại là bắt buộc.' });
+    }
+
     // Check duplicate email/phone (QD_ACC_01)
     const existing = await prisma.user.findFirst({
-      where: { OR: [email ? { email } : {}, phone ? { phone } : {}] },
+      where: { OR: orConditions },
     });
     if (existing) return res.status(409).json({ success: false, message: 'Email hoặc số điện thoại đã được sử dụng.' });
 
@@ -42,6 +94,9 @@ const register = async (req, res, next) => {
     });
 
     const token = generateToken(user);
+
+    setAuthCookie(res, token);
+    setCsrfCookie(res);
 
     res.status(201).json({
       success: true,
@@ -63,8 +118,15 @@ const login = async (req, res, next) => {
 
     const { email, phone, password } = req.body;
 
+    const orConditions = [];
+    if (email) orConditions.push({ email });
+    if (phone) orConditions.push({ phone });
+    if (orConditions.length === 0) {
+      return res.status(400).json({ success: false, message: 'Email hoặc số điện thoại là bắt buộc.' });
+    }
+
     const user = await prisma.user.findFirst({
-      where: { OR: [email ? { email } : {}, phone ? { phone } : {}] },
+      where: { OR: orConditions },
       include: { userRoles: { include: { role: true } }, customer: true, busOperator: true, staff: true },
     });
 
@@ -77,6 +139,9 @@ const login = async (req, res, next) => {
     }
 
     const token = generateToken(user);
+
+    setAuthCookie(res, token);
+    setCsrfCookie(res);
 
     res.json({
       success: true,
@@ -94,12 +159,17 @@ const login = async (req, res, next) => {
  */
 const sendOtp = async (req, res, next) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
+
     const { identifier, purpose } = req.body; // identifier = email or phone
 
     const user = await prisma.user.findFirst({
       where: { OR: [{ email: identifier }, { phone: identifier }] },
     });
-    if (!user) return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
+    if (!user) {
+      return res.json({ success: true, message: 'Nếu tài khoản tồn tại, OTP đã được gửi.' });
+    }
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 phút
@@ -116,7 +186,7 @@ const sendOtp = async (req, res, next) => {
       await sendOtpEmail(user.email, code, purpose);
     }
 
-    res.json({ success: true, message: 'Mã OTP đã được gửi.' });
+    res.json({ success: true, message: 'Nếu tài khoản tồn tại, OTP đã được gửi.' });
   } catch (err) {
     next(err);
   }
@@ -127,7 +197,15 @@ const sendOtp = async (req, res, next) => {
  */
 const verifyOtp = async (req, res, next) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
+
     const { userId, code, purpose } = req.body;
+
+    const attempts = await incrementOtpAttempts(userId, purpose);
+    if (attempts > OTP_MAX_ATTEMPTS) {
+      return res.status(429).json({ success: false, message: 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau.' });
+    }
 
     const cached = await redisClient.get(`otp:${userId}:${purpose}`);
     if (!cached || cached !== code) {
@@ -135,6 +213,7 @@ const verifyOtp = async (req, res, next) => {
     }
 
     await redisClient.del(`otp:${userId}:${purpose}`);
+    await clearOtpAttempts(userId, purpose);
 
     res.json({ success: true, message: 'Xác thực OTP thành công.' });
   } catch (err) {
@@ -147,6 +226,9 @@ const verifyOtp = async (req, res, next) => {
  */
 const forgotPassword = async (req, res, next) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
+
     const { identifier } = req.body;
     const user = await prisma.user.findFirst({
       where: { OR: [{ email: identifier }, { phone: identifier }] },
@@ -168,7 +250,15 @@ const forgotPassword = async (req, res, next) => {
  */
 const resetPassword = async (req, res, next) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
+
     const { userId, code, newPassword } = req.body;
+
+    const attempts = await incrementOtpAttempts(userId, 'RESET_PASSWORD');
+    if (attempts > OTP_MAX_ATTEMPTS) {
+      return res.status(429).json({ success: false, message: 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau.' });
+    }
 
     const cached = await redisClient.get(`otp:${userId}:RESET_PASSWORD`);
     if (!cached || cached !== code) {
@@ -176,10 +266,24 @@ const resetPassword = async (req, res, next) => {
     }
 
     await redisClient.del(`otp:${userId}:RESET_PASSWORD`);
+    await clearOtpAttempts(userId, 'RESET_PASSWORD');
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
 
     res.json({ success: true, message: 'Đặt lại mật khẩu thành công.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * GET /api/auth/csrf
+ * Issue CSRF cookie for SPA clients
+ */
+const getCsrfToken = async (req, res, next) => {
+  try {
+    const token = setCsrfCookie(res);
+    res.json({ success: true, data: { csrfToken: token } });
   } catch (err) {
     next(err);
   }
@@ -200,4 +304,4 @@ function formatUser(user) {
   return rest;
 }
 
-module.exports = { register, login, sendOtp, verifyOtp, forgotPassword, resetPassword };
+module.exports = { register, login, sendOtp, verifyOtp, forgotPassword, resetPassword, getCsrfToken };

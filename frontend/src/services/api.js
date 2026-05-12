@@ -8,12 +8,21 @@ const api = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
-// Request interceptor - attach JWT
+const getCookie = (name) => {
+  const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+};
+
+// Request interceptor - attach CSRF token
 api.interceptors.request.use((config) => {
-  const token = store.getState().auth.token;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const method = (config.method || 'get').toUpperCase();
+  if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const csrfToken = getCookie('csrf_token');
+    if (csrfToken) config.headers['X-CSRF-Token'] = csrfToken;
+  }
   return config;
 });
 
@@ -33,6 +42,7 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
+  csrf: () => api.get('/auth/csrf'),
   sendOtp: (data) => api.post('/auth/send-otp', data),
   verifyOtp: (data) => api.post('/auth/verify-otp', data),
   forgotPassword: (data) => api.post('/auth/forgot-password', data),

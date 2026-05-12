@@ -6,9 +6,8 @@ let socket = null;
 export const connectSocket = () => {
   if (socket?.connected) return socket;
 
-  const token = store.getState().auth.token;
   socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
-    auth: { token },
+    withCredentials: true,
     reconnectionAttempts: 5,
     reconnectionDelay: 2000,
   });

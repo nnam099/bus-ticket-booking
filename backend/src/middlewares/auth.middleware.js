@@ -8,11 +8,12 @@ const prisma = new PrismaClient();
 const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
+    const cookieToken = req.cookies?.access_token;
+    const headerToken = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
+    const token = cookieToken || headerToken;
+    if (!token) {
       return res.status(401).json({ success: false, message: 'Vui lòng đăng nhập để tiếp tục.' });
     }
-
-    const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await prisma.user.findUnique({

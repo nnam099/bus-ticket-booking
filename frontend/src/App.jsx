@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { authAPI } from './services/api';
 
 // Layouts
 import PublicLayout from './components/shared/PublicLayout';
@@ -45,13 +47,17 @@ import AdminReviewsPage from './pages/admin/ReviewsPage';
 
 // Guards
 const PrivateRoute = ({ children, roles }) => {
-  const { user, token } = useSelector((s) => s.auth);
-  if (!token) return <Navigate to="/login" replace />;
+  const { user } = useSelector((s) => s.auth);
+  if (!user) return <Navigate to="/login" replace />;
   if (roles && !roles.some((r) => user?.roles?.includes(r))) return <Navigate to="/" replace />;
   return children;
 };
 
 export default function App() {
+  useEffect(() => {
+    authAPI.csrf().catch(() => { });
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>

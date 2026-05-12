@@ -6,22 +6,32 @@ import { register, clearError } from '../../store/slices/authSlice';
 export default function RegisterPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, token } = useSelector(s => s.auth);
+  const { loading, error, user } = useSelector(s => s.auth);
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [localError, setLocalError] = useState(null);
 
+  const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/;
+
   useEffect(() => { dispatch(clearError()); }, []);
-  useEffect(() => { if (token) navigate('/dashboard', { replace: true }); }, [token]);
+  useEffect(() => { if (user) navigate('/dashboard', { replace: true }); }, [user]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     setLocalError(null);
+    if (!form.email && !form.phone) {
+      setLocalError('Vui lòng nhập email hoặc số điện thoại.');
+      return;
+    }
     if (form.password !== form.confirmPassword) {
       setLocalError('Mật khẩu xác nhận không khớp.');
       return;
     }
-    if (form.password.length < 6) {
-      setLocalError('Mật khẩu phải có ít nhất 6 ký tự.');
+    if (form.password.length < 8) {
+      setLocalError('Mật khẩu phải có ít nhất 8 ký tự.');
+      return;
+    }
+    if (!passwordPolicy.test(form.password)) {
+      setLocalError('Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt.');
       return;
     }
     const { confirmPassword, ...data } = form;
@@ -60,8 +70,11 @@ export default function RegisterPage() {
             </div>
             <div>
               <label className="label">Mật khẩu *</label>
-              <input className="input" type="password" placeholder="Ít nhất 6 ký tự"
+              <input className="input" type="password" placeholder="Ít nhất 8 ký tự"
                 value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
+              <p className="text-xs text-gray-500 mt-1">
+                Gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
+              </p>
             </div>
             <div>
               <label className="label">Xác nhận mật khẩu *</label>

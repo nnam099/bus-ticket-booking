@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 
 export default function PublicLayout() {
-  const { user, token } = useSelector(s => s.auth);
+  const { user } = useSelector(s => s.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -29,7 +29,7 @@ export default function PublicLayout() {
           </Link>
 
           <div className="flex items-center gap-4">
-            {token ? (
+            {user ? (
               <>
                 <Link to={getDashboardLink()} className="text-sm text-gray-600 hover:text-brand transition-colors">
                   {user?.customer?.fullName || user?.busOperator?.companyName || user?.email || 'Tài khoản'}

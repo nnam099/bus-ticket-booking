@@ -4,6 +4,16 @@ const logger = require('../utils/logger');
 
 let io;
 
+const parseCookies = (cookieHeader) => {
+  if (!cookieHeader) return {};
+  return cookieHeader.split(';').reduce((acc, item) => {
+    const [key, ...val] = item.trim().split('=');
+    if (!key) return acc;
+    acc[key] = decodeURIComponent(val.join('='));
+    return acc;
+  }, {});
+};
+
 const initSocket = (httpServer) => {
   io = new Server(httpServer, {
     cors: {
@@ -14,7 +24,8 @@ const initSocket = (httpServer) => {
 
   // Auth middleware for socket
   io.use((socket, next) => {
-    const token = socket.handshake.auth?.token;
+    const cookies = parseCookies(socket.handshake.headers?.cookie);
+    const token = cookies.access_token || socket.handshake.auth?.token;
     if (token) {
       try {
         socket.user = jwt.verify(token, process.env.JWT_SECRET);

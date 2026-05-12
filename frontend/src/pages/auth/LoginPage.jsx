@@ -6,24 +6,28 @@ import { login, clearError } from '../../store/slices/authSlice';
 export default function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, token, user } = useSelector(s => s.auth);
-  const [form, setForm] = useState({ email: '', password: '' });
+  const { loading, error, user } = useSelector(s => s.auth);
+  const [form, setForm] = useState({ identifier: '', password: '' });
 
   useEffect(() => { dispatch(clearError()); }, []);
 
   useEffect(() => {
-    if (token && user) {
+    if (user) {
       const roles = user.roles || [];
       if (roles.includes('ADMIN')) navigate('/admin', { replace: true });
       else if (roles.includes('BUS_OPERATOR')) navigate('/operator', { replace: true });
       else if (roles.includes('STAFF')) navigate('/staff', { replace: true });
       else navigate('/dashboard', { replace: true });
     }
-  }, [token, user]);
+  }, [user]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(login(form));
+    const identifier = form.identifier.trim();
+    const payload = identifier.includes('@')
+      ? { email: identifier, password: form.password }
+      : { phone: identifier, password: form.password };
+    dispatch(login(payload));
   };
 
   return (
@@ -39,9 +43,9 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="label">Email hoặc số điện thoại</label>
-              <input className="input" type="text" placeholder="email@example.com"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
+              <input className="input" type="text" placeholder="email@example.com / 0901234567"
+                value={form.identifier}
+                onChange={e => setForm({ ...form, identifier: e.target.value })}
                 required />
             </div>
             <div>

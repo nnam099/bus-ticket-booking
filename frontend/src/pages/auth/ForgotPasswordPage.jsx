@@ -12,6 +12,16 @@ export default function ForgotPasswordPage() {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
 
+  const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/;
+
+  const getErrorMessage = (err, fallback) => {
+    const apiErrors = err.response?.data?.errors;
+    if (Array.isArray(apiErrors) && apiErrors.length > 0) {
+      return apiErrors[0].msg || fallback;
+    }
+    return err.response?.data?.message || fallback;
+  };
+
   const handleSend = async (e) => {
     e.preventDefault();
     setLoading(true); setError(null);
@@ -19,7 +29,7 @@ export default function ForgotPasswordPage() {
       await authAPI.forgotPassword({ identifier });
       setMessage('Nếu tài khoản tồn tại, OTP đã được gửi đến email/SĐT của bạn.');
       setStep(2);
-    } catch { setError('Gửi OTP thất bại.'); }
+    } catch (err) { setError(getErrorMessage(err, 'Gửi OTP thất bại.')); }
     finally { setLoading(false); }
   };
 
@@ -29,18 +39,22 @@ export default function ForgotPasswordPage() {
     try {
       await authAPI.verifyOtp({ userId, code: otp, purpose: 'RESET_PASSWORD' });
       setStep(3);
-    } catch { setError('Mã OTP không đúng hoặc đã hết hạn.'); }
+    } catch (err) { setError(getErrorMessage(err, 'Mã OTP không đúng hoặc đã hết hạn.')); }
     finally { setLoading(false); }
   };
 
   const handleReset = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 6) { setError('Mật khẩu phải có ít nhất 6 ký tự.'); return; }
+    if (newPassword.length < 8) { setError('Mật khẩu phải có ít nhất 8 ký tự.'); return; }
+    if (!passwordPolicy.test(newPassword)) {
+      setError('Mật khẩu phải có chữ hoa, chữ thường, số và ký tự đặc biệt.');
+      return;
+    }
     setLoading(true); setError(null);
     try {
       await authAPI.resetPassword({ userId, code: otp, newPassword });
       setStep(4);
-    } catch { setError('Đặt lại mật khẩu thất bại.'); }
+    } catch (err) { setError(getErrorMessage(err, 'Đặt lại mật khẩu thất bại.')); }
     finally { setLoading(false); }
   };
 
@@ -77,8 +91,11 @@ export default function ForgotPasswordPage() {
           {step === 3 && (
             <form onSubmit={handleReset}>
               <label className="label">Mật khẩu mới</label>
-              <input className="input mb-3" type="password" placeholder="Ít nhất 6 ký tự"
+              <input className="input mb-3" type="password" placeholder="Ít nhất 8 ký tự"
                 value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
+              <p className="text-xs text-gray-500 mb-2">
+                Gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
+              </p>
               {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
               <button type="submit" disabled={loading} className="btn-primary w-full py-3">
                 {loading ? 'Đang đặt lại...' : 'Đặt lại mật khẩu'}
