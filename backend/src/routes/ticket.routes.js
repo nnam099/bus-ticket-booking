@@ -4,6 +4,18 @@ const { PrismaClient } = require('@prisma/client');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = new PrismaClient();
 
+// GET /api/tickets/trip/:tripId - list tickets for a trip
+router.get('/trip/:tripId', authenticate, authorize('STAFF', 'BUS_OPERATOR'), async (req, res, next) => {
+  try {
+    const tickets = await prisma.ticketDetail.findMany({
+      where: { tripSeat: { tripId: req.params.tripId }, status: { in: ['PAID', 'COMPLETED'] } },
+      include: { tripSeat: { include: { seatLayout: true } }, order: { include: { customer: true } } },
+      orderBy: { tripSeat: { seatLayout: { seatCode: 'asc' } } },
+    });
+    res.json({ success: true, data: tickets });
+  } catch (err) { next(err); }
+});
+
 // GET /api/tickets/:id - Chi tiết vé
 router.get('/:id', authenticate, async (req, res, next) => {
   try {
@@ -34,18 +46,6 @@ router.patch('/:id/check-in', authenticate, authorize('STAFF', 'BUS_OPERATOR'), 
       data: { checkedInAt: new Date() },
     });
     res.json({ success: true, message: 'Xác nhận khách lên xe thành công.', data: updated });
-  } catch (err) { next(err); }
-});
-
-// GET /api/tickets/trip/:tripId - Danh sách vé theo chuyến (Staff)
-router.get('/trip/:tripId', authenticate, authorize('STAFF', 'BUS_OPERATOR'), async (req, res, next) => {
-  try {
-    const tickets = await prisma.ticketDetail.findMany({
-      where: { tripSeat: { tripId: req.params.tripId }, status: { in: ['PAID', 'COMPLETED'] } },
-      include: { tripSeat: { include: { seatLayout: true } }, order: { include: { customer: true } } },
-      orderBy: { tripSeat: { seatLayout: { seatCode: 'asc' } } },
-    });
-    res.json({ success: true, data: tickets });
   } catch (err) { next(err); }
 });
 

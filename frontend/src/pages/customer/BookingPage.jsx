@@ -8,7 +8,8 @@ import BookingTimer from '../../components/customer/BookingTimer';
 import { format } from 'date-fns';
 
 export default function BookingPage() {
-  const { tripId } = useParams();
+  const params = useParams();
+  const tripId = params.tripId || params.id;
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { selectedSeats, step, lockExpiresAt, selectedTrip } = useSelector(s => s.booking);

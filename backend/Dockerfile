@@ -17,4 +17,4 @@ RUN mkdir -p logs
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]
+CMD ["sh", "-c", "npx prisma db push && node src/server.js"]
