@@ -19,7 +19,7 @@ Hệ thống phục vụ **4 nhóm đối tượng** chính:
 - **Runtime:** Node.js + Express.js
 - **Database:** PostgreSQL
 - **ORM:** Prisma
-- **Auth:** JWT + OTP (SMS/Email)
+- **Auth:** JWT (Bearer) + OTP (SMS/Email)
 - **Cache / Lock:** Redis (Booking Lock)
 - **Realtime:** Socket.IO
 - **Payment:** VNPay / MoMo
@@ -40,13 +40,17 @@ Hệ thống phục vụ **4 nhóm đối tượng** chính:
 ```bash
 git clone <repo-url>
 cd bus-ticket-booking
-cp .env.example .env
 docker-compose up --build
 ```
 
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:3000
 - API Docs: http://localhost:3000/api/docs
+
+### Seed dữ liệu mẫu (khi chạy bằng Docker)
+```bash
+docker exec bus_ticket_api node prisma/seed.js
+```
 
 ## 📁 Cấu trúc dự án
 
@@ -99,6 +103,30 @@ Pending → Paid → Completed
 | Admin | admin@busticket.vn | Admin@123 |
 | Nhà xe demo | operator@demo.vn | Demo@123 |
 | Khách hàng | customer@demo.vn | Demo@123 |
+
+## 🔐 Xác thực & chính sách mật khẩu
+- Đăng nhập/đăng ký dùng JWT Bearer token.
+- OTP được dùng cho quên mật khẩu và các luồng yêu cầu xác thực.
+- Mật khẩu tối thiểu 6 ký tự (có thể thay đổi qua validation backend).
+
+## 🧪 Chạy local (không dùng Docker)
+### Backend
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## 🛠️ Troubleshooting
+- Nếu frontend không vào được qua Docker trên Windows, thử chạy frontend trực tiếp bằng `npm run dev` và dùng port hiển thị trong terminal.
+- Khi đăng ký thất bại với lỗi role, hãy chạy lại seed bằng lệnh Docker ở trên.
 
 ## 📄 Tài liệu
 
