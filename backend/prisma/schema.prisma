@@ -207,6 +207,7 @@ model Route {
   operator BusOperator @relation(fields: [operatorId], references: [id])
   trips    Trip[]
 
+  @@index([originCity, destinationCity])
   @@map("routes")
 }
 
@@ -233,6 +234,7 @@ model Trip {
   tripStaffs TripStaff[]
   tripSeats  TripSeat[]
 
+  @@index([departureTime, status])
   @@map("trips")
 }
 
@@ -270,6 +272,7 @@ model TripSeat {
   ticketDetail TicketDetail?
 
   @@unique([tripId, seatLayoutId])
+  @@index([tripId, status])
   @@map("trip_seats")
 }
 
@@ -291,6 +294,7 @@ model Order {
   payments      Payment[]
   ticketDetails TicketDetail[]
 
+  @@index([customerId])
   @@map("orders")
 }
 
@@ -333,6 +337,7 @@ model TicketDetail {
   tripSeat TripSeat @relation(fields: [tripSeatId], references: [id])
   review   Review?
 
+  @@index([orderId])
   @@map("ticket_details")
 }
 

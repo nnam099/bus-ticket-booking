@@ -1,9 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 
 const findManagedTrip = async (req, tripId) => {
   if (req.roles?.includes('BUS_OPERATOR')) {

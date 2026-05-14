@@ -1,14 +1,26 @@
-const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { validationResult } = require('express-validator');
+const prisma = require('../config/prisma');
 const { redisClient } = require('../config/redis');
 const { sendOtpEmail } = require('../services/email.service');
 
-const prisma = new PrismaClient();
-
 const generateOtpCode = () => crypto.randomInt(100000, 1000000).toString();
+const buildIdentifierWhere = ({ identifier, email, phone }) => {
+  const normalized = identifier?.trim();
+  const clauses = [];
+  if (email) clauses.push({ email });
+  if (phone) clauses.push({ phone });
+  if (normalized) clauses.push(normalized.includes('@') ? { email: normalized } : { phone: normalized });
+  return clauses;
+};
+
+const findUserByIdentifier = async ({ identifier, email, phone }) => {
+  const OR = buildIdentifierWhere({ identifier, email, phone });
+  if (!OR.length) return null;
+  return prisma.user.findFirst({ where: { OR } });
+};
 
 /**
  * POST /api/auth/register
@@ -22,14 +34,15 @@ const register = async (req, res, next) => {
     const { email, phone, password, fullName } = req.body;
 
     // Check duplicate email/phone (QD_ACC_01)
-    const existing = await prisma.user.findFirst({
-      where: { OR: [email ? { email } : {}, phone ? { phone } : {}] },
-    });
+    const existing = await prisma.user.findFirst({ where: { OR: buildIdentifierWhere({ email, phone }) } });
     if (existing) return res.status(409).json({ success: false, message: 'Email hoặc số điện thoại đã được sử dụng.' });
 
     const passwordHash = await bcrypt.hash(password, 12);
 
     const customerRole = await prisma.role.findUnique({ where: { name: 'CUSTOMER' } });
+    if (!customerRole) {
+      return res.status(500).json({ success: false, message: 'CUSTOMER role is not initialized. Please run seed.' });
+    }
 
     const user = await prisma.user.create({
       data: {
@@ -62,10 +75,10 @@ const login = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
 
-    const { email, phone, password } = req.body;
+    const { identifier, email, phone, password } = req.body;
 
     const user = await prisma.user.findFirst({
-      where: { OR: [email ? { email } : {}, phone ? { phone } : {}] },
+      where: { OR: buildIdentifierWhere({ identifier, email, phone }) },
       include: { userRoles: { include: { role: true } }, customer: true, busOperator: true, staff: true },
     });
 
@@ -97,9 +110,7 @@ const sendOtp = async (req, res, next) => {
   try {
     const { identifier, purpose } = req.body; // identifier = email or phone
 
-    const user = await prisma.user.findFirst({
-      where: { OR: [{ email: identifier }, { phone: identifier }] },
-    });
+    const user = await findUserByIdentifier({ identifier });
     if (!user) return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
 
     const code = generateOtpCode();
@@ -128,14 +139,16 @@ const sendOtp = async (req, res, next) => {
  */
 const verifyOtp = async (req, res, next) => {
   try {
-    const { userId, code, purpose } = req.body;
+    const { userId, identifier, code, purpose } = req.body;
+    const user = userId ? { id: userId } : await findUserByIdentifier({ identifier });
+    if (!user) return res.status(400).json({ success: false, message: 'Invalid or expired OTP.' });
 
-    const cached = await redisClient.get(`otp:${userId}:${purpose}`);
+    const cached = await redisClient.get(`otp:${user.id}:${purpose}`);
     if (!cached || cached !== code) {
       return res.status(400).json({ success: false, message: 'Mã OTP không hợp lệ hoặc đã hết hạn.' });
     }
 
-    await redisClient.del(`otp:${userId}:${purpose}`);
+    await redisClient.del(`otp:${user.id}:${purpose}`);
 
     res.json({ success: true, message: 'Xác thực OTP thành công.' });
   } catch (err) {
@@ -149,9 +162,7 @@ const verifyOtp = async (req, res, next) => {
 const forgotPassword = async (req, res, next) => {
   try {
     const { identifier } = req.body;
-    const user = await prisma.user.findFirst({
-      where: { OR: [{ email: identifier }, { phone: identifier }] },
-    });
+    const user = await findUserByIdentifier({ identifier });
     // Always return 200 to prevent user enumeration
     if (user) {
       const code = generateOtpCode();
@@ -169,16 +180,18 @@ const forgotPassword = async (req, res, next) => {
  */
 const resetPassword = async (req, res, next) => {
   try {
-    const { userId, code, newPassword } = req.body;
+    const { userId, identifier, code, newPassword } = req.body;
+    const user = userId ? { id: userId } : await findUserByIdentifier({ identifier });
+    if (!user) return res.status(400).json({ success: false, message: 'Invalid or expired OTP.' });
 
-    const cached = await redisClient.get(`otp:${userId}:RESET_PASSWORD`);
+    const cached = await redisClient.get(`otp:${user.id}:RESET_PASSWORD`);
     if (!cached || cached !== code) {
       return res.status(400).json({ success: false, message: 'Mã OTP không hợp lệ hoặc đã hết hạn.' });
     }
 
-    await redisClient.del(`otp:${userId}:RESET_PASSWORD`);
+    await redisClient.del(`otp:${user.id}:RESET_PASSWORD`);
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
+    await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
 
     res.json({ success: true, message: 'Đặt lại mật khẩu thành công.' });
   } catch (err) {
@@ -188,6 +201,9 @@ const resetPassword = async (req, res, next) => {
 
 // Helpers
 function generateToken(user) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not configured.');
+  }
   const roles = user.userRoles?.map((ur) => ur.role.name) || [];
   return jwt.sign(
     { userId: user.id, roles },

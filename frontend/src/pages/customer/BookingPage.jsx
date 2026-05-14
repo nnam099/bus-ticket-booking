@@ -21,12 +21,11 @@ export default function BookingPage() {
   const [passengers, setPassengers] = useState([]);
 
   useEffect(() => {
+    dispatch(resetBooking());
     tripAPI.getById(tripId)
       .then(r => { setTrip(r.data.data); dispatch(setSelectedTrip(r.data.data)); })
       .catch(() => setError('Không tìm thấy chuyến xe.'))
       .finally(() => setLoading(false));
-
-    return () => { dispatch(resetBooking()); };
   }, [tripId]);
 
   useEffect(() => {

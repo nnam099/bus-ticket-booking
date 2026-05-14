@@ -3,13 +3,11 @@
  * Xử lý logic đặt vé, khóa ghế và giải phóng ghế (QD_BOOK_01, QD_BOOK_02, QD_BOOK_03)
  */
 
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../config/prisma');
 const { redisClient } = require('../config/redis');
 const { io } = require('../config/socket');
 const QRCode = require('qrcode');
 const logger = require('../utils/logger');
-
-const prisma = new PrismaClient();
 
 const LOCK_MINUTES = parseInt(process.env.BOOKING_LOCK_MINUTES || '15', 10);
 const MAX_SEATS = parseInt(process.env.MAX_SEATS_PER_BOOKING || '5', 10);
@@ -96,6 +94,37 @@ const releaseSeats = async (tripId, seatIds, customerId) => {
 
   io?.to(`trip:${tripId}`).emit('seats:updated', { seatIds, status: 'AVAILABLE' });
   logger.info(`Seats released: ${seatIds.join(',')} on trip ${tripId}`);
+};
+
+const releaseExpiredSeatLocks = async () => {
+  const expiredSeats = await prisma.tripSeat.findMany({
+    where: {
+      status: 'PROCESSING',
+      lockExpiresAt: { lt: new Date() },
+    },
+    select: { id: true, tripId: true },
+  });
+
+  if (!expiredSeats.length) return 0;
+
+  const seatIds = expiredSeats.map((seat) => seat.id);
+  await prisma.tripSeat.updateMany({
+    where: { id: { in: seatIds }, status: 'PROCESSING' },
+    data: { status: 'AVAILABLE', lockedAt: null, lockedBy: null, lockExpiresAt: null },
+  });
+
+  const byTrip = expiredSeats.reduce((acc, seat) => {
+    acc[seat.tripId] = acc[seat.tripId] || [];
+    acc[seat.tripId].push(seat.id);
+    return acc;
+  }, {});
+
+  for (const [tripId, ids] of Object.entries(byTrip)) {
+    io?.to(`trip:${tripId}`).emit('seats:updated', { seatIds: ids, status: 'AVAILABLE' });
+  }
+
+  logger.info(`Released ${expiredSeats.length} expired seat locks`);
+  return expiredSeats.length;
 };
 
 /**
@@ -241,4 +270,4 @@ const cancelTicket = async (ticketId, customerId) => {
   return { refundAmount, refundRate };
 };
 
-module.exports = { lockSeats, releaseSeats, confirmBooking, cancelTicket };
+module.exports = { lockSeats, releaseSeats, releaseExpiredSeatLocks, confirmBooking, cancelTicket };

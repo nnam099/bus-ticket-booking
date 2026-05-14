@@ -1,10 +1,8 @@
 // admin.routes.js
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
-
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 
 // All admin routes require ADMIN role
 router.use(authenticate, authorize('ADMIN'));

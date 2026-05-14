@@ -1,9 +1,8 @@
 // review.routes.js
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 
 // POST /api/reviews - Đánh giá chuyến xe (phải có vé đã completed)
 router.post('/', authenticate, authorize('CUSTOMER'), async (req, res, next) => {

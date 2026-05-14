@@ -7,7 +7,7 @@ export default function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error, token, user } = useSelector(s => s.auth);
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ identifier: '', password: '' });
 
   useEffect(() => { dispatch(clearError()); }, []);
 
@@ -40,8 +40,8 @@ export default function LoginPage() {
             <div>
               <label className="label">Email hoặc số điện thoại</label>
               <input className="input" type="text" placeholder="email@example.com"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
+                value={form.identifier}
+                onChange={e => setForm({ ...form, identifier: e.target.value })}
                 required />
             </div>
             <div>

@@ -6,7 +6,7 @@ RUN apk add --no-cache openssl
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm ci
 
 COPY prisma ./prisma
 RUN npx prisma generate
@@ -17,4 +17,4 @@ RUN mkdir -p logs
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma db push && node src/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node src/server.js"]

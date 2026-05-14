@@ -3,6 +3,7 @@ const app = require('./app');
 const { createServer } = require('http');
 const { initSocket } = require('./config/socket');
 const { connectRedis } = require('./config/redis');
+const { releaseExpiredSeatLocks } = require('./services/booking.service');
 const logger = require('./utils/logger');
 
 const PORT = process.env.PORT || 3000;
@@ -12,6 +13,10 @@ initSocket(httpServer);
 
 const start = async () => {
   await connectRedis();
+  await releaseExpiredSeatLocks();
+  setInterval(() => {
+    releaseExpiredSeatLocks().catch((error) => logger.error('Failed to release expired seat locks:', error));
+  }, 60 * 1000);
 
   httpServer.listen(PORT, () => {
     logger.info(`Bus Ticket API running on port ${PORT}`);

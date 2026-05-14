@@ -1,9 +1,8 @@
 // vehicle.routes.js
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
-const prisma = new PrismaClient();
+const prisma = require('../config/prisma');
 
 router.get('/', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
   try {

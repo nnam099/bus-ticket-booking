@@ -6,7 +6,6 @@ export default function ForgotPasswordPage() {
   const [step, setStep] = useState(1);
   const [identifier, setIdentifier] = useState('');
   const [otp, setOtp] = useState('');
-  const [userId, setUserId] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -27,7 +26,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setLoading(true); setError(null);
     try {
-      await authAPI.verifyOtp({ userId, code: otp, purpose: 'RESET_PASSWORD' });
+      await authAPI.verifyOtp({ identifier, code: otp, purpose: 'RESET_PASSWORD' });
       setStep(3);
     } catch { setError('Mã OTP không đúng hoặc đã hết hạn.'); }
     finally { setLoading(false); }
@@ -38,7 +37,7 @@ export default function ForgotPasswordPage() {
     if (newPassword.length < 6) { setError('Mật khẩu phải có ít nhất 6 ký tự.'); return; }
     setLoading(true); setError(null);
     try {
-      await authAPI.resetPassword({ userId, code: otp, newPassword });
+      await authAPI.resetPassword({ identifier, code: otp, newPassword });
       setStep(4);
     } catch { setError('Đặt lại mật khẩu thất bại.'); }
     finally { setLoading(false); }
