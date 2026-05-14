@@ -4,9 +4,35 @@ const { PrismaClient } = require('@prisma/client');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = new PrismaClient();
 
+const canAccessTrip = async (req, tripId) => {
+  if (req.roles?.includes('ADMIN')) return true;
+
+  if (req.roles?.includes('BUS_OPERATOR')) {
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, vehicle: { operator: { userId: req.user.id } } },
+      select: { id: true },
+    });
+    return Boolean(trip);
+  }
+
+  if (req.roles?.includes('STAFF')) {
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, tripStaffs: { some: { staffId: req.user.staff?.id } } },
+      select: { id: true },
+    });
+    return Boolean(trip);
+  }
+
+  return false;
+};
+
 // GET /api/tickets/trip/:tripId - list tickets for a trip
 router.get('/trip/:tripId', authenticate, authorize('STAFF', 'BUS_OPERATOR'), async (req, res, next) => {
   try {
+    if (!(await canAccessTrip(req, req.params.tripId))) {
+      return res.status(403).json({ success: false, message: 'You cannot view tickets for this trip.' });
+    }
+
     const tickets = await prisma.ticketDetail.findMany({
       where: { tripSeat: { tripId: req.params.tripId }, status: { in: ['PAID', 'COMPLETED'] } },
       include: { tripSeat: { include: { seatLayout: true } }, order: { include: { customer: true } } },
@@ -16,36 +42,51 @@ router.get('/trip/:tripId', authenticate, authorize('STAFF', 'BUS_OPERATOR'), as
   } catch (err) { next(err); }
 });
 
-// GET /api/tickets/:id - Chi tiết vé
+// GET /api/tickets/:id
 router.get('/:id', authenticate, async (req, res, next) => {
   try {
-    const ticket = await prisma.ticketDetail.findUnique({
-      where: { id: req.params.id },
+    const accessFilter = req.roles?.includes('ADMIN')
+      ? {}
+      : req.roles?.includes('CUSTOMER')
+        ? { order: { customer: { userId: req.user.id } } }
+        : req.roles?.includes('BUS_OPERATOR')
+          ? { tripSeat: { trip: { vehicle: { operator: { userId: req.user.id } } } } }
+          : req.roles?.includes('STAFF')
+            ? { tripSeat: { trip: { tripStaffs: { some: { staffId: req.user.staff?.id } } } } }
+            : { id: '__deny__' };
+
+    const ticket = await prisma.ticketDetail.findFirst({
+      where: { id: req.params.id, ...accessFilter },
       include: {
         tripSeat: { include: { trip: { include: { route: true } }, seatLayout: true } },
         order: { include: { customer: true } },
       },
     });
-    if (!ticket) return res.status(404).json({ success: false, message: 'Không tìm thấy vé.' });
+    if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found.' });
     res.json({ success: true, data: ticket });
   } catch (err) { next(err); }
 });
 
-// PATCH /api/tickets/:id/check-in - Xác nhận khách lên xe (Staff/Driver)
+// PATCH /api/tickets/:id/check-in
 router.patch('/:id/check-in', authenticate, authorize('STAFF', 'BUS_OPERATOR'), async (req, res, next) => {
   try {
     const ticket = await prisma.ticketDetail.findUnique({
       where: { id: req.params.id },
       include: { tripSeat: true },
     });
-    if (!ticket) return res.status(404).json({ success: false, message: 'Không tìm thấy vé.' });
-    if (ticket.status !== 'PAID') return res.status(400).json({ success: false, message: 'Vé chưa được thanh toán.' });
+    if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found.' });
+    if (!(await canAccessTrip(req, ticket.tripSeat.tripId))) {
+      return res.status(403).json({ success: false, message: 'You cannot check in this ticket.' });
+    }
+    if (ticket.status !== 'PAID') {
+      return res.status(400).json({ success: false, message: 'Ticket has not been paid.' });
+    }
 
     const updated = await prisma.ticketDetail.update({
       where: { id: req.params.id },
       data: { checkedInAt: new Date() },
     });
-    res.json({ success: true, message: 'Xác nhận khách lên xe thành công.', data: updated });
+    res.json({ success: true, message: 'Ticket check-in completed.', data: updated });
   } catch (err) { next(err); }
 });
 

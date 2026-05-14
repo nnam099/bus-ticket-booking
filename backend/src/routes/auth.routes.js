@@ -2,7 +2,6 @@ const express = require('express');
 const { body } = require('express-validator');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
-const { authenticate } = require('../middlewares/auth.middleware');
 
 // POST /api/auth/register
 router.post(

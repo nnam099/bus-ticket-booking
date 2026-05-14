@@ -23,7 +23,8 @@ router.post('/lock', authenticate, authorize('CUSTOMER'), async (req, res, next)
 router.post('/release', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
   try {
     const { tripId, seatIds } = req.body;
-    await releaseSeats(tripId, seatIds);
+    const customerId = req.user.customer?.id;
+    await releaseSeats(tripId, seatIds, customerId);
     res.json({ success: true, message: 'Đã hủy giữ chỗ.' });
   } catch (err) {
     next(err);
@@ -33,10 +34,10 @@ router.post('/release', authenticate, authorize('CUSTOMER'), async (req, res, ne
 // POST /api/bookings/confirm - Xác nhận đặt vé sau thanh toán
 router.post('/confirm', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
   try {
-    const { tripId, seatIds, passengerInfo, totalAmount, paymentMethod } = req.body;
+    const { tripId, seatIds, passengerInfo, paymentMethod } = req.body;
     const customerId = req.user.customer?.id;
 
-    const result = await confirmBooking({ customerId, tripId, seatIds, passengerInfo, totalAmount, paymentMethod });
+    const result = await confirmBooking({ customerId, tripId, seatIds, passengerInfo, paymentMethod });
     res.status(201).json({ success: true, message: 'Đặt vé thành công!', data: result });
   } catch (err) {
     if (err.message.includes('hết hạn')) return res.status(410).json({ success: false, message: err.message });

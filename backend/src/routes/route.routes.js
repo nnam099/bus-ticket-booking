@@ -40,6 +40,12 @@ router.put('/:id', authenticate, authorize('BUS_OPERATOR'), async (req, res, nex
 
 router.delete('/:id', authenticate, authorize('BUS_OPERATOR', 'ADMIN'), async (req, res, next) => {
   try {
+    if (!req.roles?.includes('ADMIN')) {
+      const operatorId = req.user.busOperator?.id;
+      const existing = await prisma.route.findFirst({ where: { id: req.params.id, operatorId } });
+      if (!existing) return res.status(403).json({ success: false, message: 'Khong co quyen xoa tuyen nay.' });
+    }
+
     await prisma.route.update({ where: { id: req.params.id }, data: { isActive: false } });
     res.json({ success: true, message: 'Đã xóa tuyến xe.' });
   } catch (err) { next(err); }

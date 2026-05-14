@@ -64,7 +64,7 @@ if (process.env.NODE_ENV !== 'test') {
 try {
   const swaggerDoc = YAML.load(path.join(__dirname, '../docs/swagger.yaml'));
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
-} catch (e) {
+} catch {
   // docs not required to start
 }
 

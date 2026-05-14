@@ -5,6 +5,22 @@ const { authenticate, authorize } = require('../middlewares/auth.middleware');
 
 const prisma = new PrismaClient();
 
+const findManagedTrip = async (req, tripId) => {
+  if (req.roles?.includes('BUS_OPERATOR')) {
+    return prisma.trip.findFirst({
+      where: { id: tripId, vehicle: { operator: { userId: req.user.id } } },
+    });
+  }
+
+  if (req.roles?.includes('STAFF')) {
+    return prisma.trip.findFirst({
+      where: { id: tripId, tripStaffs: { some: { staffId: req.user.staff?.id } } },
+    });
+  }
+
+  return null;
+};
+
 // GET /api/trips/search - Tìm kiếm chuyến xe (public)
 router.get('/search', async (req, res, next) => {
   try {
@@ -111,6 +127,11 @@ router.patch('/:id/status', authenticate, authorize('STAFF', 'BUS_OPERATOR'), as
       return res.status(400).json({ success: false, message: 'Vui lòng nhập lý do hủy chuyến.' });
     }
 
+    const managedTrip = await findManagedTrip(req, req.params.id);
+    if (!managedTrip) {
+      return res.status(403).json({ success: false, message: 'Khong co quyen cap nhat chuyen nay.' });
+    }
+
     const trip = await prisma.trip.update({
       where: { id: req.params.id },
       data: { status, cancelReason: cancelReason || null },
@@ -118,7 +139,6 @@ router.patch('/:id/status', authenticate, authorize('STAFF', 'BUS_OPERATOR'), as
 
     // If operator cancels trip, auto-refund all paid tickets (QD_OP_03)
     if (status === 'CANCELLED') {
-      const bookingService = require('../services/booking.service');
       const paidTickets = await prisma.ticketDetail.findMany({
         where: { tripSeat: { tripId: trip.id }, status: 'PAID' },
       });

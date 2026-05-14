@@ -9,7 +9,8 @@ const prisma = new PrismaClient();
 
 // GET /api/users/me
 router.get('/me', authenticate, async (req, res) => {
-  const { passwordHash, ...user } = req.user;
+  const user = { ...req.user };
+  delete user.passwordHash;
   res.json({ success: true, data: user });
 });
 

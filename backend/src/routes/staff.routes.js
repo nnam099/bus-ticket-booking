@@ -1,11 +1,30 @@
-// staff.routes.js
 const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = new PrismaClient();
 
-// GET /api/staff/trips/assigned - Chuyến xe được phân công
+const canAccessTrip = async (req, tripId) => {
+  if (req.roles?.includes('BUS_OPERATOR')) {
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, vehicle: { operator: { userId: req.user.id } } },
+      select: { id: true },
+    });
+    return Boolean(trip);
+  }
+
+  if (req.roles?.includes('STAFF')) {
+    const trip = await prisma.trip.findFirst({
+      where: { id: tripId, tripStaffs: { some: { staffId: req.user.staff?.id } } },
+      select: { id: true },
+    });
+    return Boolean(trip);
+  }
+
+  return false;
+};
+
+// GET /api/staff/trips/assigned
 router.get('/trips/assigned', authenticate, authorize('STAFF'), async (req, res, next) => {
   try {
     const staffId = req.user.staff?.id;
@@ -21,6 +40,10 @@ router.get('/trips/assigned', authenticate, authorize('STAFF'), async (req, res,
 // GET /api/staff/trips/:tripId/passengers
 router.get('/trips/:tripId/passengers', authenticate, authorize('STAFF', 'BUS_OPERATOR'), async (req, res, next) => {
   try {
+    if (!(await canAccessTrip(req, req.params.tripId))) {
+      return res.status(403).json({ success: false, message: 'You cannot view passengers for this trip.' });
+    }
+
     const passengers = await prisma.ticketDetail.findMany({
       where: { tripSeat: { tripId: req.params.tripId }, status: { in: ['PAID', 'COMPLETED'] } },
       include: { tripSeat: { include: { seatLayout: true } } },

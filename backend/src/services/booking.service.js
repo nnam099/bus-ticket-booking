@@ -45,9 +45,9 @@ const lockSeats = async (tripId, seatIds, customerId) => {
     lockResults.push(seatId);
   }
 
-  // Update DB status to PROCESSING
-  await prisma.tripSeat.updateMany({
-    where: { id: { in: seatIds }, tripId },
+  // Update DB status to PROCESSING only if the seats are still available.
+  const updated = await prisma.tripSeat.updateMany({
+    where: { id: { in: seatIds }, tripId, status: 'AVAILABLE' },
     data: {
       status: 'PROCESSING',
       lockedAt: new Date(),
@@ -55,6 +55,13 @@ const lockSeats = async (tripId, seatIds, customerId) => {
       lockExpiresAt: lockExpiry,
     },
   });
+
+  if (updated.count !== seatIds.length) {
+    for (const lockedId of lockResults) {
+      await redisClient.del(`seat_lock:${tripId}:${lockedId}`);
+    }
+    throw new Error('Một hoặc nhiều ghế không còn khả dụng. Vui lòng chọn lại.');
+  }
 
   // Broadcast realtime seat status change
   io?.to(`trip:${tripId}`).emit('seats:updated', {
@@ -69,13 +76,21 @@ const lockSeats = async (tripId, seatIds, customerId) => {
 /**
  * Giải phóng ghế (timeout hoặc hủy) - QD_BOOK_02
  */
-const releaseSeats = async (tripId, seatIds) => {
+const releaseSeats = async (tripId, seatIds, customerId) => {
   for (const seatId of seatIds) {
-    await redisClient.del(`seat_lock:${tripId}:${seatId}`);
+    const lockKey = `seat_lock:${tripId}:${seatId}`;
+    const owner = await redisClient.get(lockKey);
+    if (!customerId || owner === customerId) {
+      await redisClient.del(lockKey);
+    }
   }
 
   await prisma.tripSeat.updateMany({
-    where: { id: { in: seatIds }, tripId },
+    where: {
+      id: { in: seatIds },
+      tripId,
+      ...(customerId ? { lockedBy: customerId } : {}),
+    },
     data: { status: 'AVAILABLE', lockedAt: null, lockedBy: null, lockExpiresAt: null },
   });
 
@@ -86,36 +101,49 @@ const releaseSeats = async (tripId, seatIds) => {
 /**
  * Tạo đơn hàng và vé sau khi thanh toán thành công
  */
-const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, totalAmount, paymentMethod }) => {
+const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, paymentMethod }) => {
+  for (const seatId of seatIds) {
+    const owner = await redisClient.get(`seat_lock:${tripId}:${seatId}`);
+    if (owner !== customerId) {
+      throw new Error('Phiên giữ chỗ đã hết hạn. Vui lòng đặt lại.');
+    }
+  }
+
   return await prisma.$transaction(async (tx) => {
     // Verify seats are still locked by this customer
     const seats = await tx.tripSeat.findMany({
       where: { id: { in: seatIds }, tripId, lockedBy: customerId, status: 'PROCESSING' },
+      include: { trip: true },
     });
 
     if (seats.length !== seatIds.length) {
       throw new Error('Phiên giữ chỗ đã hết hạn. Vui lòng đặt lại.');
     }
 
+    const unitPrice = Number(seats[0].trip.basePrice);
+    const totalAmount = unitPrice * seatIds.length;
+    const isCashPayment = paymentMethod === 'CASH';
+
     // Create Order
     const order = await tx.order.create({
       data: {
         customerId,
         totalAmount,
-        status: 'PAID',
+        status: isCashPayment ? 'PAID' : 'PENDING',
       },
     });
 
-    // Create Payment record
-    await tx.payment.create({
-      data: {
-        orderId: order.id,
-        amount: totalAmount,
-        method: paymentMethod,
-        status: 'SUCCESS',
-        paidAt: new Date(),
-      },
-    });
+    if (isCashPayment) {
+      await tx.payment.create({
+        data: {
+          orderId: order.id,
+          amount: totalAmount,
+          method: paymentMethod,
+          status: 'SUCCESS',
+          paidAt: new Date(),
+        },
+      });
+    }
 
     // Create Ticket Details and update seat status
     const tickets = [];
@@ -132,24 +160,26 @@ const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, tota
           tripSeatId: seatId,
           passengerName: passenger.name,
           passengerPhone: passenger.phone,
-          price: seats.find(s => s.id === seatId) ? totalAmount / seatIds.length : 0,
+          price: unitPrice,
           qrCode,
-          status: 'PAID',
+          status: isCashPayment ? 'PAID' : 'PENDING',
         },
       });
       tickets.push(ticket);
 
-      await tx.tripSeat.update({
-        where: { id: seatId },
-        data: { status: 'BOOKED', lockedBy: null, lockExpiresAt: null },
-      });
+      if (isCashPayment) {
+        await tx.tripSeat.update({
+          where: { id: seatId },
+          data: { status: 'BOOKED', lockedBy: null, lockedAt: null, lockExpiresAt: null },
+        });
 
-      // Remove Redis lock
-      await redisClient.del(`seat_lock:${tripId}:${seatId}`);
+        await redisClient.del(`seat_lock:${tripId}:${seatId}`);
+      }
     }
 
-    // Broadcast booked status
-    io?.to(`trip:${tripId}`).emit('seats:updated', { seatIds, status: 'BOOKED' });
+    if (isCashPayment) {
+      io?.to(`trip:${tripId}`).emit('seats:updated', { seatIds, status: 'BOOKED' });
+    }
 
     return { order, tickets };
   });

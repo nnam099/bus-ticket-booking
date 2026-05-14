@@ -1,13 +1,14 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { validationResult } = require('express-validator');
-const otplib = require('otplib');
 const { redisClient } = require('../config/redis');
 const { sendOtpEmail } = require('../services/email.service');
-const logger = require('../utils/logger');
 
 const prisma = new PrismaClient();
+
+const generateOtpCode = () => crypto.randomInt(100000, 1000000).toString();
 
 /**
  * POST /api/auth/register
@@ -101,7 +102,7 @@ const sendOtp = async (req, res, next) => {
     });
     if (!user) return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = generateOtpCode();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 phút
 
     await prisma.otpCode.create({
@@ -153,7 +154,7 @@ const forgotPassword = async (req, res, next) => {
     });
     // Always return 200 to prevent user enumeration
     if (user) {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const code = generateOtpCode();
       await redisClient.setEx(`otp:${user.id}:RESET_PASSWORD`, 300, code);
       if (user.email) await sendOtpEmail(user.email, code, 'RESET_PASSWORD');
     }
@@ -196,7 +197,8 @@ function generateToken(user) {
 }
 
 function formatUser(user) {
-  const { passwordHash, ...rest } = user;
+  const rest = { ...user };
+  delete rest.passwordHash;
   return rest;
 }
 
