@@ -1,88 +1,135 @@
-# Sơ Đồ Hệ Thống
+# Sơ Đồ Và Luồng Hệ Thống
 
-## ERD Online
-🔗 https://dbdiagram.io/d/Diagram_VeXe-69c736fcfb2db18e3b243d68
+ERD online: https://dbdiagram.io/d/Diagram_VeXe-69c736fcfb2db18e3b243d68
 
----
+## Quan hệ chính
 
-## Mối Quan Hệ Giữa Các Thực Thể
-
-### 1. Phân quyền & Định danh (Identity & Access Management)
-- **USERS ↔ ROLES (N-N qua USER_ROLES):** Một người dùng có thể đảm nhận nhiều vai trò.
-- **USERS → CUSTOMERS / BUS_OPERATORS / STAFFS (1-1):** Kỹ thuật Sub-typing — USERS chỉ giữ thông tin đăng nhập, thông tin đặc thù tách riêng.
-
-### 2. Phương tiện & Tuyến đường (Fleet & Route)
-- **BUS_OPERATORS → VEHICLES / ROUTES (1-N):** Mỗi nhà xe quản lý nhiều xe và tuyến riêng.
-- **VEHICLE_TYPES → SEAT_LAYOUTS / VEHICLES (1-N):** Template layout chuẩn cho từng loại xe.
-
-### 3. Vận hành Chuyến đi (Trip Operations)
-- **ROUTES → TRIPS (1-N):** Một tuyến có nhiều chuyến.
-- **TRIPS ↔ STAFFS (N-N qua TRIP_STAFFS):** Phân công nhân sự nhiều-nhiều.
-
-### 4. Quản lý Ghế (Core Seat Inventory)
-- **TRIPS ↔ SEAT_LAYOUTS (N-N qua TRIP_SEATS):** Sinh ghế theo chuyến từ layout xe. TRIP_SEATS lưu trạng thái real-time.
-
-### 5. Giao dịch & Đánh giá (Transactions & Reviews)
-- **CUSTOMERS → ORDERS (1-N):** Khách hàng tạo đơn hàng.
-- **ORDERS → PAYMENTS (1-N):** Một đơn cho phép thất bại và thử lại nhiều lần.
-- **ORDERS → TICKET_DETAILS (1-N):** Một đơn hàng mua nhiều vé.
-- **TICKET_DETAILS → TRIP_SEATS (1-1):** Bảo vệ double-booking tuyệt đối.
-- **TICKET_DETAILS → REVIEWS (1-1):** Chỉ người có vé thật mới được đánh giá.
-
----
-
-## Luồng Đặt Vé (Booking Flow)
-
-```
-Khách chọn ghế
-      │
-      ▼
-Redis SET NX seat_lock:{tripId}:{seatId} → customerId (TTL 15 phút)
-      │
-      ├── Thành công → DB: trip_seats.status = PROCESSING
-      │                    → Broadcast Socket: seats:updated { PROCESSING }
-      │
-      └── Thất bại (ghế đã lock) → Báo lỗi cho khách
-              │
-              ▼
-      Khách điền thông tin + chọn thanh toán
-              │
-              ▼
-      Gọi cổng thanh toán (VNPay/MoMo)
-              │
-              ├── Thanh toán thành công
-              │       → Xóa Redis lock
-              │       → DB: trip_seats.status = BOOKED
-              │       → Tạo ticket_details + QR Code
-              │       → Broadcast Socket: seats:updated { BOOKED }
-              │
-              └── Timeout 15 phút / Hủy
-                      → Redis TTL expire
-                      → DB: trip_seats.status = AVAILABLE
-                      → Broadcast Socket: seats:updated { AVAILABLE }
+```text
+users
+  ├─ user_roles ─ roles
+  ├─ customers ─ orders ─ payments
+  │                  └─ ticket_details ─ reviews
+  ├─ bus_operators ─ routes ─ trips ─ trip_seats ─ ticket_details
+  │                  └─ vehicles ─ vehicle_types ─ seat_layouts
+  └─ staffs ─ trip_staffs ─ trips
 ```
 
----
+## Kiến trúc runtime
 
-## Kiến Trúc Hệ Thống
-
+```text
+React/Vite SPA
+  │
+  ├─ REST API /api/*
+  │
+  ├─ Socket.IO seat updates
+  │
+Express Backend
+  │
+  ├─ Prisma ORM ─ PostgreSQL
+  │
+  └─ Redis seat locks
 ```
-┌─────────────────────────────────────────────────┐
-│                  CLIENT                          │
-│  React SPA (Vite + Redux + Tailwind CSS)         │
-│  Socket.IO Client (seat map real-time)           │
-└────────────────────┬────────────────────────────┘
-                     │ HTTPS / WSS
-┌────────────────────▼────────────────────────────┐
-│                 BACKEND                          │
-│  Node.js + Express.js                            │
-│  Socket.IO Server                                │
-│  Prisma ORM                                      │
-└──────┬─────────────────────────┬────────────────┘
-       │                         │
-┌──────▼──────┐          ┌───────▼──────┐
-│ PostgreSQL  │          │    Redis     │
-│  (Primary   │          │ (Seat Locks  │
-│   Store)    │          │  Cache OTP)  │
-└─────────────┘          └──────────────┘
+
+## Luồng tìm chuyến
+
+```text
+Khách nhập điểm đi, điểm đến, ngày
+  │
+  ▼
+GET /api/trips/search
+  │
+  ├─ Lọc route.originCity/destinationCity
+  ├─ Lọc departureTime trong ngày
+  ├─ Lọc status SCHEDULED/BOARDING
+  └─ Tính số ghế AVAILABLE bằng _count.tripSeats
+  │
+  ▼
+Frontend hiển thị danh sách chuyến
+```
+
+## Luồng chọn ghế và đặt vé
+
+```text
+GET /api/trips/:id
+  │
+  ▼
+Frontend hiển thị seat map từ tripSeats + seatLayout
+  │
+  ▼
+POST /api/bookings/lock
+  │
+  ├─ Redis SET NX seat_lock:{tripId}:{tripSeatId}, TTL 15 phút
+  ├─ DB: trip_seats.status = PROCESSING
+  └─ Socket.IO: seats:updated
+  │
+  ▼
+POST /api/bookings/confirm
+  │
+  ├─ Tạo order PENDING
+  ├─ Tạo ticket_details PENDING
+  └─ Giữ nguyên ghế PROCESSING chờ thanh toán
+```
+
+## Luồng thanh toán
+
+```text
+POST /api/payments/initiate
+  │
+  ├─ Tạo payment PENDING
+  └─ Trả paymentUrl mock cho frontend
+  │
+  ▼
+POST /api/payments/mock/complete
+hoặc
+POST /api/payments/callback
+  │
+  ├─ SUCCESS:
+  │   ├─ order.status = PAID
+  │   ├─ ticket_details.status = PAID
+  │   ├─ trip_seats.status = BOOKED
+  │   └─ Xóa Redis lock
+  │
+  └─ FAILED:
+      ├─ order.status = CANCELLED
+      ├─ Xóa ticket_details PENDING
+      ├─ trip_seats.status = AVAILABLE
+      └─ Xóa Redis lock
+```
+
+## Luồng hủy vé
+
+```text
+DELETE /api/bookings/tickets/:ticketId
+  │
+  ├─ Kiểm tra vé thuộc khách hàng hiện tại
+  ├─ Tính thời gian trước khởi hành
+  ├─ Tạo payment hoàn tiền nếu có
+  ├─ ticket_details.status = CANCELLED hoặc REFUNDED
+  └─ trip_seats.status = AVAILABLE
+```
+
+## Luồng vận hành chuyến
+
+```text
+Staff/Operator
+  │
+  ├─ GET /api/staff/trips/assigned
+  ├─ GET /api/staff/trips/:tripId/passengers
+  ├─ GET /api/tickets/trip/:tripId
+  ├─ PATCH /api/tickets/:id/check-in
+  └─ PATCH /api/trips/:id/status
+```
+
+## Luồng admin
+
+```text
+Admin
+  │
+  ├─ GET /api/admin/stats
+  ├─ GET /api/admin/operators/pending
+  ├─ PATCH /api/admin/operators/:id/approve
+  ├─ PATCH /api/admin/users/:id/toggle-active
+  ├─ GET /api/admin/audit-logs
+  ├─ GET /api/admin/reviews/pending
+  └─ PATCH /api/admin/reviews/:id/approve
 ```

@@ -1,111 +1,151 @@
 # Thiết Kế Cơ Sở Dữ Liệu
 
-## Sơ đồ ERD trực tuyến
-🔗 https://dbdiagram.io/d/Diagram_VeXe-69c736fcfb2db18e3b243d68
+Database dùng PostgreSQL và Prisma. Schema chính nằm tại `backend/prisma/schema.prisma`.
 
----
+## Nhóm bảng
 
-## Các nhóm thực thể
+### Identity & Access
 
-### 1. Identity & Access Management
 | Bảng | Mô tả |
-|------|--------|
-| `users` | Thông tin đăng nhập (email, phone, password_hash) |
-| `roles` | Vai trò: CUSTOMER, BUS_OPERATOR, STAFF, ADMIN |
-| `user_roles` | Bảng trung gian N-N: User ↔ Role |
-| `otp_codes` | Mã OTP theo mục đích (REGISTER, RESET_PASSWORD...) |
+| --- | --- |
+| `users` | Thông tin đăng nhập, trạng thái tài khoản, cờ anonymize |
+| `roles` | Vai trò: `CUSTOMER`, `BUS_OPERATOR`, `STAFF`, `ADMIN` |
+| `user_roles` | Quan hệ nhiều-nhiều giữa user và role |
+| `otp_codes` | OTP theo mục đích như đăng ký, reset mật khẩu, thanh toán |
 
-**Quan hệ:** USERS - ROLES là N-N qua USER_ROLES. Kỹ thuật Sub-typing tách bảng đặc thù theo role.
+### Customer & Operator
 
-### 2. Fleet & Route Management
 | Bảng | Mô tả |
-|------|--------|
-| `bus_operators` | Thông tin nhà xe (1-1 với users) |
-| `vehicle_types` | Loại xe: tên, số ghế |
-| `seat_layouts` | Sơ đồ ghế chuẩn theo loại xe (tọa độ row/col) |
-| `vehicles` | Xe vật lý (biển số, năm SX) — thuộc về nhà xe |
-| `routes` | Tuyến đường (điểm đi, điểm đến) — thuộc về nhà xe |
+| --- | --- |
+| `customers` | Hồ sơ khách hàng, điểm tích lũy |
+| `bus_operators` | Hồ sơ nhà xe, giấy phép, hotline, trạng thái duyệt |
+| `staffs` | Nhân viên/tài xế của nhà xe |
 
-**Thiết kế Template:** `vehicle_types` → `seat_layouts` định nghĩa layout chuẩn. `vehicles` chỉ cần tham chiếu `vehicle_type_id`.
+### Fleet & Route
 
-### 3. Trip Operations
 | Bảng | Mô tả |
-|------|--------|
-| `trips` | Chuyến xe (tuyến + xe + giờ khởi hành + giá) |
-| `staffs` | Nhân viên/tài xế (1-1 với users) |
-| `trip_staffs` | Phân công nhân sự N-N: Trip ↔ Staff |
+| --- | --- |
+| `vehicle_types` | Loại xe và số ghế chuẩn |
+| `seat_layouts` | Sơ đồ ghế theo loại xe, gồm tầng, hàng, cột, mã ghế |
+| `vehicles` | Xe vật lý của nhà xe |
+| `routes` | Tuyến đường của nhà xe |
 
-### 4. Core Seat Inventory (Trái tim hệ thống)
+Thiết kế dùng `vehicle_types` và `seat_layouts` làm template. Khi tạo chuyến, hệ thống sinh `trip_seats` từ layout của loại xe.
+
+### Trip Operations
+
 | Bảng | Mô tả |
-|------|--------|
-| `trip_seats` | Trạng thái ghế theo chuyến: AVAILABLE / PROCESSING / BOOKED / UNAVAILABLE |
+| --- | --- |
+| `trips` | Chuyến xe cụ thể: tuyến, xe, giờ đi, giờ đến dự kiến, giá |
+| `trip_staffs` | Phân công tài xế/nhân viên cho chuyến |
+| `trip_seats` | Tồn kho ghế theo từng chuyến |
 
-**Logic khóa ghế:**
-- Khi khách chọn → Redis SET NX (atomic) + DB status = PROCESSING
-- Hết 15 phút → Redis TTL expire → Job giải phóng DB về AVAILABLE
-- Thanh toán thành công → status = BOOKED, xóa Redis lock
+Trạng thái chuyến:
 
-### 5. Transactions & Reviews
+```text
+SCHEDULED | BOARDING | ON_ROUTE | COMPLETED | DELAYED | CANCELLED
+```
+
+Trạng thái ghế:
+
+```text
+AVAILABLE   - còn trống
+PROCESSING  - đang được giữ tạm
+BOOKED      - đã thanh toán
+UNAVAILABLE - không bán
+```
+
+### Transaction & Payment
+
 | Bảng | Mô tả |
-|------|--------|
-| `customers` | Thông tin khách hàng (1-1 với users) |
-| `orders` | Đơn hàng tổng của khách |
-| `payments` | Lịch sử giao dịch (nhiều lần thử thanh toán) |
-| `ticket_details` | Vé chi tiết (1 vé = 1 ghế + 1 hành khách) |
-| `reviews` | Đánh giá (chỉ tạo được khi có ticket_detail hợp lệ) |
+| --- | --- |
+| `orders` | Đơn hàng của khách |
+| `payments` | Lịch sử giao dịch thanh toán |
+| `ticket_details` | Vé chi tiết, mỗi vé gắn với một ghế của chuyến |
+| `reviews` | Đánh giá chuyến đi sau khi vé hoàn tất |
 
----
+Trạng thái order:
+
+```text
+PENDING | PAID | CANCELLED | REFUNDED
+```
+
+Trạng thái payment:
+
+```text
+PENDING | SUCCESS | FAILED | REFUNDED
+```
+
+Trạng thái vé:
+
+```text
+PENDING -> PAID -> COMPLETED
+              \-> REFUNDED
+       \-> CANCELLED
+```
+
+### Audit & Config
+
+| Bảng | Mô tả |
+| --- | --- |
+| `audit_logs` | Nhật ký hành động hệ thống |
+| `system_configs` | Cấu hình nghiệp vụ như thời gian giữ ghế, chính sách hoàn tiền |
 
 ## Ràng buộc quan trọng
 
-### Chống Double-booking
+Chống double-booking:
+
 ```sql
--- UNIQUE constraint đảm bảo 1 ghế trên 1 chuyến chỉ có 1 vé
 UNIQUE (trip_seat_id) ON ticket_details
 ```
 
-### Chống Spam Review
+Mỗi ghế layout chỉ xuất hiện một lần trong một chuyến:
+
 ```sql
--- 1-1 giữa ticket_detail và review
--- Chỉ khi có vé thật (status = COMPLETED) mới tạo được review
+UNIQUE (trip_id, seat_layout_id) ON trip_seats
+```
+
+Chống review trùng:
+
+```sql
 UNIQUE (ticket_detail_id) ON reviews
 ```
 
----
-
-## Trạng thái ghế (Trip Seat Status)
-
-```
-AVAILABLE   — Còn trống, có thể đặt
-PROCESSING  — Đang được khách hàng giữ (15 phút)
-BOOKED      — Đã thanh toán thành công
-UNAVAILABLE — Không sử dụng (ghế hỏng, dành riêng...)
-```
-
-## Trạng thái vé (Ticket Status)
-
-```
-PENDING   → PAID → COMPLETED
-                  ↘ REFUNDED
-          ↘ CANCELLED
-```
-
----
-
-## Index đề xuất
+## Index chính
 
 ```sql
--- Tìm kiếm chuyến xe nhanh
-CREATE INDEX idx_trips_departure ON trips(departure_time, status);
-CREATE INDEX idx_routes_cities ON routes(origin_city, destination_city);
+-- Tìm chuyến theo ngày và trạng thái
+CREATE INDEX trips_departure_time_status_idx ON trips(departure_time, status);
 
--- Tra cứu ghế theo chuyến
-CREATE INDEX idx_trip_seats_trip ON trip_seats(trip_id, status);
+-- Tìm tuyến theo thành phố
+CREATE INDEX routes_origin_city_destination_city_idx ON routes(origin_city, destination_city);
 
--- Tra cứu vé theo khách hàng
-CREATE INDEX idx_orders_customer ON orders(customer_id);
-CREATE INDEX idx_ticket_order ON ticket_details(order_id);
+-- Tra cứu ghế theo chuyến và trạng thái
+CREATE INDEX trip_seats_trip_id_status_idx ON trip_seats(trip_id, status);
 
--- Redis lock key pattern
--- seat_lock:{trip_id}:{trip_seat_id} → customer_id, TTL 15 phút
+-- Tra cứu order theo khách
+CREATE INDEX orders_customer_id_idx ON orders(customer_id);
+
+-- Tra cứu ticket theo order
+CREATE INDEX ticket_details_order_id_idx ON ticket_details(order_id);
 ```
+
+## Logic khóa ghế
+
+1. Khách chọn ghế.
+2. Backend dùng Redis key `seat_lock:{tripId}:{tripSeatId}` với TTL mặc định 15 phút.
+3. Nếu lock thành công, DB cập nhật `trip_seats.status = PROCESSING`.
+4. Nếu thanh toán thành công, DB cập nhật ghế sang `BOOKED`, vé sang `PAID`.
+5. Nếu thanh toán thất bại hoặc hủy giữ chỗ, ghế quay về `AVAILABLE`.
+
+## Dữ liệu seed
+
+`backend/prisma/seed.js` tạo dữ liệu đủ để demo luồng chính:
+
+- Roles và tài khoản mẫu
+- Nhà xe đã duyệt
+- Tài xế demo
+- Loại xe, layout ghế, xe vật lý
+- Tuyến và chuyến trong 14 ngày tới
+- Ghế theo từng chuyến
+- Cấu hình nghiệp vụ mặc định

@@ -1,127 +1,97 @@
-# Yêu Cầu Hệ Thống - Phần Mềm Đặt Vé Xe Khách
+# Yêu Cầu Hệ Thống
 
-## 1. Tổng Quan
+## Tổng quan
 
-Hệ thống đặt vé xe khách là nền tảng số hóa kết nối hành khách và các đơn vị vận tải.
+Hệ thống đặt vé xe khách hỗ trợ khách hàng tìm chuyến, giữ ghế, thanh toán và quản lý vé. Nhà xe quản lý tuyến, xe và chuyến đi. Nhân viên hỗ trợ vận hành chuyến, còn admin kiểm soát hệ thống.
 
-### Các nhóm đối tượng (Actors)
+## Actor
 
 | Actor | Mô tả |
-|-------|--------|
-| **Khách hàng** | Tìm kiếm, đặt vé, thanh toán, quản lý lịch sử đi lại |
-| **Nhà xe** | Quản lý xe, tuyến đường, lịch trình, giá vé, doanh thu |
-| **Nhân viên / Tài xế** | Soát vé, xác nhận hành khách, cập nhật trạng thái chuyến |
-| **Admin** | Phê duyệt nhà xe, cấu hình hệ thống, audit log |
+| --- | --- |
+| Khách hàng | Tìm chuyến, đặt vé, thanh toán, xem/hủy vé, đánh giá |
+| Nhà xe | Quản lý hồ sơ nhà xe, xe, tuyến, chuyến và doanh thu |
+| Nhân viên/Tài xế | Xem chuyến được phân công, danh sách hành khách, check-in |
+| Admin | Duyệt nhà xe, quản lý tài khoản, audit log, duyệt đánh giá |
 
----
+## Chức năng khách hàng
 
-## 2. Yêu Cầu Chức Năng
+| Mã | Chức năng | Mô tả |
+| --- | --- | --- |
+| KH-01 | Đăng ký/đăng nhập | Đăng nhập bằng email hoặc số điện thoại, JWT Bearer token |
+| KH-02 | Quản lý hồ sơ | Xem/cập nhật thông tin cá nhân, đổi mật khẩu |
+| KH-03 | Xóa tài khoản | Anonymize email, số điện thoại và khóa tài khoản |
+| KH-04 | Tìm chuyến | Tìm theo điểm đi, điểm đến, ngày, giá, nhà xe |
+| KH-05 | Xem chuyến | Xem thông tin tuyến, xe, giá, ghế |
+| KH-06 | Giữ ghế | Khóa ghế tạm thời 15 phút bằng Redis |
+| KH-07 | Đặt vé | Tạo order và ticket từ ghế đang giữ |
+| KH-08 | Thanh toán | Mock payment local hoặc callback gateway |
+| KH-09 | Quản lý vé | Xem chi tiết vé, lịch sử vé |
+| KH-10 | Hủy vé | Tính hoàn tiền theo thời gian trước khởi hành |
+| KH-11 | Đánh giá | Chỉ đánh giá khi vé đã hoàn tất |
 
-### 2.1 Khách Hàng
+## Chức năng nhà xe
 
-| STT | Chức năng | Mô tả |
-|-----|-----------|--------|
-| KH-01 | Đăng ký / Đăng nhập / Đăng xuất | Email không trùng, mật khẩu ≥ 6 ký tự, hỗ trợ OTP |
-| KH-02 | Quản lý thông tin cá nhân | Cập nhật profile, đổi mật khẩu, quên mật khẩu |
-| KH-03 | Xóa tài khoản | Anonymize dữ liệu, giữ lịch sử giao dịch 5 năm |
-| KH-04 | Tìm kiếm và lọc chuyến xe | Lọc theo giá, nhà xe, giờ khởi hành, loại xe |
-| KH-05 | Xem chi tiết chuyến xe | Sơ đồ ghế real-time |
-| KH-06 | Đặt vé và chọn ghế | Khóa ghế 15 phút, tối đa 5 ghế/chuyến |
-| KH-07 | Thanh toán | Ví điện tử, thẻ ngân hàng, chuyển khoản, tiền mặt |
-| KH-08 | Quản lý lịch sử vé | Xem, tải vé điện tử/QR |
-| KH-09 | Hủy / Đổi vé | Theo chính sách hoàn tiền của nhà xe |
-| KH-10 | Đánh giá | 1-5 sao, chỉ khi đã hoàn thành chuyến |
+| Mã | Chức năng | Mô tả |
+| --- | --- | --- |
+| NX-01 | Cập nhật hồ sơ | Tên nhà xe, hotline, địa chỉ, mô tả, logo |
+| NX-02 | Quản lý xe | Thêm/sửa/xóa mềm xe của nhà xe |
+| NX-03 | Quản lý tuyến | Thêm/sửa/xóa mềm tuyến |
+| NX-04 | Tạo chuyến | Chọn tuyến, xe, giờ đi, giờ đến, giá |
+| NX-05 | Theo dõi vé | Xem vé đã thanh toán theo chuyến |
+| NX-06 | Cập nhật trạng thái chuyến | Boarding, on route, completed, delayed, cancelled |
+| NX-07 | Báo cáo | Doanh thu, số chuyến, số vé theo ngày/tháng/năm |
 
-### 2.2 Nhà Xe
+## Chức năng nhân viên
 
-| STT | Chức năng | Mô tả |
-|-----|-----------|--------|
-| NX-01 | Quản lý tài khoản | Đăng ký, đăng nhập, cập nhật thông tin |
-| NX-02 | Quản lý loại xe & Sơ đồ ghế | Thêm/sửa/xóa xe, thiết lập layout ghế |
-| NX-03 | Quản lý tuyến xe | Tạo/cập nhật/xóa tuyến |
-| NX-04 | Quản lý chuyến xe | Tạo chuyến, gán tuyến + tài xế + xe + thời gian |
-| NX-05 | Quản lý ghế & Đặt chỗ | Theo dõi real-time: Trống / Đang chọn / Đã bán |
-| NX-06 | Quản lý giá vé | Giá cơ bản + phụ thu ngày lễ/cuối tuần |
-| NX-07 | Thống kê & Báo cáo | Doanh thu theo ngày/tháng/năm, số vé bán ra |
+| Mã | Chức năng | Mô tả |
+| --- | --- | --- |
+| NV-01 | Xem chuyến | Danh sách chuyến được phân công |
+| NV-02 | Xem hành khách | Danh sách khách đã thanh toán/hoàn tất |
+| NV-03 | Check-in | Xác nhận khách lên xe |
+| NV-04 | Cập nhật chuyến | Cập nhật trạng thái chuyến được phân công |
 
-### 2.3 Nhân Viên / Tài Xế
+## Chức năng admin
 
-| STT | Chức năng | Mô tả |
-|-----|-----------|--------|
-| NV-01 | Đăng nhập / Đăng xuất | Tài khoản nhân sự |
-| NV-02 | Tra cứu danh sách vé | Xem chi tiết vé theo chuyến |
-| NV-03 | Kiểm tra hành khách | Danh sách hành khách theo chuyến |
-| NV-04 | Xác nhận vé | Check-in hành khách lên xe |
-| NV-05 | Cập nhật trạng thái chuyến | Chưa khởi hành → Đang chạy → Hoàn thành |
-| NV-06 | Kiểm tra sơ đồ ghế | Tra cứu ghế đã đặt / còn trống |
-| NV-07 | Hỗ trợ khách hàng | Đổi/hủy vé tại hiện trường |
+| Mã | Chức năng | Mô tả |
+| --- | --- | --- |
+| AD-01 | Thống kê hệ thống | Tổng user, nhà xe, chuyến, doanh thu |
+| AD-02 | Duyệt nhà xe | Phê duyệt nhà xe chờ duyệt |
+| AD-03 | Quản lý tài khoản | Khóa/mở khóa user |
+| AD-04 | Audit log | Xem nhật ký hoạt động |
+| AD-05 | Duyệt đánh giá | Kiểm duyệt review trước khi public |
 
-### 2.4 Admin
+## Quy định nghiệp vụ
 
-| STT | Chức năng | Mô tả |
-|-----|-----------|--------|
-| AD-01 | Đăng nhập / Đăng xuất | |
-| AD-02 | Quản lý tài khoản | Tạo, khóa, xóa, phân quyền |
-| AD-03 | Phê duyệt nhà xe | Xem xét và duyệt đăng ký nhà xe |
-| AD-04 | Quản lý tuyến xe toàn hệ thống | Thêm/sửa/xóa tuyến xe |
-| AD-05 | Quản lý hệ thống | Cấu hình, sao lưu, khôi phục dữ liệu |
-| AD-06 | Thống kê & Báo cáo | Doanh thu hệ thống, số vé bán |
-| AD-07 | Audit & Kiểm soát | Ghi log hoạt động, kiểm duyệt đánh giá |
-
----
-
-## 3. Quy Định Nghiệp Vụ
-
-### QD_ACC — Tài khoản
 | Mã | Quy định |
-|----|----------|
-| QD_ACC_01 | Định danh duy nhất bởi Email hoặc SĐT |
+| --- | --- |
+| QD_ACC_01 | User định danh bằng email hoặc số điện thoại duy nhất |
 | QD_ACC_02 | Mật khẩu tối thiểu 6 ký tự |
-| QD_ACC_03 | OTP bắt buộc cho: đổi mật khẩu, thanh toán lần đầu, xóa tài khoản |
-| QD_ACC_04 | Xóa tài khoản: Anonymize dữ liệu, giữ lịch sử giao dịch 5 năm |
+| QD_ACC_03 | Xóa tài khoản dùng anonymize, không xóa lịch sử giao dịch |
+| QD_BOOK_01 | Ghế chuyển sang `PROCESSING` khi khách giữ |
+| QD_BOOK_02 | Thời gian giữ ghế mặc định là 15 phút |
+| QD_BOOK_03 | Mỗi lần giữ/đặt tối đa 5 ghế |
+| QD_PAY_01 | Thanh toán thành công chuyển order/ticket sang `PAID`, ghế sang `BOOKED` |
+| QD_PAY_02 | Thanh toán thất bại hủy order pending và trả ghế về `AVAILABLE` |
+| QD_OP_01 | Nhà xe/tài xế chỉ được thao tác chuyến thuộc phạm vi quản lý |
+| QD_OP_02 | Hủy chuyến hoàn 100% cho vé đã thanh toán |
+| QD_REVIEW_01 | Review chỉ được tạo từ vé `COMPLETED` |
 
-### QD_BOOK — Đặt vé & Giữ chỗ
-| Mã | Quy định |
-|----|----------|
-| QD_BOOK_01 | Ghế chuyển sang "Processing" và khóa 15 phút khi khách chọn |
-| QD_BOOK_02 | Hệ thống tự động giải phóng ghế sau 15 phút không thanh toán |
-| QD_BOOK_03 | Tối đa 5 ghế / tài khoản / chuyến xe |
+## Chính sách hoàn tiền
 
-### QD_OP — Vận hành Nhà xe
-| Mã | Quy định |
-|----|----------|
-| QD_OP_01 | Chốt danh sách hành khách trước 15 phút khởi hành |
-| QD_OP_02 | Giá vé đã thanh toán không thay đổi khi nhà xe cập nhật giá mới |
-| QD_OP_03 | Nhà xe hủy chuyến → hoàn 100% tự động cho toàn bộ khách |
+| Thời gian trước khởi hành | Tỷ lệ hoàn |
+| --- | --- |
+| Trên 24 giờ | 100% |
+| Từ 12 đến 24 giờ | 70% |
+| Dưới 12 giờ | 0% |
+| Nhà xe hủy chuyến | 100% |
 
-### ST_FLOW — Vòng đời Vé
-```
-PENDING → PAID → COMPLETED
-                ↘ REFUNDED (nếu đủ điều kiện thời gian)
-         ↘ CANCELLED
-```
+## Yêu cầu phi chức năng
 
-### Chính sách hoàn tiền (mặc định)
-| Thời gian trước khởi hành | Hoàn tiền |
-|---------------------------|-----------|
-| > 24 giờ | 100% |
-| 12 – 24 giờ | 70% |
-| < 12 giờ | 0% |
-| Nhà xe hủy chuyến | 100% (tự động) |
-
----
-
-## 4. Yêu Cầu Chất Lượng (Non-Functional)
-
-| STT | Yêu cầu | Mô tả |
-|-----|---------|--------|
-| 1 | Hiệu năng | Phản hồi tra cứu ≤ 3 giây |
-| 2 | Tính sẵn sàng | Uptime cao cho đặt vé, thanh toán, tra cứu |
-| 3 | Toàn vẹn dữ liệu | Khóa ghế atomic, không double-booking |
-| 4 | Bảo mật | JWT, OTP, phân quyền RBAC |
-| 5 | Độ tin cậy | Xử lý chính xác đặt vé, thanh toán, hủy vé |
-| 6 | Khả năng khôi phục | Backup hàng ngày, restore khi sự cố |
-| 7 | Kiểm soát & Truy vết | Audit log, kiểm duyệt review |
-| 8 | Khả năng sử dụng | Giao diện rõ ràng cho 4 nhóm người dùng |
-| 9 | Khả năng mở rộng | Scale số nhà xe, tuyến, chuyến, user |
-| 10 | Khả năng bảo trì | Module hóa theo chức năng |
+| Nhóm | Yêu cầu |
+| --- | --- |
+| Bảo mật | JWT, phân quyền RBAC, rate limit endpoint auth/API |
+| Toàn vẹn dữ liệu | Unique constraint chống double-booking |
+| Hiệu năng | Tìm chuyến theo index ngày, trạng thái và tuyến |
+| Realtime | Socket.IO cập nhật trạng thái ghế |
+| Khả dụng local | Docker Compose chạy PostgreSQL, Redis, backend, frontend |
+| Bảo trì | Backend chia theo routes, services, middlewares, config |

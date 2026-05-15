@@ -1,148 +1,157 @@
-# 🚌 Bus Ticket Booking System (Hệ thống Đặt Vé Xe Khách)
+# Bus Ticket Booking System
 
-Nền tảng số hóa kết nối hành khách và đơn vị vận tải, hỗ trợ đặt vé trực tuyến, quản lý chuyến xe, thanh toán và vận hành thời gian thực.
+Hệ thống đặt vé xe khách gồm backend Express/Prisma, frontend React/Vite, PostgreSQL và Redis để giữ ghế tạm thời theo thời gian thực.
 
-## 📋 Tổng quan hệ thống
+## Chức năng chính
 
-Hệ thống phục vụ **4 nhóm đối tượng** chính:
+Hệ thống phục vụ 4 nhóm người dùng:
 
-| Actor | Mô tả |
-|-------|--------|
-| **Khách hàng** | Tìm kiếm, đặt vé, thanh toán, quản lý lịch sử đi lại |
-| **Nhà xe** | Quản lý xe, tuyến đường, lịch trình, giá vé, doanh thu |
-| **Nhân viên / Tài xế** | Soát vé, xác nhận hành khách, cập nhật trạng thái chuyến |
-| **Admin** | Phê duyệt nhà xe, cấu hình hệ thống, audit log |
+| Vai trò | Chức năng |
+| --- | --- |
+| Khách hàng | Tìm chuyến, chọn ghế, đặt vé, thanh toán, xem/hủy vé, đánh giá chuyến đi |
+| Nhà xe | Quản lý tuyến, xe, chuyến đi, giá vé và doanh thu |
+| Nhân viên/Tài xế | Xem chuyến được phân công, danh sách hành khách, check-in vé |
+| Admin | Duyệt nhà xe, khóa/mở tài khoản, xem thống kê, audit log, duyệt đánh giá |
 
-## 🛠️ Công nghệ sử dụng
+## Công nghệ
 
-### Backend
-- **Runtime:** Node.js + Express.js
-- **Database:** PostgreSQL
-- **ORM:** Prisma
-- **Auth:** JWT (Bearer) + OTP (SMS/Email)
-- **Cache / Lock:** Redis (Booking Lock)
-- **Realtime:** Socket.IO
-- **Payment:** VNPay / MoMo
+Backend:
 
-### Frontend
-- **Framework:** React.js (Vite)
-- **State:** Redux Toolkit
-- **UI:** Tailwind CSS + shadcn/ui
-- **HTTP:** Axios
-- **Realtime:** Socket.IO Client
+- Node.js, Express.js
+- PostgreSQL, Prisma
+- JWT Bearer auth, RBAC
+- Redis cho khóa ghế tạm thời
+- Socket.IO cho cập nhật ghế realtime
 
-### DevOps
-- **Containerization:** Docker + Docker Compose
-- **CI/CD:** GitHub Actions
+Frontend:
 
-## 🚀 Chạy nhanh với Docker
+- React 18, Vite
+- Redux Toolkit
+- React Router
+- Tailwind CSS
+- Axios, Socket.IO Client
+
+DevOps:
+
+- Docker Compose
+- GitHub Actions
+
+## Chạy bằng Docker
 
 ```bash
-git clone <repo-url>
-cd bus-ticket-booking
 docker-compose up --build
 ```
 
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
-- API Docs: http://localhost:3000/api/docs
+Sau khi các container chạy xong:
 
-### Seed dữ liệu mẫu (khi chạy bằng Docker)
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:3000`
+- Health check: `http://localhost:3000/health`
+- API docs nếu có swagger: `http://localhost:3000/api/docs`
+
+Seed dữ liệu demo:
+
 ```bash
-docker exec bus_ticket_api node prisma/seed.js
+docker exec bus_ticket_api npm run db:seed
 ```
 
-## 📁 Cấu trúc dự án
+Seed hiện tạo:
 
-```
-bus-ticket-booking/
-├── backend/               # Node.js + Express API
-│   ├── src/
-│   │   ├── controllers/   # Request handlers
-│   │   ├── models/        # Prisma models
-│   │   ├── routes/        # API routes
-│   │   ├── middlewares/   # Auth, validation, error handling
-│   │   ├── services/      # Business logic
-│   │   └── utils/         # Helpers
-│   ├── prisma/            # DB schema & migrations
-│   └── tests/
-├── frontend/              # React.js app
-│   └── src/
-│       ├── components/    # Reusable UI components
-│       ├── pages/         # Route-based pages
-│       ├── services/      # API calls
-│       └── store/         # Redux store
-├── docs/                  # Tài liệu yêu cầu & thiết kế
-├── docker-compose.yml
-└── .github/workflows/     # CI/CD pipelines
-```
+- Tài khoản admin, khách hàng, nhà xe, tài xế
+- 2 loại xe: limousine 22 chỗ, giường nằm 40 chỗ
+- Sơ đồ ghế cho từng loại xe
+- Xe vật lý, tuyến xe và chuyến xe trong 14 ngày tới
+- Ghế theo từng chuyến để có thể tìm chuyến, chọn ghế và đặt vé ngay
 
-## 📐 Quy tắc nghiệp vụ chính
+## Chạy local
 
-### Đặt vé & Giữ chỗ
-- Ghế được **khóa 15 phút** khi khách chọn (QD_BOOK_01)
-- Tự động **giải phóng ghế** nếu không thanh toán (QD_BOOK_02)
-- Mỗi tài khoản tối đa **5 ghế / chuyến** (QD_BOOK_03)
+Backend:
 
-### Vòng đời vé
-```
-Pending → Paid → Completed
-                ↘ Refunded (nếu đủ điều kiện)
-         ↘ Cancelled
-```
-
-### Hủy vé & Hoàn tiền
-- > 24h trước khởi hành: **Hoàn 100%**
-- 12–24h trước khởi hành: **Hoàn 70%** (phí 30%)
-- Nhà xe hủy chuyến: **Hoàn 100% tự động**
-
-## 🔑 Tài khoản mặc định (Development)
-
-| Vai trò | Email | Mật khẩu |
-|---------|-------|----------|
-| Admin | admin@busticket.vn | Admin@123 |
-| Nhà xe demo | operator@demo.vn | Demo@123 |
-| Khách hàng | customer@demo.vn | Demo@123 |
-
-## 🔐 Xác thực & chính sách mật khẩu
-- Đăng nhập/đăng ký dùng JWT Bearer token.
-- OTP được dùng cho quên mật khẩu và các luồng yêu cầu xác thực.
-- Mật khẩu tối thiểu 6 ký tự (có thể thay đổi qua validation backend).
-
-## 🧪 Chạy local (không dùng Docker)
-### Backend
 ```bash
 cd backend
 npm install
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
-### Frontend
+Frontend:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-## 🛠️ Troubleshooting
-- Nếu frontend không vào được qua Docker trên Windows, thử chạy frontend trực tiếp bằng `npm run dev` và dùng port hiển thị trong terminal.
-- Khi đăng ký thất bại với lỗi role, hãy chạy lại seed bằng lệnh Docker ở trên.
+Nếu chạy frontend local không qua Docker, cấu hình API:
 
-## 📄 Tài liệu
+```bash
+VITE_API_URL=http://localhost:3000/api
+VITE_SOCKET_URL=http://localhost:3000
+```
+
+## Tài khoản demo
+
+| Vai trò | Email | Mật khẩu |
+| --- | --- | --- |
+| Admin | `admin@busticket.vn` | `Admin@123` |
+| Nhà xe | `operator@demo.vn` | `Demo@123` |
+| Khách hàng | `customer@demo.vn` | `Demo@123` |
+| Tài xế | `driver@demo.vn` | `Demo@123` |
+
+## Dữ liệu lịch xe demo
+
+Seed tạo các tuyến mẫu:
+
+| Tuyến | Giờ chạy hằng ngày | Giá cơ bản |
+| --- | --- | --- |
+| TP. Hồ Chí Minh -> Đà Lạt | 06:00, 09:00, 13:00, 22:00 | 280.000đ |
+| TP. Hồ Chí Minh -> Nha Trang | 07:00, 20:00, 22:30 | 320.000đ |
+| TP. Hồ Chí Minh -> Cần Thơ | 05:30, 08:30, 14:00, 18:00 | 180.000đ |
+| Hà Nội -> Hải Phòng | 06:30, 10:00, 15:00, 19:00 | 150.000đ |
+| Đà Nẵng -> Huế | 07:00, 11:00, 16:00 | 140.000đ |
+
+Các chuyến được tạo cho 14 ngày tiếp theo tính từ lúc chạy seed.
+
+## Luồng đặt vé
+
+1. Khách hàng tìm chuyến qua `/api/trips/search`.
+2. Xem chi tiết chuyến và sơ đồ ghế qua `/api/trips/:id`.
+3. Khóa ghế qua `/api/bookings/lock`. Ghế chuyển sang `PROCESSING` trong 15 phút.
+4. Xác nhận đặt vé qua `/api/bookings/confirm`, tạo order và ticket ở trạng thái `PENDING`.
+5. Khởi tạo thanh toán qua `/api/payments/initiate`.
+6. Hoàn tất mock payment qua `/api/payments/mock/complete` hoặc gateway callback `/api/payments/callback`.
+7. Thanh toán thành công chuyển order/ticket sang `PAID`, ghế sang `BOOKED`.
+
+## Cấu trúc dự án
+
+```text
+bus-ticket-booking/
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── seed.js
+│   └── src/
+│       ├── config/
+│       ├── controllers/
+│       ├── middlewares/
+│       ├── routes/
+│       ├── services/
+│       └── utils/
+├── frontend/
+│   └── src/
+│       ├── components/
+│       ├── pages/
+│       ├── services/
+│       └── store/
+├── docs/
+├── docker-compose.yml
+└── README.md
+```
+
+## Tài liệu
 
 - [Yêu cầu hệ thống](docs/requirements.md)
 - [Thiết kế database](docs/database.md)
-- [Sơ đồ ERD](docs/diagram.md)
-- [API Reference](docs/api.md)
-
-## 🤝 Đóng góp
-
-1. Fork repository
-2. Tạo branch: `git checkout -b feature/ten-tinh-nang`
-3. Commit: `git commit -m 'feat: mô tả thay đổi'`
-4. Push: `git push origin feature/ten-tinh-nang`
-5. Tạo Pull Request
-
-## 📜 License
-
-MIT License
+- [Sơ đồ và luồng hệ thống](docs/diagram.md)
+- [API reference](docs/api.md)

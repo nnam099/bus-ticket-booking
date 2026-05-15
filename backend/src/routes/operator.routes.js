@@ -3,7 +3,7 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
 
-// GET /api/operators - Danh sách nhà xe đã duyệt (public)
+// GET /api/operators - approved operators (public)
 router.get('/', async (req, res, next) => {
   try {
     const operators = await prisma.busOperator.findMany({
@@ -11,25 +11,12 @@ router.get('/', async (req, res, next) => {
       select: { id: true, companyName: true, hotline: true, logoUrl: true, address: true, description: true },
     });
     res.json({ success: true, data: operators });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
-// GET /api/operators/:id
-router.get('/:id', async (req, res, next) => {
-  try {
-    const op = await prisma.busOperator.findUnique({
-      where: { id: req.params.id },
-      include: {
-        routes: { where: { isActive: true } },
-        vehicles: { where: { isActive: true }, include: { vehicleType: true } },
-      },
-    });
-    if (!op) return res.status(404).json({ success: false, message: 'Không tìm thấy nhà xe.' });
-    res.json({ success: true, data: op });
-  } catch (err) { next(err); }
-});
-
-// GET /api/operators/me/dashboard - Thống kê doanh thu (QD NX-7)
+// GET /api/operators/me/dashboard - operator revenue summary
 router.get('/me/dashboard', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
   try {
     const operatorId = req.user.busOperator?.id;
@@ -56,7 +43,9 @@ router.get('/me/dashboard', authenticate, authorize('BUS_OPERATOR'), async (req,
       success: true,
       data: { totalTrips, totalTickets, totalRevenue: revenue._sum.price || 0, period, startDate },
     });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 // PUT /api/operators/me
@@ -68,7 +57,26 @@ router.put('/me', authenticate, authorize('BUS_OPERATOR'), async (req, res, next
       data: { companyName, hotline, address, description, logoUrl },
     });
     res.json({ success: true, data: op });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /api/operators/:id
+router.get('/:id', async (req, res, next) => {
+  try {
+    const op = await prisma.busOperator.findUnique({
+      where: { id: req.params.id },
+      include: {
+        routes: { where: { isActive: true } },
+        vehicles: { where: { isActive: true }, include: { vehicleType: true } },
+      },
+    });
+    if (!op) return res.status(404).json({ success: false, message: 'Operator not found.' });
+    res.json({ success: true, data: op });
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = router;
