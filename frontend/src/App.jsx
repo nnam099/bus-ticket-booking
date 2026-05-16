@@ -1,3 +1,4 @@
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
@@ -9,44 +10,44 @@ import AdminLayout from './components/shared/AdminLayout';
 import StaffLayout from './components/shared/StaffLayout';
 
 // Public pages
-import HomePage from './pages/HomePage';
-import SearchResultsPage from './pages/SearchResultsPage';
-import TripDetailPage from './pages/TripDetailPage';
-import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
-import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+const HomePage = React.lazy(() => import('./pages/HomePage'));;
+const SearchResultsPage = React.lazy(() => import('./pages/SearchResultsPage'));;
+const TripDetailPage = React.lazy(() => import('./pages/TripDetailPage'));;
+const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));;
+const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));;
+const ForgotPasswordPage = React.lazy(() => import('./pages/auth/ForgotPasswordPage'));;
 
 // Customer pages
-import CustomerDashboard from './pages/customer/Dashboard';
-import BookingPage from './pages/customer/BookingPage';
-import PaymentPage from './pages/customer/PaymentPage';
-import PaymentCallbackPage from './pages/customer/PaymentCallbackPage';
-import MyTicketsPage from './pages/customer/MyTicketsPage';
-import TicketDetailPage from './pages/customer/TicketDetailPage';
-import ProfilePage from './pages/customer/ProfilePage';
+const CustomerDashboard = React.lazy(() => import('./pages/customer/Dashboard'));;
+const BookingPage = React.lazy(() => import('./pages/customer/BookingPage'));;
+const PaymentPage = React.lazy(() => import('./pages/customer/PaymentPage'));;
+const PaymentCallbackPage = React.lazy(() => import('./pages/customer/PaymentCallbackPage'));;
+const MyTicketsPage = React.lazy(() => import('./pages/customer/MyTicketsPage'));;
+const TicketDetailPage = React.lazy(() => import('./pages/customer/TicketDetailPage'));;
+const ProfilePage = React.lazy(() => import('./pages/customer/ProfilePage'));;
 
 // Operator pages
-import OperatorDashboard from './pages/operator/Dashboard';
-import VehiclesPage from './pages/operator/VehiclesPage';
-import RoutesPage from './pages/operator/RoutesPage';
-import TripsPage from './pages/operator/TripsPage';
-import OperatorReportsPage from './pages/operator/ReportsPage';
+const OperatorDashboard = React.lazy(() => import('./pages/operator/Dashboard'));;
+const VehiclesPage = React.lazy(() => import('./pages/operator/VehiclesPage'));;
+const RoutesPage = React.lazy(() => import('./pages/operator/RoutesPage'));;
+const TripsPage = React.lazy(() => import('./pages/operator/TripsPage'));;
+const OperatorReportsPage = React.lazy(() => import('./pages/operator/ReportsPage'));;
 
 // Staff pages
-import StaffDashboard from './pages/staff/Dashboard';
-import TripCheckInPage from './pages/staff/TripCheckInPage';
+const StaffDashboard = React.lazy(() => import('./pages/staff/Dashboard'));;
+const TripCheckInPage = React.lazy(() => import('./pages/staff/TripCheckInPage'));;
 
 // Admin pages
-import AdminDashboard from './pages/admin/Dashboard';
-import AdminOperatorsPage from './pages/admin/OperatorsPage';
-import AdminUsersPage from './pages/admin/UsersPage';
-import AdminAuditPage from './pages/admin/AuditPage';
-import AdminReviewsPage from './pages/admin/ReviewsPage';
+const AdminDashboard = React.lazy(() => import('./pages/admin/Dashboard'));;
+const AdminOperatorsPage = React.lazy(() => import('./pages/admin/OperatorsPage'));;
+const AdminUsersPage = React.lazy(() => import('./pages/admin/UsersPage'));;
+const AdminAuditPage = React.lazy(() => import('./pages/admin/AuditPage'));;
+const AdminReviewsPage = React.lazy(() => import('./pages/admin/ReviewsPage'));;
 
 // Guards
 const PrivateRoute = ({ children, roles }) => {
-  const { user, token } = useSelector((s) => s.auth);
-  if (!token) return <Navigate to="/login" replace />;
+  const { user } = useSelector((s) => s.auth);
+  if (!user) return <Navigate to="/login" replace />;
   if (roles && !roles.some((r) => user?.roles?.includes(r))) return <Navigate to="/" replace />;
   return children;
 };
@@ -54,6 +55,7 @@ const PrivateRoute = ({ children, roles }) => {
 export default function App() {
   return (
     <BrowserRouter>
+      <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
       <Routes>
         {/* Public */}
         <Route element={<PublicLayout />}>
@@ -102,6 +104,7 @@ export default function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </Suspense>
     </BrowserRouter>
   );
 }

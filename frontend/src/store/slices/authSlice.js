@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authAPI } from '../../services/api';
 
-const token = localStorage.getItem('token');
+
 const user = JSON.parse(localStorage.getItem('user') || 'null');
 
 export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
@@ -24,12 +24,12 @@ export const register = createAsyncThunk('auth/register', async (data, { rejectW
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState: { user, token, loading: false, error: null },
+  initialState: { user, loading: false, error: null },
   reducers: {
     logout(state) {
       state.user = null;
-      state.token = null;
-      localStorage.removeItem('token');
+      
+      
       localStorage.removeItem('user');
     },
     clearError(state) { state.error = null; },
@@ -39,9 +39,9 @@ const authSlice = createSlice({
       .addCase(login.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(login.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.token = payload.token;
+        
         state.user = { ...payload.user, roles: payload.user.userRoles?.map(ur => ur.role.name) || [] };
-        localStorage.setItem('token', payload.token);
+        
         localStorage.setItem('user', JSON.stringify(state.user));
       })
       .addCase(login.rejected, (state, { payload }) => {
@@ -51,9 +51,9 @@ const authSlice = createSlice({
       .addCase(register.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(register.fulfilled, (state, { payload }) => {
         state.loading = false;
-        state.token = payload.token;
+        
         state.user = { ...payload.user, roles: payload.user.userRoles?.map(ur => ur.role.name) || [] };
-        localStorage.setItem('token', payload.token);
+        
         localStorage.setItem('user', JSON.stringify(state.user));
       })
       .addCase(register.rejected, (state, { payload }) => {

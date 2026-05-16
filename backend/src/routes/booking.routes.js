@@ -1,68 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
-const { lockSeats, releaseSeats, confirmBooking, cancelTicket } = require('../services/booking.service');
+const bookingController = require('../controllers/booking.controller');
 
 // POST /api/bookings/lock - Khóa ghế tạm thời (QD_BOOK_01)
-router.post('/lock', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
-  try {
-    const { tripId, seatIds } = req.body;
-    const customerId = req.user.customer?.id;
-    if (!customerId) return res.status(403).json({ success: false, message: 'Chỉ khách hàng mới có thể đặt vé.' });
-
-    const result = await lockSeats(tripId, seatIds, customerId);
-    res.json({ success: true, message: `Giữ chỗ thành công. Bạn có ${process.env.BOOKING_LOCK_MINUTES || 15} phút để hoàn tất thanh toán.`, data: result });
-  } catch (err) {
-    if (err.message.includes('đã được')) return res.status(409).json({ success: false, message: err.message });
-    if (err.message.includes('tối đa')) return res.status(400).json({ success: false, message: err.message });
-    next(err);
-  }
-});
+router.post('/lock', authenticate, authorize('CUSTOMER'), bookingController.lockSeats);
 
 // POST /api/bookings/release - Giải phóng ghế (hủy giữ chỗ)
-router.post('/release', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
-  try {
-    const { tripId, seatIds } = req.body;
-    const customerId = req.user.customer?.id;
-    await releaseSeats(tripId, seatIds, customerId);
-    res.json({ success: true, message: 'Đã hủy giữ chỗ.' });
-  } catch (err) {
-    next(err);
-  }
-});
+router.post('/release', authenticate, authorize('CUSTOMER'), bookingController.releaseSeats);
 
 // POST /api/bookings/confirm - Xác nhận đặt vé sau thanh toán
-router.post('/confirm', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
-  try {
-    const { tripId, seatIds, passengerInfo, paymentMethod } = req.body;
-    const customerId = req.user.customer?.id;
-
-    const result = await confirmBooking({ customerId, tripId, seatIds, passengerInfo, paymentMethod });
-    res.status(201).json({ success: true, message: 'Đặt vé thành công!', data: result });
-  } catch (err) {
-    if (err.message.includes('hết hạn')) return res.status(410).json({ success: false, message: err.message });
-    next(err);
-  }
-});
+router.post('/confirm', authenticate, authorize('CUSTOMER'), bookingController.confirmBooking);
 
 // DELETE /api/bookings/tickets/:ticketId - Hủy vé
-router.delete('/tickets/:ticketId', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
-  try {
-    const customerId = req.user.customer?.id;
-    const result = await cancelTicket(req.params.ticketId, customerId);
-    res.json({
-      success: true,
-      message: result.refundAmount > 0
-        ? `Hủy vé thành công. Hoàn tiền: ${result.refundAmount.toLocaleString('vi-VN')}đ (${result.refundRate * 100}%)`
-        : 'Hủy vé thành công. Không được hoàn tiền do hủy gần giờ khởi hành.',
-      data: result,
-    });
-  } catch (err) {
-    if (err.message.includes('không có quyền') || err.message.includes('không thể hủy')) {
-      return res.status(403).json({ success: false, message: err.message });
-    }
-    next(err);
-  }
-});
+router.delete('/tickets/:ticketId', authenticate, authorize('CUSTOMER'), bookingController.cancelTicket);
 
 module.exports = router;

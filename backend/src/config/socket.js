@@ -1,11 +1,16 @@
 const { Server } = require('socket.io');
+const { createAdapter } = require('@socket.io/redis-adapter');
+const { redisClient } = require('./redis');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 
 let io;
 
 const initSocket = (httpServer) => {
+  const pubClient = redisClient.duplicate();
+  const subClient = redisClient.duplicate();
   io = new Server(httpServer, {
+    adapter: createAdapter(pubClient, subClient),
     cors: {
       origin: process.env.CLIENT_URL || 'http://localhost:5173',
       credentials: true,
