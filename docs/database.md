@@ -43,7 +43,7 @@ Thiết kế dùng `vehicle_types` và `seat_layouts` làm template. Khi tạo c
 Trạng thái chuyến:
 
 ```text
-SCHEDULED | BOARDING | ON_ROUTE | COMPLETED | DELAYED | CANCELLED
+SCHEDULED | BOARDING | DEPARTED | COMPLETED | DELAYED | CANCELLED
 ```
 
 Trạng thái ghế:

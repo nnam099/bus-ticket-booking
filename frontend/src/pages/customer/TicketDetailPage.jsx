@@ -92,11 +92,13 @@ export default function TicketDetailPage() {
             <span className="text-gray-500">Trạng thái</span>
             <span className={`badge ${
               ticket.status === 'PAID' ? 'bg-green-100 text-green-700' :
+              ticket.status === 'CHECKED_IN' ? 'bg-emerald-100 text-emerald-700' :
               ticket.status === 'COMPLETED' ? 'bg-blue-100 text-blue-700' :
               ticket.status === 'CANCELLED' ? 'bg-gray-100 text-gray-500' :
               'bg-yellow-100 text-yellow-700'
             }`}>
               {ticket.status === 'PAID' ? 'Đã thanh toán' :
+               ticket.status === 'CHECKED_IN' ? 'Đã lên xe' :
                ticket.status === 'COMPLETED' ? 'Hoàn thành' :
                ticket.status === 'CANCELLED' ? 'Đã hủy' :
                ticket.status === 'REFUNDED' ? 'Đã hoàn tiền' : 'Chờ thanh toán'}

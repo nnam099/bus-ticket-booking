@@ -5,6 +5,7 @@ const tripController = require('../controllers/trip.controller');
 
 // GET /api/trips/search - Tìm kiếm chuyến xe (public)
 router.get('/search', tripController.searchTrips);
+router.get('/operator/me', authenticate, authorize('BUS_OPERATOR'), tripController.listOperatorTrips);
 
 // GET /api/trips/:id - Chi tiết chuyến xe
 router.get('/:id', tripController.getTripById);

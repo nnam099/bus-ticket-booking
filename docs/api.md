@@ -41,10 +41,11 @@ Authorization: Bearer <jwt>
 | --- | --- | --- | --- |
 | GET | `/trips/search?origin=&destination=&date=&minPrice=&maxPrice=&operatorId=` | Public | Tìm chuyến theo tuyến, ngày và bộ lọc |
 | GET | `/trips/:id` | Public | Chi tiết chuyến, xe, tuyến, ghế và nhân sự |
+| GET | `/trips/operator/me` | Bus operator | Danh sách chuyến của nhà xe đang đăng nhập |
 | POST | `/trips` | Bus operator | Tạo chuyến, tự sinh ghế theo layout xe |
 | PATCH | `/trips/:id/status` | Staff, Bus operator | Cập nhật trạng thái chuyến |
 
-Trạng thái chuyến hợp lệ khi cập nhật: `BOARDING`, `ON_ROUTE`, `COMPLETED`, `DELAYED`, `CANCELLED`.
+Trạng thái chuyến hợp lệ khi cập nhật: `BOARDING`, `DEPARTED`, `COMPLETED`, `DELAYED`, `CANCELLED`.
 
 ## Bookings
 

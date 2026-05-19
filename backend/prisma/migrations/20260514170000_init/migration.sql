@@ -51,7 +51,6 @@ CREATE TABLE "customers" (
     "full_name" TEXT NOT NULL,
     "date_of_birth" TIMESTAMP(3),
     "avatar_url" TEXT,
-    "loyalty_points" INTEGER NOT NULL DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -158,7 +157,6 @@ CREATE TABLE "trips" (
     "base_price" DECIMAL(12,0) NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'SCHEDULED',
     "cancel_reason" TEXT,
-    "price_multiplier" DECIMAL(4,2) NOT NULL DEFAULT 1.0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 

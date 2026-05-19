@@ -44,6 +44,7 @@ export const authAPI = {
 export const tripAPI = {
   search: (params) => api.get('/trips/search', { params }),
   getById: (id) => api.get(`/trips/${id}`),
+  getMine: () => api.get('/trips/operator/me'),
   create: (data) => api.post('/trips', data),
   updateStatus: (id, data) => api.patch(`/trips/${id}/status`, data),
 };

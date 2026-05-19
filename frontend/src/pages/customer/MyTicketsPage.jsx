@@ -7,6 +7,7 @@ import { vi } from 'date-fns/locale';
 const STATUS_MAP = {
   PENDING:   { label: 'Chờ thanh toán', cls: 'bg-yellow-100 text-yellow-700' },
   PAID:      { label: 'Đã thanh toán',  cls: 'bg-green-100 text-green-700' },
+  CHECKED_IN:{ label: 'Đã lên xe',      cls: 'bg-emerald-100 text-emerald-700' },
   COMPLETED: { label: 'Hoàn thành',     cls: 'bg-blue-100 text-blue-700' },
   CANCELLED: { label: 'Đã hủy',        cls: 'bg-gray-100 text-gray-500' },
   REFUNDED:  { label: 'Đã hoàn tiền',  cls: 'bg-purple-100 text-purple-700' },

@@ -78,6 +78,29 @@ const getTripById = async (req, res, next) => {
   }
 };
 
+const listOperatorTrips = async (req, res, next) => {
+  try {
+    const operatorId = req.user.busOperator?.id;
+    const trips = await prisma.trip.findMany({
+      where: { vehicle: { operatorId } },
+      include: {
+        route: true,
+        vehicle: { include: { vehicleType: true } },
+        _count: {
+          select: {
+            tripSeats: { where: { status: 'AVAILABLE' } },
+          },
+        },
+      },
+      orderBy: { departureTime: 'desc' },
+    });
+
+    res.json({ success: true, data: trips });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const createTrip = async (req, res, next) => {
   try {
     const { routeId, vehicleId, departureTime, estimatedArrival, basePrice } = req.body;
@@ -86,6 +109,8 @@ const createTrip = async (req, res, next) => {
     // Verify ownership
     const vehicle = await prisma.vehicle.findFirst({ where: { id: vehicleId, operatorId } });
     if (!vehicle) return res.status(403).json({ success: false, message: 'Xe không thuộc nhà xe của bạn.' });
+    const route = await prisma.route.findFirst({ where: { id: routeId, operatorId, isActive: true } });
+    if (!route) return res.status(403).json({ success: false, message: 'Tuyến không thuộc nhà xe của bạn.' });
 
     const trip = await prisma.$transaction(async (tx) => {
       const newTrip = await tx.trip.create({
@@ -110,7 +135,7 @@ const createTrip = async (req, res, next) => {
 const updateTripStatus = async (req, res, next) => {
   try {
     const { status, cancelReason } = req.body;
-    const validStatuses = ['BOARDING', 'ON_ROUTE', 'COMPLETED', 'DELAYED', 'CANCELLED'];
+    const validStatuses = ['BOARDING', 'DEPARTED', 'COMPLETED', 'DELAYED', 'CANCELLED'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Trạng thái không hợp lệ.' });
     }
@@ -147,4 +172,4 @@ const updateTripStatus = async (req, res, next) => {
   }
 };
 
-module.exports = { searchTrips, getTripById, createTrip, updateTripStatus };
+module.exports = { searchTrips, getTripById, listOperatorTrips, createTrip, updateTripStatus };

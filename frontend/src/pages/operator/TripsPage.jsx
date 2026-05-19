@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 const STATUS_LABELS = {
   SCHEDULED: { label: 'Lịch trình', cls: 'bg-blue-100 text-blue-700' },
   BOARDING:  { label: 'Đang lên xe', cls: 'bg-yellow-100 text-yellow-700' },
-  ON_ROUTE:  { label: 'Đang chạy', cls: 'bg-green-100 text-green-700' },
+  DEPARTED:  { label: 'Đang chạy', cls: 'bg-green-100 text-green-700' },
   COMPLETED: { label: 'Hoàn thành', cls: 'bg-gray-100 text-gray-500' },
   CANCELLED: { label: 'Đã hủy', cls: 'bg-red-100 text-red-600' },
   DELAYED:   { label: 'Trễ giờ', cls: 'bg-orange-100 text-orange-700' },
@@ -20,14 +20,9 @@ export default function TripsPage() {
   const [loading, setLoading] = useState(false);
 
   const loadTrips = () => {
-    // For operator's own trips - in real app this would filter by operator
-    routeAPI.getAll().then(r => {
-      const routeIds = r.data.data.map(rt => rt.id);
-      setRoutes(r.data.data);
-      // Simplified: show empty until we add a proper operator trips endpoint
-      setTrips([]);
-    });
+    routeAPI.getAll().then(r => setRoutes(r.data.data));
     vehicleAPI.getMyVehicles().then(r => setVehicles(r.data.data));
+    tripAPI.getMine().then(r => setTrips(r.data.data));
   };
 
   useEffect(() => { loadTrips(); }, []);
@@ -110,7 +105,7 @@ export default function TripsPage() {
                   </p>
                   <p className="text-sm text-gray-500">
                     {format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')} •{' '}
-                    {trip.vehicle?.licensePlate}
+                    {trip.vehicle?.licensePlate} • Còn {trip._count?.tripSeats ?? 0} ghế
                   </p>
                 </div>
                 <span className={`badge ${badge.cls}`}>{badge.label}</span>

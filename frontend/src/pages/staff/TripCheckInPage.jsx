@@ -14,7 +14,7 @@ export default function TripCheckInPage() {
   const handleCheckIn = async (ticketId) => {
     try {
       await ticketAPI.checkIn(ticketId);
-      setPassengers(prev => prev.map(p => p.id === ticketId ? { ...p, checkedInAt: new Date().toISOString() } : p));
+      setPassengers(prev => prev.map(p => p.id === ticketId ? { ...p, checkedInAt: new Date().toISOString(), status: 'CHECKED_IN' } : p));
     } catch (err) { alert(err.response?.data?.message || 'Lỗi xác nhận'); }
   };
 
@@ -41,10 +41,10 @@ export default function TripCheckInPage() {
           <p className="text-sm text-gray-500">{checkedIn}/{passengers.length} hành khách đã lên xe</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {['BOARDING', 'ON_ROUTE', 'COMPLETED', 'DELAYED', 'CANCELLED'].map(s => (
+          {['BOARDING', 'DEPARTED', 'COMPLETED', 'DELAYED', 'CANCELLED'].map(s => (
             <button key={s} disabled={updating} onClick={() => handleUpdateStatus(s)}
               className="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-100">
-              {s === 'BOARDING' ? '🚏 Lên xe' : s === 'ON_ROUTE' ? '🚌 Khởi hành' :
+              {s === 'BOARDING' ? '🚏 Lên xe' : s === 'DEPARTED' ? '🚌 Khởi hành' :
                s === 'COMPLETED' ? '✅ Hoàn thành' : s === 'DELAYED' ? '⚠️ Trễ' : '❌ Hủy'}
             </button>
           ))}

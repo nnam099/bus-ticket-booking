@@ -33,7 +33,7 @@ router.get('/trip/:tripId', authenticate, authorize('STAFF', 'BUS_OPERATOR'), as
     }
 
     const tickets = await prisma.ticketDetail.findMany({
-      where: { tripSeat: { tripId: req.params.tripId }, status: { in: ['PAID', 'COMPLETED'] } },
+      where: { tripSeat: { tripId: req.params.tripId }, status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] } },
       include: { tripSeat: { include: { seatLayout: true } }, order: { include: { customer: true } } },
       orderBy: { tripSeat: { seatLayout: { seatCode: 'asc' } } },
     });
@@ -83,7 +83,7 @@ router.patch('/:id/check-in', authenticate, authorize('STAFF', 'BUS_OPERATOR'), 
 
     const updated = await prisma.ticketDetail.update({
       where: { id: req.params.id },
-      data: { checkedInAt: new Date() },
+      data: { checkedInAt: new Date(), status: 'CHECKED_IN' },
     });
     res.json({ success: true, message: 'Ticket check-in completed.', data: updated });
   } catch (err) { next(err); }

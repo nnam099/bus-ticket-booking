@@ -5,9 +5,6 @@ const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
-const swaggerUi = require('swagger-ui-express');
-const YAML = require('yamljs');
-const path = require('path');
 
 const { errorHandler } = require('./middlewares/errorHandler');
 const logger = require('./utils/logger');
@@ -60,14 +57,6 @@ app.use(express.urlencoded({ extended: true }));
 // Logging
 if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
-}
-
-// API Docs
-try {
-  const swaggerDoc = YAML.load(path.join(__dirname, '../docs/swagger.yaml'));
-  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
-} catch {
-  // docs not required to start
 }
 
 // Health check

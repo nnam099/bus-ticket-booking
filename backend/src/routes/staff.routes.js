@@ -44,7 +44,7 @@ router.get('/trips/:tripId/passengers', authenticate, authorize('STAFF', 'BUS_OP
     }
 
     const passengers = await prisma.ticketDetail.findMany({
-      where: { tripSeat: { tripId: req.params.tripId }, status: { in: ['PAID', 'COMPLETED'] } },
+      where: { tripSeat: { tripId: req.params.tripId }, status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] } },
       include: { tripSeat: { include: { seatLayout: true } } },
     });
     res.json({ success: true, data: passengers });
