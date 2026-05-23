@@ -42,6 +42,17 @@ router.patch('/users/:id/toggle-active', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/admin/users - Lấy danh sách người dùng
+router.get('/users', async (req, res, next) => {
+  try {
+    const users = await prisma.user.findMany({
+      include: { userRoles: { include: { role: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ success: true, data: users });
+  } catch (err) { next(err); }
+});
+
 // GET /api/admin/stats - Thống kê hệ thống
 router.get('/stats', async (req, res, next) => {
   try {
