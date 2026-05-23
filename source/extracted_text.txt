@@ -1,0 +1,1489 @@
+--- Chức năng các đối tượng.docx ---
+XÂY DỰNG WEBSITE ĐẶT VÉ XE KHÁCH
+I. PHÂN BIỆT ACTOR VÀ ĐỐI TƯỢNG NGHIỆP VỤ
+Khi phân tích phần mềm, cần tách rõ hai khái niệm: actor và đối tượng nghiệp vụ. Actor là người dùng hoặc hệ thống bên ngoài tương tác với website. Đối tượng nghiệp vụ là dữ liệu được hệ thống lưu trữ và xử lý trong quá trình hoạt động.
+Nhóm
+Ý nghĩa
+Ví dụ trong website đặt vé xe khách
+Actor / Vai trò sử dụng hệ thống
+Là người dùng hoặc hệ thống bên ngoài thực hiện hành động trên website.
+Khách hàng, quản lý nhà xe, nhân viên nhà xe, tài xế/phụ xe, quản trị viên, cổng thanh toán.
+Đối tượng nghiệp vụ / Entity
+Là dữ liệu chính được lưu trong cơ sở dữ liệu để phục vụ nghiệp vụ.
+User, BusCompany, Route, Trip, Seat, Booking, Ticket, Payment, Review.
+ 
+Tránh nhầm lẫn giữa “nhà xe” là một đơn vị kinh doanh và “tài khoản quản lý nhà xe” là người đăng nhập vào hệ thống để thao tác dữ liệu của nhà xe.
+II. DANH SÁCH ACTOR CHÍNH CỦA WEBSITE
+Phạm vi website đặt vé xe khách:
+STT
+Actor
+Vai trò trong hệ thống
+1
+Khách hàng
+Đăng ký, đăng nhập, tìm chuyến, đặt vé, thanh toán, quản lý vé và đánh giá dịch vụ.
+2
+Quản lý nhà xe
+Quản lý thông tin nhà xe, xe, loại xe, tuyến, chuyến, giá vé, sơ đồ ghế và đơn đặt vé của nhà xe.
+3
+Nhân viên nhà xe
+Hỗ trợ khách hàng, tra cứu vé, xác nhận thanh toán thủ công, xử lý hủy/đổi vé theo quyền được cấp.
+4
+Tài xế / phụ xe
+Xem chuyến được phân công, xem danh sách hành khách, kiểm tra vé/QR code và xác nhận khách đã lên xe.
+5
+Quản trị viên hệ thống
+Quản lý toàn bộ website, phê duyệt nhà xe, quản lý tài khoản, danh mục, cấu hình, đánh giá và báo cáo.
+6
+Cổng thanh toán
+Hệ thống ngoài tiếp nhận yêu cầu thanh toán và trả kết quả thanh toán về website.
+ 
+Tài xế/phụ xe được bổ sung như một actor hỗ trợ, nhưng quyền của tài xế/phụ xe phải được giới hạn để tránh làm phạm vi đề tài trở thành hệ thống điều hành vận tải hoàn chỉnh.
+III. CHỨC NĂNG CHI TIẾT CỦA TỪNG ACTOR
+1. Khách hàng
+Khách hàng là người sử dụng website để tìm kiếm chuyến xe, đặt vé, thanh toán và quản lý vé đã đặt. Trong hệ thống này, khách hàng bắt buộc phải có tài khoản và đăng nhập trước khi đặt vé.
+1.1. Quản lý tài khoản
+·       Đăng ký tài khoản bằng họ tên, số điện thoại, email và mật khẩu.
+·       Đăng nhập hệ thống bằng email/số điện thoại và mật khẩu.
+·       Đăng xuất khỏi hệ thống.
+·       Quên mật khẩu và đặt lại mật khẩu.
+·       Đổi mật khẩu khi đã đăng nhập.
+·       Cập nhật thông tin cá nhân: họ tên, số điện thoại, email, ngày sinh, giới tính nếu cần.
+·       Yêu cầu khóa hoặc vô hiệu hóa tài khoản. Không nên xóa cứng tài khoản vì còn liên quan đến lịch sử đặt vé, thanh toán và hóa đơn.
+1.2. Tìm kiếm và lọc chuyến xe
+·       Tìm kiếm chuyến xe theo điểm đi, điểm đến và ngày khởi hành.
+·       Lọc chuyến xe theo nhà xe, khoảng giá, giờ khởi hành, loại xe và số ghế còn trống.
+·       Sắp xếp kết quả theo giá vé, giờ khởi hành, đánh giá nhà xe hoặc thời gian di chuyển.
+·       Xem danh sách chuyến xe phù hợp với điều kiện tìm kiếm.
+1.3. Xem thông tin chuyến xe
+·       Xem tên nhà xe, thông tin liên hệ và điểm đánh giá của nhà xe.
+·       Xem tuyến xe, điểm đón, điểm trả, thời gian khởi hành và thời gian đến dự kiến.
+·       Xem loại xe, tiện ích xe, giá vé và chính sách hủy/đổi vé.
+·       Xem sơ đồ ghế và trạng thái ghế theo thời gian thực.
+·       Xem các ghi chú quan trọng như thời gian có mặt trước giờ khởi hành, hành lý, quy định lên xe.
+1.4. Đặt vé
+·       Chọn chuyến xe muốn đặt.
+·       Chọn điểm đón và điểm trả nếu chuyến xe hỗ trợ nhiều điểm.
+·       Chọn ghế còn trống trên sơ đồ ghế.
+·       Hệ thống khóa ghế tạm thời trong một khoảng thời gian nhất định để tránh nhiều người đặt cùng một ghế.
+·       Nhập thông tin hành khách: họ tên, số điện thoại, email nhận vé và ghi chú nếu có.
+·       Kiểm tra lại thông tin đặt vé trước khi xác nhận.
+·       Tạo đơn đặt vé ở trạng thái chờ thanh toán.
+1.5. Thanh toán
+·       Chọn phương thức thanh toán: ví điện tử, thẻ ngân hàng, chuyển khoản hoặc tiền mặt tùy phạm vi triển khai.
+·       Thanh toán trực tuyến thông qua cổng thanh toán.
+·       Xem trạng thái thanh toán: chưa thanh toán, đang xử lý, đã thanh toán, thất bại hoặc đã hoàn tiền.
+·       Nhận xác nhận thanh toán sau khi giao dịch thành công.
+·       Nhận vé điện tử sau khi đơn đặt vé được xác nhận.
+1.6. Quản lý vé
+·       Xem danh sách vé đã đặt.
+·       Xem chi tiết vé gồm mã vé, thông tin chuyến, ghế, hành khách, điểm đón, điểm trả và trạng thái thanh toán.
+·       Tải hoặc xem vé điện tử dưới dạng mã vé/QR code.
+·       Hủy vé theo chính sách hủy vé của nhà xe.
+·       Gửi yêu cầu đổi vé nếu website hỗ trợ chức năng đổi vé.
+·       Theo dõi trạng thái hoàn tiền nếu vé đã thanh toán và đủ điều kiện hoàn tiền.
+1.7. Đánh giá dịch vụ
+·       Đánh giá chuyến xe sau khi chuyến đã hoàn thành.
+·       Đánh giá nhà xe theo số sao và nhận xét.
+·       Xem lại các đánh giá đã gửi.
+·       Chỉnh sửa hoặc xóa đánh giá trong phạm vi cho phép của hệ thống.
+2. Quản lý nhà xe
+Quản lý nhà xe là tài khoản đại diện cho một đơn vị vận tải trên website. Vai trò này dùng để đăng bán chuyến xe và quản lý các thông tin liên quan đến dịch vụ đặt vé của nhà xe.
+2.1. Đăng ký và quản lý tài khoản nhà xe
+·       Đăng ký tài khoản nhà xe và gửi thông tin để quản trị viên phê duyệt.
+·       Đăng nhập, đăng xuất, quên mật khẩu và đổi mật khẩu.
+·       Cập nhật thông tin nhà xe: tên nhà xe, logo, hotline, email, địa chỉ, mô tả, chính sách dịch vụ.
+·       Theo dõi trạng thái tài khoản nhà xe: chờ phê duyệt, đang hoạt động, bị khóa hoặc bị từ chối.
+2.2. Quản lý xe, loại xe và sơ đồ ghế
+·       Quản lý loại xe: ghế ngồi, giường nằm, limousine, cabin đơn, cabin đôi hoặc các loại xe khác.
+·       Quản lý xe cụ thể: biển số xe, loại xe, số ghế, trạng thái hoạt động.
+·       Thiết lập sơ đồ ghế theo từng loại xe hoặc từng xe.
+·       Cập nhật trạng thái ghế không bán nếu ghế hỏng hoặc không sử dụng.
+·       Không cần quản lý vận hành kỹ thuật của xe như bảo dưỡng, nhiên liệu hoặc lộ trình GPS vì nằm ngoài phạm vi website đặt vé.
+2.3. Quản lý tuyến xe và điểm đón/trả
+·       Tạo tuyến xe mà nhà xe khai thác, ví dụ: TP. Hồ Chí Minh - Đà Lạt.
+·       Cập nhật thông tin tuyến xe: điểm đi, điểm đến, khoảng cách dự kiến, thời gian di chuyển dự kiến.
+·       Quản lý điểm đón và điểm trả trên từng tuyến.
+·       Ẩn hoặc ngừng khai thác tuyến xe khi không còn sử dụng.
+·       Không nên cho nhà xe xóa cứng tuyến đã phát sinh chuyến hoặc vé để tránh mất dữ liệu lịch sử.
+2.4. Quản lý chuyến xe đăng bán
+·       Tạo chuyến xe mới dựa trên tuyến xe đã có.
+·       Thiết lập thời gian khởi hành, thời gian đến dự kiến, xe sử dụng, số ghế mở bán và giá vé.
+·       Cập nhật thông tin chuyến xe khi chưa có hoặc chưa ảnh hưởng đến vé đã bán.
+·       Tạm ngừng bán vé hoặc hủy chuyến khi cần thiết.
+·       Xem danh sách ghế đã bán, ghế còn trống và ghế đang bị khóa tạm thời.
+·       Không mở rộng sang quản lý tài xế chi tiết, điều phối theo ca hoặc theo dõi xe đang chạy trong phiên bản website đặt vé cơ bản.
+2.5. Quản lý giá vé và chính sách
+·       Thiết lập giá vé theo tuyến, loại xe, chuyến xe hoặc vị trí ghế nếu cần.
+·       Cập nhật giá vé trước khi chuyến được mở bán hoặc theo quy định của hệ thống.
+·       Thiết lập giá vé theo ngày thường, cuối tuần hoặc ngày lễ nếu phạm vi đồ án cho phép.
+·       Thiết lập chính sách hủy vé, đổi vé và hoàn tiền.
+·       Công khai chính sách để khách hàng xem trước khi thanh toán.
+2.6. Quản lý đơn đặt vé của nhà xe
+·       Xem danh sách đơn đặt vé theo chuyến xe.
+·       Xem chi tiết thông tin vé, hành khách, ghế, thanh toán và trạng thái đơn.
+·       Xác nhận thanh toán thủ công đối với hình thức chuyển khoản hoặc tiền mặt nếu website hỗ trợ.
+·       Hỗ trợ hủy vé, đổi vé hoặc hoàn tiền theo chính sách đã thiết lập.
+·       Xuất danh sách hành khách của chuyến xe nếu cần phục vụ vận hành thực tế.
+2.7. Thống kê và báo cáo
+·       Xem số vé đã bán theo ngày, tháng, tuyến hoặc chuyến.
+·       Xem doanh thu theo chuyến, tuyến, khoảng thời gian hoặc loại xe.
+·       Xem tỷ lệ lấp đầy ghế của từng chuyến.
+·       Xem danh sách chuyến có doanh thu cao hoặc thấp.
+·       Xuất báo cáo cơ bản dưới dạng file nếu cần.
+3. Nhân viên nhà xe
+Nhân viên nhà xe là tài khoản được quản lý nhà xe tạo hoặc phân quyền để hỗ trợ nghiệp vụ đặt vé, tra cứu vé và chăm sóc khách hàng. Đây là vai trò nên có nhưng không bắt buộc nếu đồ án muốn đơn giản hóa.
+·       Đăng nhập và đăng xuất hệ thống.
+·       Tra cứu chuyến xe của nhà xe.
+·       Tra cứu vé theo mã vé, số điện thoại, email hoặc tên hành khách.
+·       Đặt vé hộ khách tại quầy hoặc qua điện thoại nếu website có chức năng bán vé nội bộ.
+·       Xác nhận thanh toán thủ công theo quyền được cấp.
+·       Hỗ trợ hủy vé hoặc đổi vé theo chính sách.
+·       Gửi lại vé điện tử cho khách hàng.
+·       Xem danh sách hành khách theo chuyến để hỗ trợ nhà xe.
+Nhân viên nhà xe không nên có quyền quản lý toàn bộ dữ liệu quan trọng như xóa nhà xe, xóa tuyến đã phát sinh vé, thay đổi chính sách hệ thống hoặc xem doanh thu toàn nền tảng.
+4. Tài xế / phụ xe
+Tài xế/phụ xe là tài khoản thuộc nhà xe, được sử dụng để hỗ trợ kiểm tra vé và xác nhận hành khách trong phạm vi một chuyến xe cụ thể.
+4.1. Đăng nhập và xem chuyến được phân công
+·       Đăng nhập và đăng xuất hệ thống bằng tài khoản được nhà xe cấp.
+·       Xem danh sách các chuyến xe được phân công trong ngày hoặc trong khoảng thời gian gần nhất.
+·       Xem thông tin cơ bản của chuyến: tuyến xe, giờ khởi hành, xe sử dụng, điểm đón, điểm trả và số lượng khách đã đặt vé.
+·       Chỉ được xem các chuyến thuộc nhà xe của mình và được phân công, không được xem dữ liệu của nhà xe khác.
+4.2. Xem danh sách hành khách và sơ đồ ghế
+·       Xem danh sách hành khách theo từng chuyến xe được phân công.
+·       Xem thông tin cần thiết để phục vụ kiểm vé: mã vé, tên hành khách, số điện thoại, vị trí ghế, điểm đón và điểm trả.
+·       Xem sơ đồ ghế để biết ghế đã đặt, ghế còn trống và ghế của từng hành khách.
+·       Không được xem thông tin thanh toán chi tiết như mã giao dịch, thông tin ngân hàng hoặc dữ liệu nhạy cảm của khách hàng.
+4.3. Kiểm tra vé và xác nhận khách lên xe
+·       Kiểm tra vé bằng mã vé hoặc QR code nếu website có hỗ trợ.
+·       Đối chiếu thông tin vé với danh sách hành khách của chuyến xe.
+·       Xác nhận hành khách đã lên xe, từ đó cập nhật trạng thái vé thành CheckedIn.
+·       Ghi nhận trường hợp khách không lên xe nếu chuyến đã khởi hành và vé chưa được xác nhận.
+·       Từ chối xác nhận nếu vé không hợp lệ, vé đã hủy, vé sai chuyến hoặc không thuộc nhà xe/chuyến xe được phân công.
+4.4. Cập nhật trạng thái chuyến ở mức cơ bản
+·       Cập nhật trạng thái đang đón khách nếu chuyến xe bắt đầu cho khách lên xe.
+·       Cập nhật trạng thái đã khởi hành khi xe bắt đầu chạy.
+·       Cập nhật trạng thái hoàn thành khi chuyến xe kết thúc.
+·       Báo trễ hoặc báo sự cố đơn giản để nhà xe/nhân viên xử lý tiếp.
+·       Không được tạo chuyến, xóa chuyến, thay đổi giá vé, thay đổi tuyến xe hoặc hủy chuyến nếu không có quyền quản lý nhà xe.
+Việc bổ sung tài xế/phụ xe giúp hệ thống đặt vé hoàn chỉnh hơn ở bước sau bán vé: vé điện tử không chỉ được phát hành cho khách mà còn có thể được kiểm tra khi khách lên xe. Tuy nhiên, vai trò này cần được giới hạn rõ ràng để đề tài vẫn tập trung vào website đặt vé, không chuyển thành hệ thống quản lý vận tải toàn diện.
+5. Quản trị viên hệ thống
+Quản trị viên hệ thống là người quản lý toàn bộ website đặt vé xe khách. Vai trò này đảm bảo hệ thống hoạt động đúng, dữ liệu được kiểm soát và các nhà xe tham gia nền tảng được phê duyệt hợp lệ.
+5.1. Quản lý tài khoản và phân quyền
+·       Xem danh sách tài khoản khách hàng, nhà xe, nhân viên nhà xe và tài xế/phụ xe.
+·       Tạo, khóa, mở khóa hoặc vô hiệu hóa tài khoản.
+·       Phân quyền người dùng theo vai trò.
+·       Đặt lại mật khẩu hoặc hỗ trợ khôi phục tài khoản khi cần.
+·       Theo dõi trạng thái tài khoản và lịch sử đăng nhập nếu hệ thống có hỗ trợ.
+5.2. Quản lý nhà xe
+·       Phê duyệt hoặc từ chối hồ sơ đăng ký nhà xe.
+·       Xem và cập nhật thông tin nhà xe khi cần hỗ trợ.
+·       Khóa hoặc mở khóa nhà xe vi phạm quy định.
+·       Theo dõi danh sách nhà xe đang hoạt động trên website.
+·       Quản lý tỷ lệ hoa hồng hoặc phí nền tảng nếu đề tài có xét đến doanh thu hệ thống.
+5.3. Quản lý danh mục dùng chung
+·       Quản lý tỉnh/thành phố, bến xe, địa điểm, loại xe, tiện ích xe.
+·       Quản lý tuyến xe chuẩn nếu website muốn dùng dữ liệu thống nhất toàn hệ thống.
+·       Quản lý phương thức thanh toán được hỗ trợ.
+·       Quản lý các cấu hình hiển thị công khai trên website.
+5.4. Quản lý đánh giá và nội dung
+·       Xem danh sách đánh giá của khách hàng.
+·       Ẩn, hiện hoặc xử lý đánh giá vi phạm quy định.
+·       Quản lý phản hồi khiếu nại nếu website có chức năng hỗ trợ khách hàng.
+·       Quản lý nội dung tĩnh như điều khoản sử dụng, chính sách bảo mật, hướng dẫn đặt vé.
+5.5. Thống kê, báo cáo và kiểm soát
+·       Thống kê số lượng khách hàng, nhà xe, chuyến xe và vé bán trên toàn hệ thống.
+·       Thống kê doanh thu hệ thống nếu website có quản lý thanh toán.
+·       Xem báo cáo giao dịch thanh toán và hoàn tiền.
+·       Xem nhật ký hoạt động của người dùng quan trọng.
+·       Cấu hình hệ thống, sao lưu dữ liệu và khôi phục dữ liệu khi cần.
+6. Cổng thanh toán
+Cổng thanh toán là hệ thống bên ngoài được tích hợp với website để xử lý thanh toán trực tuyến. Đây không phải là người dùng đăng nhập nhưng vẫn được xem là actor ngoài hệ thống vì có trao đổi dữ liệu với website.
+·       Tiếp nhận yêu cầu thanh toán từ website.
+·       Xử lý thanh toán qua thẻ ngân hàng, ví điện tử hoặc phương thức được hỗ trợ.
+·       Trả kết quả thanh toán về website thông qua callback hoặc webhook.
+·       Cung cấp mã giao dịch để website đối soát.
+·       Hỗ trợ xử lý hoàn tiền nếu hệ thống có chức năng refund.
+IV. CÁC ĐỐI TƯỢNG NGHIỆP VỤ CHÍNH
+Nhóm đối tượng
+Đối tượng nghiệp vụ
+Vai trò
+Tài khoản và phân quyền
+User
+Lưu thông tin đăng nhập chung của mọi tài khoản trong hệ thống.
+Tài khoản và phân quyền
+Role / Permission
+Xác định quyền của khách hàng, nhà xe, nhân viên nhà xe, tài xế/phụ xe và admin.
+Tài khoản và phân quyền
+CustomerProfile
+Lưu thông tin cá nhân của khách hàng.
+Nhà xe
+BusCompany
+Lưu thông tin đơn vị vận tải tham gia website.
+Nhà xe
+CompanyStaff
+Lưu thông tin nhân viên thuộc nhà xe.
+Nhà xe
+DriverProfile
+Lưu thông tin tài xế/phụ xe thuộc nhà xe và tài khoản đăng nhập tương ứng.
+Nhà xe
+TripAssignment
+Lưu thông tin phân công tài xế/phụ xe cho một chuyến xe cụ thể.
+Vận tải cơ bản
+VehicleType
+Lưu loại xe như ghế ngồi, giường nằm, limousine.
+Vận tải cơ bản
+Vehicle
+Lưu xe cụ thể, biển số, số ghế, trạng thái hoạt động.
+Vận tải cơ bản
+SeatLayout
+Lưu cấu trúc sơ đồ ghế theo xe hoặc loại xe.
+Vận tải cơ bản
+Seat
+Lưu thông tin từng ghế trong sơ đồ ghế.
+Tuyến và chuyến
+Route
+Lưu tuyến xe gồm điểm đi, điểm đến và thời gian di chuyển dự kiến.
+Tuyến và chuyến
+PickupDropoffPoint
+Lưu điểm đón và điểm trả của từng tuyến/chuyến.
+Tuyến và chuyến
+Trip
+Lưu chuyến xe cụ thể theo ngày giờ khởi hành, giá vé và xe sử dụng.
+Đặt vé
+SeatLock
+Lưu trạng thái khóa ghế tạm thời trong quá trình khách đặt vé.
+Đặt vé
+Booking
+Lưu đơn đặt vé tổng quát của khách hàng.
+Đặt vé
+BookingItem
+Lưu từng ghế hoặc từng vé trong một đơn đặt vé.
+Đặt vé
+PassengerInfo
+Lưu thông tin người đi xe, có thể khác với chủ tài khoản đặt vé.
+Đặt vé
+Ticket
+Lưu vé điện tử, mã vé, QR code và trạng thái vé.
+Đặt vé
+TicketCheck / CheckInLog
+Lưu thời điểm kiểm vé, người kiểm vé và trạng thái khách đã lên xe.
+Thanh toán
+Payment
+Lưu thông tin giao dịch thanh toán của đơn đặt vé.
+Thanh toán
+Refund
+Lưu thông tin hoàn tiền khi khách hủy vé hoặc nhà xe hủy chuyến.
+Tương tác
+Review
+Lưu đánh giá của khách hàng sau chuyến đi.
+Tương tác
+Notification
+Lưu thông báo gửi cho khách hàng hoặc nhà xe.
+Quản trị
+AuditLog
+Lưu nhật ký hoạt động quan trọng trong hệ thống.
+ 
+V. TRẠNG THÁI CẦN QUẢN LÝ TRONG HỆ THỐNG
+1. Trạng thái ghế
+Trạng thái
+Ý nghĩa
+Available
+Ghế còn trống và có thể đặt.
+Locked
+Ghế đang được giữ tạm thời trong quá trình khách đặt vé.
+Booked
+Ghế đã được đặt thành công.
+Unavailable
+Ghế không mở bán hoặc tạm ngừng sử dụng.
+ 
+2. Trạng thái đơn đặt vé
+Trạng thái
+Ý nghĩa
+Pending
+Đơn đã được tạo nhưng đang chờ thanh toán.
+Confirmed
+Đơn đặt vé đã được xác nhận sau khi thanh toán thành công hoặc được nhân viên xác nhận.
+Cancelled
+Đơn đã bị hủy theo yêu cầu hoặc do nhà xe/hệ thống xử lý.
+Expired
+Đơn hết hạn do khách không thanh toán trong thời gian giữ ghế.
+Completed
+Chuyến đi liên quan đến đơn đặt vé đã hoàn thành.
+ 
+3. Trạng thái thanh toán
+Trạng thái
+Ý nghĩa
+Unpaid
+Chưa thanh toán.
+Processing
+Đang xử lý thanh toán.
+Paid
+Đã thanh toán thành công.
+Failed
+Thanh toán thất bại.
+Refunded
+Đã hoàn tiền.
+PartiallyRefunded
+Đã hoàn tiền một phần.
+ 
+4. Trạng thái vé
+Trạng thái
+Ý nghĩa
+Issued
+Vé đã được phát hành.
+Valid
+Vé còn hiệu lực để sử dụng.
+CheckedIn
+Vé đã được tài xế/phụ xe hoặc nhân viên xác nhận khi khách lên xe.
+NoShow
+Khách không lên xe dù vé còn hiệu lực hoặc chuyến đã khởi hành.
+Cancelled
+Vé đã bị hủy.
+Used
+Vé đã được sử dụng hoặc chuyến đi đã hoàn thành.
+Expired
+Vé hết hiệu lực do chuyến đã qua hoặc đơn không hoàn tất.
+ 
+5. Trạng thái chuyến xe
+Trạng thái
+Ý nghĩa
+Scheduled
+Chuyến xe đã được tạo và đang mở bán hoặc sắp khởi hành.
+SoldOut
+Chuyến xe đã hết ghế trống.
+Boarding
+Chuyến xe đang trong giai đoạn đón khách/lên xe.
+Departed
+Chuyến xe đã khởi hành.
+Delayed
+Chuyến xe bị trễ so với giờ dự kiến.
+Cancelled
+Chuyến xe đã bị hủy.
+Completed
+Chuyến xe đã hoàn thành.
+ 
+VI. LUỒNG NGHIỆP VỤ CHÍNH
+1. Luồng đặt vé bắt buộc đăng nhập
+1.     Khách hàng đăng ký hoặc đăng nhập vào website.
+2.     Khách hàng nhập điểm đi, điểm đến và ngày khởi hành để tìm chuyến.
+3.     Hệ thống hiển thị danh sách chuyến phù hợp.
+4.     Khách hàng chọn chuyến xe cần đặt.
+5.     Hệ thống hiển thị chi tiết chuyến và sơ đồ ghế.
+6.     Khách hàng chọn điểm đón, điểm trả và chọn ghế còn trống.
+7.     Hệ thống khóa ghế tạm thời trong thời gian quy định.
+8.     Khách hàng nhập thông tin hành khách và xác nhận thông tin đặt vé.
+9.     Hệ thống tạo đơn đặt vé với trạng thái Pending.
+10. Khách hàng thực hiện thanh toán.
+11. Cổng thanh toán trả kết quả về hệ thống.
+12. Nếu thanh toán thành công, hệ thống cập nhật đơn thành Confirmed, thanh toán thành Paid và phát hành vé điện tử.
+13. Nếu thanh toán thất bại hoặc quá hạn, hệ thống cập nhật đơn thành Failed/Expired và mở lại ghế.
+2. Luồng hủy vé
+14. Khách hàng đăng nhập và mở danh sách vé đã đặt.
+15. Khách hàng chọn vé cần hủy.
+16. Hệ thống kiểm tra chính sách hủy vé của chuyến xe.
+17. Nếu đủ điều kiện, hệ thống cập nhật vé/đơn đặt vé thành Cancelled.
+18. Hệ thống mở lại ghế nếu chuyến chưa khởi hành và còn được phép bán.
+19. Nếu vé đã thanh toán, hệ thống tạo yêu cầu hoàn tiền theo chính sách.
+20. Khách hàng nhận thông báo kết quả hủy vé và hoàn tiền nếu có.
+3. Luồng nhà xe đăng bán chuyến
+21. Quản lý nhà xe đăng nhập hệ thống.
+22. Nhà xe cập nhật thông tin nhà xe, loại xe, xe và sơ đồ ghế.
+23. Nhà xe tạo tuyến xe hoặc chọn tuyến đã có.
+24. Nhà xe tạo chuyến xe theo tuyến, ngày giờ khởi hành, xe sử dụng và giá vé.
+25. Hệ thống kiểm tra thông tin chuyến và mở bán vé.
+26. Khách hàng có thể tìm kiếm và đặt vé trên chuyến đã được mở bán.
+27. Nhà xe theo dõi danh sách đơn đặt vé, số ghế đã bán và doanh thu của chuyến.
+4. Luồng kiểm vé khi khách lên xe
+28. Tài xế/phụ xe đăng nhập vào website hoặc giao diện kiểm vé được phân quyền.
+29. Hệ thống hiển thị danh sách chuyến xe được phân công.
+30. Tài xế/phụ xe chọn chuyến xe cần kiểm vé.
+31. Hệ thống hiển thị danh sách hành khách và sơ đồ ghế của chuyến.
+32. Khách hàng xuất trình vé điện tử, mã vé hoặc QR code.
+33. Tài xế/phụ xe kiểm tra mã vé trên hệ thống.
+34. Nếu vé hợp lệ, hệ thống cập nhật trạng thái vé thành CheckedIn và ghi nhận thời điểm kiểm vé.
+35. Nếu vé không hợp lệ hoặc đã hủy, hệ thống hiển thị cảnh báo để tài xế/phụ xe từ chối xác nhận.
+VII. CÁC CHỨC NĂNG KHÔNG ĐƯA VÀO PHẠM VI CHÍNH
+Để đảm bảo đề tài đúng trọng tâm là website đặt vé xe khách, các chức năng sau không nên đưa vào phạm vi chính hoặc chỉ trình bày là phần mở rộng:
+·       Quản lý lịch làm việc chi tiết của tài xế và phụ xe.
+·       Theo dõi vị trí xe theo GPS theo thời gian thực.
+·       Quản lý bảo dưỡng xe, nhiên liệu, chi phí vận hành xe.
+·       Điều phối xe theo ca hoặc tối ưu lịch chạy phức tạp.
+·       Ứng dụng tài xế chuyên sâu có GPS, tối ưu lộ trình, chấm công, quản lý ca làm việc hoặc xử lý sự cố vận hành phức tạp.
+·       Hệ thống chăm sóc khách hàng phức tạp dạng tổng đài/ticket nâng cao.
+·       Hệ thống kế toán, hóa đơn điện tử và đối soát doanh thu nâng cao.
+Các nội dung trên có thể rất hữu ích trong thực tế, nhưng nếu đưa vào đồ án ngay từ đầu sẽ làm phạm vi quá rộng, khó hoàn thành và dễ làm lệch trọng tâm khỏi bài toán chính là đặt vé xe khách qua website.
+ 
+
+--- Link Diagram .docx ---
+Link Diagram 
+
+--- Link ERD.docx ---
+https://drive.google.com/file/d/1n9EZ3wWRXgLbBLtLd-jRLpYMM7ZsrlW-/view?usp=sharing
+
+--- Mối quan hệ giữa các thực thể.docx ---
+1. Nhóm phân quyền và định danh
+USERS - ROLES (N-N qua USER_ROLES): Một người dùng có thể đảm nhận nhiều vai trò, ví dụ vừa là khách hàng, vừa là quản lý nhà xe. Ngược lại, một vai trò như khách hàng, nhân viên nhà xe hoặc quản trị viên có thể được gán cho nhiều người dùng. Bảng trung gian USER_ROLES dùng để giải quyết quan hệ nhiều-nhiều và phục vụ phân quyền người dùng.
+USERS - CUSTOMER_PROFILES (1-1): Một tài khoản người dùng có thể có một hồ sơ khách hàng tương ứng. Bảng USERS lưu thông tin đăng nhập như email, số điện thoại, mật khẩu; còn bảng CUSTOMER_PROFILES lưu thông tin cá nhân của khách hàng như họ tên, ngày sinh, giới tính, địa chỉ liên hệ.
+2. Nhóm nhà xe và tài khoản thuộc nhà xe
+USERS - BUS_COMPANIES (N-N qua BUS_COMPANY_USERS): Một nhà xe có thể có nhiều tài khoản thuộc nhà xe như quản lý nhà xe, nhân viên nhà xe, tài xế hoặc phụ xe. Một người dùng cũng có thể được liên kết với nhà xe thông qua bảng BUS_COMPANY_USERS. Bảng trung gian này lưu thêm vai trò nội bộ của người dùng trong nhà xe, ví dụ MANAGER, STAFF, DRIVER, ASSISTANT.
+BUS_COMPANIES - VEHICLES (1-N): Một nhà xe có thể quản lý nhiều xe khác nhau. Mỗi xe cụ thể chỉ thuộc về một nhà xe tại một thời điểm. Quan hệ này phục vụ chức năng quản lý phương tiện của nhà xe.
+BUS_COMPANIES - ROUTES (1-N): Một nhà xe có thể khai thác nhiều tuyến xe khác nhau. Mỗi tuyến trong bản thiết kế rút gọn được gắn với một nhà xe cụ thể để đơn giản hóa việc quản lý tuyến.
+BUS_COMPANIES - TRIPS (1-N): Một nhà xe có thể đăng bán nhiều chuyến xe. Mỗi chuyến xe cụ thể thuộc về một nhà xe, giúp hệ thống xác định chuyến đó do đơn vị vận tải nào vận hành và chịu trách nhiệm.
+3. Nhóm phương tiện và sơ đồ ghế
+VEHICLE_TYPES - VEHICLES (1-N): Một loại xe có thể có nhiều xe cụ thể. Ví dụ loại xe Limousine có thể có nhiều xe mang biển số khác nhau. Quan hệ này giúp phân loại xe và hỗ trợ khách hàng lọc chuyến theo loại xe.
+VEHICLE_TYPES - SEAT_LAYOUTS (1-N): Một loại xe có thể có nhiều mẫu sơ đồ ghế khác nhau. Ví dụ loại xe Limousine có thể có sơ đồ 22 phòng hoặc 24 phòng. Quan hệ này giúp hệ thống tái sử dụng mẫu sơ đồ ghế cho nhiều xe cùng loại.
+SEAT_LAYOUTS - SEATS (1-N): Một sơ đồ ghế bao gồm nhiều ghế cụ thể như A01, A02, B01. Bảng SEATS lưu vị trí và mã ghế trong sơ đồ, còn trạng thái ghế theo từng chuyến sẽ được quản lý riêng trong bảng TRIP_SEATS.
+SEAT_LAYOUTS - VEHICLES (1-N): Một mẫu sơ đồ ghế có thể được áp dụng cho nhiều xe cụ thể. Mỗi xe sử dụng một sơ đồ ghế nhất định để hệ thống biết cấu trúc ghế của xe đó.
+VEHICLES - TRIPS (1-N): Một xe có thể được sử dụng cho nhiều chuyến khác nhau tại các thời điểm khác nhau. Mỗi chuyến xe cụ thể sử dụng một xe nhất định.
+4. Nhóm tuyến xe và điểm đón/trả
+LOCATIONS - ROUTES (1-N): Một địa điểm có thể là điểm đi hoặc điểm đến của nhiều tuyến xe. Ví dụ TP.HCM có thể là điểm đi của tuyến TP.HCM - Đà Lạt, TP.HCM - Vũng Tàu hoặc TP.HCM - Nha Trang.
+ROUTES - ROUTE_POINTS (1-N): Một tuyến xe có thể có nhiều điểm đón và điểm trả. Quan hệ này giúp khách hàng chọn điểm lên xe và điểm xuống xe phù hợp khi đặt vé.
+LOCATIONS - ROUTE_POINTS (1-N): Một địa điểm có thể xuất hiện trong nhiều tuyến khác nhau với vai trò là điểm đón hoặc điểm trả. Ví dụ Bến xe Miền Đông có thể là điểm đón của nhiều tuyến xe.
+ROUTES - TRIPS (1-N): Một tuyến xe có thể có nhiều chuyến xe cụ thể theo các ngày giờ khởi hành khác nhau. Ví dụ tuyến TP.HCM - Đà Lạt có thể có chuyến 08:00, 13:00 và 20:00 trong cùng một ngày.
+5. Nhóm phân công chuyến
+TRIPS - BUS_COMPANY_USERS (N-N qua TRIP_ASSIGNMENTS): Một chuyến xe có thể được phân công cho nhiều người thuộc nhà xe như tài xế, phụ xe hoặc người kiểm vé. Ngược lại, một người thuộc nhà xe có thể được phân công cho nhiều chuyến khác nhau. Bảng trung gian TRIP_ASSIGNMENTS lưu vai trò được phân công trên từng chuyến, ví dụ DRIVER, ASSISTANT, TICKET_CHECKER.
+6. Nhóm quản lý ghế theo chuyến
+TRIPS - SEATS (N-N qua TRIP_SEATS): Một chuyến xe có nhiều ghế, và một ghế trong sơ đồ xe có thể xuất hiện ở nhiều chuyến khác nhau. Bảng trung gian TRIP_SEATS dùng để lưu trạng thái của từng ghế trong từng chuyến, ví dụ Available, Locked, Booked, Unavailable. Đây là quan hệ cốt lõi giúp hệ thống quản lý ghế theo chuyến và tránh bán trùng ghế.
+TRIP_SEATS - SEAT_LOCKS (1-N): Một ghế trong một chuyến có thể phát sinh nhiều lần giữ chỗ theo thời gian. Ví dụ khách A giữ ghế nhưng hết hạn, sau đó khách B có thể giữ lại ghế đó. Bảng SEAT_LOCKS lưu lịch sử khóa ghế tạm thời trong quá trình đặt vé.
+USERS - SEAT_LOCKS (1-N): Một người dùng có thể giữ nhiều ghế trong quá trình đặt vé. Mỗi bản ghi trong SEAT_LOCKS cho biết người dùng nào đang giữ ghế nào và thời gian giữ chỗ hết hạn khi nào.
+7. Nhóm đặt vé và vé điện tử
+CUSTOMER_PROFILES - BOOKINGS (1-N): Một khách hàng có thể tạo nhiều đơn đặt vé. Mỗi đơn đặt vé thuộc về một khách hàng cụ thể.
+TRIPS - BOOKINGS (1-N): Một chuyến xe có thể có nhiều đơn đặt vé từ nhiều khách hàng khác nhau. Mỗi đơn đặt vé gắn với một chuyến xe cụ thể.
+BOOKINGS - BOOKING_ITEMS (1-N): Một đơn đặt vé có thể bao gồm nhiều ghế hoặc nhiều vé. Mỗi dòng trong BOOKING_ITEMS đại diện cho một ghế/vé trong đơn đặt vé.
+TRIP_SEATS - BOOKING_ITEMS (1-N theo lịch sử): Một ghế trong một chuyến có thể từng liên quan đến nhiều chi tiết đặt vé theo thời gian, ví dụ khách A đặt rồi hủy, sau đó khách B đặt lại. Tuy nhiên, tại cùng một thời điểm, một TRIP_SEAT chỉ được có tối đa một BOOKING_ITEM còn hiệu lực để tránh bán trùng ghế.
+BOOKING_ITEMS - PASSENGER_INFOS (1-1): Mỗi ghế/vé trong đơn đặt vé có một thông tin hành khách tương ứng. Thông tin hành khách được tách riêng vì người đặt vé có thể khác người thực tế đi xe.
+BOOKING_ITEMS - TICKETS (1-0..1): Một chi tiết đặt vé chỉ sinh ra vé điện tử sau khi thanh toán thành công hoặc được xác nhận hợp lệ. Trước khi thanh toán, hệ thống có thể đã có BOOKING_ITEMS nhưng chưa phát hành TICKETS.
+8. Nhóm thanh toán và hoàn tiền
+BOOKINGS - PAYMENTS (1-N): Một đơn đặt vé có thể phát sinh nhiều lần thanh toán, ví dụ thanh toán thất bại rồi khách hàng thực hiện lại. Mỗi lần thanh toán được lưu thành một bản ghi riêng trong PAYMENTS để phục vụ đối soát.
+PAYMENTS - REFUNDS (1-N): Một giao dịch thanh toán có thể phát sinh một hoặc nhiều yêu cầu hoàn tiền, đặc biệt trong trường hợp khách hủy một phần vé trong đơn hoặc nhà xe hủy chuyến.
+BOOKINGS - REFUNDS (1-N): Một đơn đặt vé có thể phát sinh nhiều yêu cầu hoàn tiền. Quan hệ này giúp hệ thống theo dõi việc hoàn tiền theo từng đơn đặt vé.
+9. Nhóm đánh giá
+CUSTOMER_PROFILES - REVIEWS (1-N): Một khách hàng có thể tạo nhiều đánh giá cho các chuyến đã sử dụng. Mỗi đánh giá thuộc về một khách hàng cụ thể.
+TRIPS - REVIEWS (1-N): Một chuyến xe có thể nhận nhiều đánh giá từ nhiều khách hàng khác nhau. Quan hệ này giúp hệ thống thống kê chất lượng dịch vụ theo từng chuyến.
+BUS_COMPANIES - REVIEWS (1-N): Một nhà xe có thể nhận nhiều đánh giá từ khách hàng. Các đánh giá này có thể được dùng để tính điểm uy tín hoặc hiển thị nhận xét về nhà xe.
+TICKETS - REVIEWS (1-0..1): Một vé hợp lệ có thể là căn cứ để tạo một đánh giá. Việc liên kết đánh giá với vé giúp đảm bảo chỉ khách hàng có vé thật và đã sử dụng dịch vụ mới được phép đánh giá.
+10. Nhóm nhật ký hệ thống
+USERS - AUDIT_LOGS (1-N): Một người dùng có thể tạo ra nhiều nhật ký hoạt động trong hệ thống. Bảng AUDIT_LOGS lưu lại các thao tác quan trọng như đăng nhập, đặt vé, thanh toán, hủy vé, cập nhật chuyến, duyệt nhà xe, kiểm vé hoặc phân quyền.
+
+--- usercase.docx ---
+1. Khách hàng
+Khách hàng là người sử dụng trực tiếp hệ thống để tìm kiếm chuyến xe, đặt vé và thanh toán vé xe khách.Nhóm này có các chức năng chính gồm quản lý tài khoản, tìm kiếm và lọc chuyến xe, xem thông tin chi tiết chuyến, đặt vé, thanh toán, quản lý vé và đánh giá dịch vụ sau chuyến đi.
+2. Nhà xe
+Nhà xe là đơn vị cung cấp dịch vụ vận chuyển và sử dụng hệ thống để quản lý hoạt động khai thác vận tải của mình.Các chức năng chính của nhà xe gồm quản lý tài khoản nhà xe, quản lý loại xe, tuyến xe, chuyến xe, ghế đặt chỗ, giá vé và theo dõi doanh thu, thống kê hoạt động kinh doanh.
+3. Nhân viên/Tài xế
+Nhân viên hoặc tài xế là lực lượng trực tiếp vận hành chuyến xe và hỗ trợ hành khách trong quá trình xe chạy.Nhóm này thực hiện các chức năng như tra cứu vé, kiểm tra hành khách trước khi lên xe, xác nhận check-in, cập nhật trạng thái chuyến xe, kiểm tra tình trạng ghế và hỗ trợ xử lý các sự cố phát sinh cho khách hàng.
+4. Admin
+Admin là người quản trị cao nhất của hệ thống và chịu trách nhiệm vận hành, giám sát toàn bộ nền tảng.Các chức năng chính của Admin gồm quản lý tài khoản người dùng, quản lý nhà xe, quản lý tuyến xe toàn hệ thống, cấu hình hệ thống, sao lưu và khôi phục dữ liệu, thống kê báo cáo và kiểm soát nhật ký hoạt động, đánh giá review.
+
+--- Xác định yêu cầu phần mềm.docx ---
+YÊU CẦU HỆ THỐNG PHẦN MỀM ĐẶT VÉ XE KHÁCH
+YÊU CẦU HỆ THỐNG PHẦN MỀM ĐẶT VÉ XE KHÁCH
+1. TỔNG QUAN VÀ ĐỐI TƯỢNG HỆ THỐNG
+1.1. Mục tiêu hệ thống
+Website đặt vé xe khách là nền tảng hỗ trợ khách hàng tìm kiếm chuyến xe, đặt vé, thanh toán và nhận vé điện tử; đồng thời hỗ trợ nhà xe đăng bán chuyến, quản lý ghế, quản lý đơn đặt vé và theo dõi báo cáo cơ bản. Hệ thống tập trung vào nghiệp vụ đặt vé trực tuyến, quản lý vé và tương tác giữa khách hàng với nhà xe.
+1.2. Phạm vi đề tài
+·  Phạm vi chính là xây dựng website đặt vé xe khách: khách hàng đăng nhập, tìm chuyến, chọn ghế, đặt vé, thanh toán, nhận vé điện tử và quản lý vé.
+·  Nhà xe được phép quản lý dữ liệu cần thiết để bán vé: hồ sơ nhà xe, xe, loại xe, sơ đồ ghế, tuyến, chuyến, giá vé, chính sách hủy/đổi và đơn đặt vé.
+·  Nhân viên nhà xe và tài xế/phụ xe chỉ được bổ sung ở mức phục vụ nghiệp vụ đặt vé và kiểm vé; không mở rộng thành hệ thống điều phối vận tải chuyên sâu.
+·  Quản trị viên hệ thống quản lý nền tảng, phê duyệt nhà xe, danh mục dùng chung, phân quyền, báo cáo, cấu hình và nhật ký hệ thống.
+·  Khách hàng cần có tài khoản và đăng nhập vào hệ thống trước khi đặt vé. Hệ thống không thiết kế luồng đặt vé cho khách vãng lai.
+1.3. Danh sách actor chính của website
+STT
+Actor
+Vai trò trong hệ thống
+1
+Khách hàng
+Người đăng ký/đăng nhập để tìm chuyến, đặt vé, thanh toán, quản lý vé và đánh giá dịch vụ.
+2
+Quản lý nhà xe
+Tài khoản đại diện nhà xe; quản lý hồ sơ nhà xe, xe, sơ đồ ghế, tuyến, chuyến, giá vé, đơn đặt vé và báo cáo của nhà xe.
+3
+Nhân viên nhà xe
+Hỗ trợ tra cứu vé, xử lý đơn, xác nhận thanh toán thủ công, hỗ trợ hủy/đổi vé trong phạm vi được phân quyền.
+4
+Tài xế / phụ xe
+Xem chuyến được phân công, danh sách hành khách, kiểm tra vé/QR code và xác nhận khách đã lên xe.
+5
+Quản trị viên hệ thống
+Quản lý toàn bộ website, phê duyệt nhà xe, quản lý tài khoản, danh mục, cấu hình, đánh giá, báo cáo và nhật ký hệ thống.
+6
+Cổng thanh toán
+Hệ thống bên ngoài nhận yêu cầu thanh toán, xử lý giao dịch và trả kết quả về website.
+ 
+2. DANH SÁCH YÊU CẦU CHỨC NĂNG NGHIỆP VỤ
+Các chức năng được phân nhóm theo vai trò sử dụng hệ thống. Mỗi chức năng được mô tả bằng công việc, loại công việc, quy định/công thức liên quan, biểu mẫu liên quan và ghi chú triển khai.
+2.1. Bộ phận Khách hàng (Mã KH)
+Khách hàng là người sử dụng website để tìm kiếm chuyến xe, đặt vé, thanh toán và quản lý vé đã đặt. Trong hệ thống này, khách hàng bắt buộc phải có tài khoản và đăng nhập trước khi đặt vé.
+STT
+Công việc
+Loại công việc
+Quy định / Công thức liên quan
+Biểu mẫu liên quan
+Ghi chú
+1
+Đăng ký / Đăng nhập / Đăng xuất
+Lưu trữ, Tra cứu
+QD_ACC_01, QD_ACC_02, QD_ACC_03
+KH_BM1
+Khách hàng phải đăng nhập trước khi đặt vé.
+2
+Quản lý thông tin cá nhân
+Lưu trữ
+QD_ACC_02, QD_ACC_03
+KH_BM2
+Cập nhật hồ sơ, đổi mật khẩu, quên mật khẩu.
+3
+Yêu cầu khóa hoặc vô hiệu hóa tài khoản
+Lưu trữ
+QD_ACC_04
+KH_BM2
+Không xóa cứng vì còn liên quan lịch sử vé và thanh toán.
+4
+Tìm kiếm và lọc chuyến xe
+Tra cứu
+Truy vấn theo điểm đi, điểm đến, ngày khởi hành
+KH_BM3
+Lọc theo giá, nhà xe, giờ khởi hành, loại xe, ghế trống.
+5
+Xem thông tin chi tiết chuyến xe
+Tra cứu
+Thông tin công khai của chuyến
+ 
+Hiển thị nhà xe, tuyến, điểm đón/trả, giá vé, chính sách và sơ đồ ghế.
+6
+Đặt vé và chọn ghế
+Lưu trữ
+QD_BOOK_01, QD_BOOK_02, QD_BOOK_03
+KH_BM4
+Khóa ghế tạm thời để tránh nhiều khách đặt cùng một ghế.
+7
+Xác nhận thông tin đặt vé
+Lưu trữ
+QD_BOOK_01
+KH_BM4
+Kiểm tra lại chuyến, ghế, hành khách, điểm đón/trả và tổng tiền.
+8
+Thanh toán vé
+Tính toán, Lưu trữ
+QD_PAY_01, QD_PAY_02, ST_FLOW
+KH_BM5
+Hỗ trợ thanh toán online hoặc phương thức khác theo phạm vi triển khai.
+9
+Quản lý vé điện tử
+Tra cứu, Kết xuất
+ST_FLOW
+KH_BM6
+Xem danh sách vé, chi tiết vé, mã vé/QR code và trạng thái vé.
+10
+Hủy / Đổi vé
+Lưu trữ
+QD_CANCEL_01, ST_FLOW
+ 
+Thực hiện theo chính sách của nhà xe và trạng thái chuyến.
+11
+Đánh giá và nhận xét
+Lưu trữ
+QD_REVIEW_01
+KH_BM7
+Chỉ được đánh giá sau khi chuyến hoàn thành hoặc vé đã sử dụng.
+KH_BM1: BIỂU MẪU ĐĂNG KÝ / ĐĂNG NHẬP
+(Áp dụng cho: nghiệp vụ 1)
+THÔNG TIN TÀI KHOẢN
+Email hoặc số điện thoại (bắt buộc): ..............................................................
+Mật khẩu (bắt buộc, tối thiểu 6 ký tự): ..............................................................
+Xác nhận lại mật khẩu (khi đăng ký): ..............................................................
+Mã xác thực OTP (nếu hệ thống yêu cầu): [ _ _ _ _ _ _ ]
+Nút bấm: [Đăng nhập] / [Đăng ký] / [Quên mật khẩu]
+KH_BM2: BIỂU MẪU THÔNG TIN CÁ NHÂN
+(Áp dụng cho: nghiệp vụ 2 và 3)
+HỒ SƠ KHÁCH HÀNG
+Họ và tên: ................................................................................................
+Số điện thoại: ...........................................................................................
+Email liên hệ: ............................................................................................
+Ngày sinh: ....../....../............Giới tính: ....................................................
+THAY ĐỔI MẬT KHẨU
+Mật khẩu hiện tại: ....................................................................................
+Mật khẩu mới: ..........................................................................................
+Xác nhận mật khẩu mới: ..........................................................................
+Nút bấm: [Cập nhật thông tin] / [Lưu mật khẩu] / [Yêu cầu khóa tài khoản]
+KH_BM3: BIỂU MẪU TÌM KIẾM VÀ LỌC CHUYẾN XE
+(Áp dụng cho: nghiệp vụ 4)
+TÌM CHUYẾN XE
+Điểm đi (bắt buộc): ..................................................................................
+Điểm đến (bắt buộc): ................................................................................
+Ngày khởi hành (bắt buộc): ....../....../............
+BỘ LỌC TÌM KIẾM
+Mức giá: Từ .......................... đến .......................... VNĐ
+Loại xe: [ ] Ghế ngồi[ ] Giường nằm[ ] Limousine[ ] Cabin
+Giờ khởi hành: [ ] Sáng[ ] Chiều    [ ] Tối[ ] Đêm
+Nhà xe: ....................................................................................................
+Nút bấm: [Tìm kiếm chuyến xe]
+KH_BM4: BIỂU MẪU ĐẶT VÉ VÀ CHỌN GHẾ
+(Áp dụng cho: nghiệp vụ 6 và 7)
+THÔNG TIN CHUYẾN ĐI ĐÃ CHỌN
+Tuyến: .................................. - ..................................Nhà xe: ..................................
+Giờ khởi hành: ........h........ ngày ....../....../............
+SƠ ĐỒ CHỌN GHẾ
+Chú thích trạng thái ghế: [ ] Trống[ ] Đang khóa[ ] Đã đặt[ ] Không mở bán
+Vị trí ghế đã chọn: ....................................................................................
+Số lượng ghế: .......................... (tối đa 05 ghế/lần đặt)
+Điểm đón: ................................................................................................
+Điểm trả: ..................................................................................................
+Thời gian giữ chỗ còn lại: .......... phút .......... giây
+Tổng tiền tạm tính: .......................................... VNĐ
+Nút bấm: [Tiếp tục thanh toán] / [Hủy thao tác]
+KH_BM5: BIỂU MẪU THANH TOÁN VÉ
+(Áp dụng cho: nghiệp vụ 8)
+THÔNG TIN THANH TOÁN
+Khách hàng: ..........................................    Số điện thoại: ..........................................
+Tổng số lượng vé: .................................Mã ghế: ...................................................
+TỔNG TIỀN THANH TOÁN: .......................................... VNĐ
+PHƯƠNG THỨC THANH TOÁN
+[ ] Ví điện tử[ ] Thẻ ngân hàng[ ] Chuyển khoản[ ] Tiền mặt tại quầy/nhà xe
+Nút bấm: [Xác nhận thanh toán]
+KH_BM6: VÉ ĐIỆN TỬ
+(Áp dụng cho: nghiệp vụ 9)
+VÉ XE KHÁCH ĐIỆN TỬ
+Mã vé / QR code: .....................................................................................
+Trạng thái vé: [ ] Issued[ ] Valid    [ ] CheckedIn[ ] Cancelled[ ] Used
+Khách hàng: ..........................................    Số điện thoại: ..........................................
+Tuyến xe: ..............................................Nhà xe: ..................................................
+Biển số xe: ...........................................    Loại xe: ..................................................
+Thời gian khởi hành: ........h........ ngày ....../....../............
+Vị trí ghế: ............................................
+Điểm lên xe: ........................................    Điểm xuống: ............................................
+Tổng tiền đã thanh toán: .......................................... VNĐ
+KH_BM7: PHIẾU ĐÁNH GIÁ VÀ NHẬN XÉT
+(Áp dụng cho: nghiệp vụ 11)
+ĐÁNH GIÁ TRẢI NGHIỆM CHUYẾN ĐI
+Thông tin chuyến: Tuyến ..........................................    Nhà xe: ..........................................
+Mức độ hài lòng chung: [ ] 1 sao[ ] 2 sao[ ] 3 sao    [ ] 4 sao[ ] 5 sao
+Nội dung đánh giá: ............................................................................................................................
+Nút bấm: [Gửi đánh giá]
+2.2. Bộ phận Quản lý nhà xe (Mã NX)
+Quản lý nhà xe là tài khoản đại diện cho một đơn vị vận tải trên website. Vai trò này dùng để đăng bán chuyến xe và quản lý các thông tin cần thiết cho nghiệp vụ đặt vé của nhà xe.
+STT
+Công việc
+Loại công việc
+Quy định / Công thức liên quan
+Biểu mẫu liên quan
+Ghi chú
+1
+Đăng ký và quản lý tài khoản nhà xe
+Lưu trữ, Tra cứu
+QD_ACC_01, QD_ACC_02, QD_ACC_03
+NX_BM1
+Nhà xe gửi hồ sơ để quản trị viên phê duyệt trước khi đăng bán chuyến.
+2
+Quản lý hồ sơ nhà xe
+Lưu trữ
+QD_ACC_04
+NX_BM1
+Cập nhật tên nhà xe, logo, hotline, địa chỉ, mô tả và chính sách dịch vụ.
+3
+Quản lý loại xe, xe và sơ đồ ghế
+Lưu trữ, Tra cứu
+NX_QD_01
+NX_BM2
+Chỉ quản lý dữ liệu phục vụ bán vé, không quản lý bảo dưỡng/nhiên liệu.
+4
+Quản lý tuyến xe và điểm đón/trả
+Lưu trữ, Tra cứu
+NX_QD_02
+NX_BM3
+Tạo tuyến, điểm đón, điểm trả; không xóa cứng tuyến đã phát sinh vé.
+5
+Quản lý chuyến xe đăng bán
+Lưu trữ, Tra cứu
+NX_QD_03, QD_OP_03
+NX_BM4
+Tạo chuyến, cập nhật chuyến, tạm ngừng bán, hủy chuyến có lý do.
+6
+Quản lý ghế và đặt chỗ theo chuyến
+Lưu trữ, Tra cứu
+QD_SEAT_01, QD_BOOK_01
+NX_BM5
+Theo dõi ghế trống, bị khóa, đã đặt, không mở bán.
+7
+Thiết lập giá vé và chính sách
+Tính toán, Lưu trữ
+NX_QD_04, QD_CANCEL_01
+NX_BM6
+Cấu hình giá theo tuyến/chuyến/loại xe và chính sách hủy/đổi/hoàn tiền.
+8
+Quản lý đơn đặt vé của nhà xe
+Tra cứu, Lưu trữ
+ST_FLOW, QD_PAY_02
+NX_BM8
+Xem đơn, xác nhận thanh toán thủ công, hỗ trợ hủy/đổi vé theo quyền.
+9
+Thống kê doanh thu và báo cáo
+Tổng hợp, Kết xuất
+BC_NX_01
+NX_BM7
+Thống kê vé bán, doanh thu, tỷ lệ lấp đầy theo chuyến/tuyến/thời gian.
+NX_BM1: THÔNG TIN HỒ SƠ NHÀ XE
+(Áp dụng cho: nghiệp vụ 1 và 2)
+HỒ SƠ ĐƠN VỊ VẬN TẢI
+Tên nhà xe: ................................................................................................
+Mã số thuế / giấy phép kinh doanh: ...........................................................
+Hotline: ....................................................................................................
+Email liên hệ: ............................................................................................
+Địa chỉ trụ sở: ............................................................................................
+Mô tả nhà xe: ..............................................................................................
+Trạng thái hồ sơ: [ ] Chờ duyệt[ ] Đang hoạt động[ ] Bị khóa[ ] Bị từ chối
+NX_BM2: QUẢN LÝ PHƯƠNG TIỆN VÀ SƠ ĐỒ GHẾ
+(Áp dụng cho: nghiệp vụ 3)
+THÔNG TIN XE
+Biển số xe (duy nhất): ........................................
+Loại xe: [ ] Ghế ngồi[ ] Giường nằm[ ] Limousine[ ] Cabin
+Tổng số ghế: ..........................
+Trạng thái xe: [ ] Đang hoạt động[ ] Tạm ngưng
+THIẾT LẬP SƠ ĐỒ GHẾ
+Số tầng: ..........Số hàng: ..........Số cột: ..........
+Định dạng tên ghế: ....................................................................................
+Ghi chú ghế không mở bán: ........................................................................
+NX_BM3: PHIẾU THIẾT LẬP TUYẾN VÀ ĐIỂM ĐÓN/TRẢ
+(Áp dụng cho: nghiệp vụ 4)
+DANH MỤC TUYẾN
+Tên tuyến xe: .............................................................................................
+Điểm xuất phát: ...................................    Điểm kết thúc: ...................................
+Quãng đường dự kiến: .......................... km
+Thời gian di chuyển dự kiến: .......... giờ .......... phút
+Danh sách điểm đón: ..................................................................................
+Danh sách điểm trả: ....................................................................................
+NX_BM4: BIỂU MẪU TẠO VÀ QUẢN LÝ CHUYẾN XE
+(Áp dụng cho: nghiệp vụ 5)
+CHI TIẾT CHUYẾN XE ĐĂNG BÁN
+Tuyến xe: ....................................................................................................
+Xe sử dụng (biển số): ..................................................................................
+Thời gian khởi hành: ........h........ ngày ....../....../............
+Thời gian đến dự kiến: ........h........ ngày ....../....../............
+Giá vé cơ bản: .......................................... VNĐ
+Số ghế mở bán: ..........................................
+Trạng thái chuyến: [ ] Scheduled[ ] SoldOut[ ] Boarding[ ] Departed[ ] Delayed[ ] Cancelled[ ] Completed
+Lý do hủy/trễ chuyến (nếu có): ....................................................................
+NX_BM5: BẢNG THEO DÕI TRẠNG THÁI GHẾ THEO CHUYẾN
+(Áp dụng cho: nghiệp vụ 6)
+Mã chuyến xe: ..........................................    Giờ chạy: ......................................
+STT
+Mã ghế
+Trạng thái
+Thời gian khóa
+Ghi chú
+1
+A01
+Available
+ 
+Ghế trống
+2
+A02
+Locked
+15 phút
+Khách đang giữ chỗ
+3
+A03
+Booked
+ 
+Đã đặt thành công
+4
+A04
+Unavailable
+ 
+Không mở bán
+NX_BM6: BẢNG CẤU HÌNH GIÁ VÉ VÀ CHÍNH SÁCH
+(Áp dụng cho: nghiệp vụ 7)
+THIẾT LẬP GIÁ VÉ
+Giá vé cơ bản: .......................................... VNĐ
+Phụ thu cuối tuần: .......... % hoặc .......................................... VNĐ
+Phụ thu ngày lễ/tết: .......... % hoặc .......................................... VNĐ
+Chính sách hủy vé: ....................................................................................
+Chính sách đổi vé: ......................................................................................
+Chính sách hoàn tiền: .................................................................................
+Quy định: giá vé đã thanh toán của khách hàng cũ không thay đổi khi nhà xe cập nhật giá mới.
+NX_BM7: BÁO CÁO THỐNG KÊ DOANH THU NHÀ XE
+(Áp dụng cho: nghiệp vụ 9)
+Thời gian báo cáo: Từ ngày ....../....../............ đến ngày ....../....../............
+Tổng số chuyến mở bán: ............................................................................
+Tổng số vé đã bán: .....................................................................................
+Tỷ lệ lấp đầy trung bình: ............................................................................
+Doanh thu theo tuyến/chuyến/loại xe: .......................................................
+Nút bấm: [Xem báo cáo] / [Xuất báo cáo]
+NX_BM8: BẢNG QUẢN LÝ ĐƠN ĐẶT VÉ CỦA NHÀ XE
+(Áp dụng cho: nghiệp vụ 8)
+Bộ lọc: [Theo chuyến] [Theo ngày] [Theo trạng thái thanh toán] [Theo mã vé]
+Mã đơn
+Mã vé
+Khách hàng
+Ghế
+Trạng thái
+Thao tác
+BK001
+VE001
+Nguyễn Văn A
+A01
+Confirmed/Paid
+Xem chi tiết
+BK002
+VE002
+Trần Thị B
+B02
+Pending/Unpaid
+Nhắc thanh toán
+BK003
+VE003
+Lê Văn C
+C03
+Cancelled/Refunded
+Xem hoàn tiền
+2.3. Bộ phận Nhân viên nhà xe (Mã NV)
+Nhân viên nhà xe là tài khoản thuộc nhà xe, được phân quyền để hỗ trợ nghiệp vụ đặt vé, tra cứu vé, xác nhận thanh toán thủ công và hỗ trợ khách hàng. Vai trò này không được quản lý toàn bộ dữ liệu quan trọng của nhà xe hoặc toàn hệ thống.
+STT
+Công việc
+Loại công việc
+Quy định / Công thức liên quan
+Biểu mẫu liên quan
+Ghi chú
+1
+Đăng nhập / Đăng xuất
+Lưu trữ
+QD_ACC_01, QD_ACC_02
+NV_BM1
+Tài khoản do nhà xe cấp và phân quyền.
+2
+Tra cứu chuyến xe của nhà xe
+Tra cứu
+QD_OP_01
+NV_BM2
+Chỉ xem dữ liệu thuộc nhà xe của mình.
+3
+Tra cứu vé và thông tin hành khách
+Tra cứu
+ST_FLOW
+NV_BM2
+Tìm theo mã vé, số điện thoại, email hoặc tên hành khách.
+4
+Đặt vé hộ khách
+Lưu trữ
+QD_BOOK_01, QD_BOOK_03
+NV_BM3
+Chỉ áp dụng nếu website có chức năng bán vé nội bộ cho nhân viên.
+5
+Xác nhận thanh toán thủ công
+Lưu trữ
+QD_PAY_03
+NV_BM4
+Áp dụng cho chuyển khoản hoặc tiền mặt, theo quyền được cấp.
+6
+Hỗ trợ hủy/đổi vé
+Lưu trữ
+QD_CANCEL_01, ST_FLOW
+NV_BM5
+Thực hiện theo chính sách của chuyến và quyền tài khoản.
+7
+Gửi lại vé điện tử cho khách hàng
+Kết xuất
+ST_FLOW
+NV_BM2
+Gửi lại mã vé/QR code qua email hoặc kênh được hỗ trợ.
+NV_BM1: MÀN HÌNH ĐĂNG NHẬP NHÂN VIÊN NHÀ XE
+(Áp dụng cho: nghiệp vụ 1)
+Tên đăng nhập / email nhân viên: ..............................................................
+Mật khẩu: ..................................................................................................
+Nhà xe trực thuộc: .....................................................................................
+Nút bấm: [Đăng nhập] / [Quên mật khẩu]
+NV_BM2: TRA CỨU CHUYẾN, VÉ VÀ HÀNH KHÁCH
+(Áp dụng cho: nghiệp vụ 2, 3 và 7)
+Bộ lọc tra cứu: [Mã vé] [Số điện thoại] [Email] [Tên hành khách] [Mã chuyến]
+Mã vé
+Họ tên khách
+Số điện thoại
+Ghế
+Trạng thái vé
+Ghi chú
+VE001
+Nguyễn Văn A
+09xxxxxxxx
+A01
+Valid
+Có thể gửi lại vé
+VE002
+Trần Thị B
+09xxxxxxxx
+B02
+Cancelled
+Không còn hiệu lực
+NV_BM3: BIỂU MẪU ĐẶT VÉ HỘ KHÁCH
+(Áp dụng cho: nghiệp vụ 4)
+Chỉ dùng khi hệ thống hỗ trợ nhân viên bán vé nội bộ.
+Thông tin khách hàng: ............................................................................
+Chuyến xe: ................................................................................................
+Ghế chọn: ..................................................................................................
+Điểm đón/trả: .............................................................................................
+Phương thức thanh toán: [ ] Tiền mặt[ ] Chuyển khoản[ ] Khác
+Nút bấm: [Tạo đơn đặt vé]
+NV_BM4: XÁC NHẬN THANH TOÁN THỦ CÔNG
+(Áp dụng cho: nghiệp vụ 5)
+Mã đơn đặt vé: ...........................................................................................
+Số tiền cần xác nhận: ................................................................................
+Hình thức thanh toán: [ ] Chuyển khoản[ ] Tiền mặt
+Minh chứng thanh toán: ............................................................................
+Người xác nhận: .........................................................................................
+Nút bấm: [Xác nhận thanh toán]
+NV_BM5: PHIẾU HỖ TRỢ HỦY / ĐỔI VÉ
+(Áp dụng cho: nghiệp vụ 6)
+Mã vé liên quan: ........................................................................................
+Yêu cầu: [ ] Hủy vé[ ] Đổi vé[ ] Gửi lại vé
+Lý do yêu cầu: ...........................................................................................
+Kết quả kiểm tra chính sách: [ ] Đủ điều kiện[ ] Không đủ điều kiện
+Phương án xử lý: .......................................................................................
+2.4. Bộ phận Tài xế / phụ xe (Mã TX)
+Tài xế/phụ xe là tài khoản thuộc nhà xe, dùng để hỗ trợ kiểm vé và xác nhận hành khách trong phạm vi chuyến xe được phân công. Vai trò này được giới hạn để đề tài vẫn tập trung vào website đặt vé xe khách.
+STT
+Công việc
+Loại công việc
+Quy định / Công thức liên quan
+Biểu mẫu liên quan
+Ghi chú
+1
+Đăng nhập và xem chuyến được phân công
+Tra cứu
+TX_QD_01
+TX_BM1
+Chỉ xem chuyến thuộc nhà xe của mình và được phân công.
+2
+Xem danh sách hành khách và sơ đồ ghế
+Tra cứu
+TX_QD_02
+TX_BM2
+Không xem dữ liệu thanh toán nhạy cảm.
+3
+Kiểm tra vé / QR code
+Tra cứu, Lưu trữ
+ST_FLOW
+TX_BM3
+Đối chiếu mã vé với danh sách hành khách của chuyến.
+4
+Xác nhận khách đã lên xe
+Lưu trữ
+ST_FLOW
+TX_BM3
+Cập nhật vé thành CheckedIn và ghi nhận thời điểm kiểm vé.
+5
+Ghi nhận khách không lên xe
+Lưu trữ
+ST_FLOW
+TX_BM3
+Cập nhật NoShow khi chuyến đã khởi hành và khách chưa check-in.
+6
+Cập nhật trạng thái chuyến ở mức cơ bản
+Lưu trữ
+TX_QD_03
+TX_BM4
+Boarding, Departed, Completed, Delayed; không quản lý vận hành chuyên sâu.
+TX_BM1: DANH SÁCH CHUYẾN ĐƯỢC PHÂN CÔNG
+(Áp dụng cho: nghiệp vụ 1)
+Tài khoản tài xế/phụ xe: ............................................................................
+Mã chuyến
+Tuyến
+Giờ khởi hành
+Xe
+Số khách
+Trạng thái
+TR001
+TP.HCM - Đà Lạt
+08:00 01/05/2026
+51B-123.45
+28/34
+Scheduled
+TR002
+TP.HCM - Vũng Tàu
+14:00 01/05/2026
+51B-678.90
+20/29
+Boarding
+TX_BM2: DANH SÁCH HÀNH KHÁCH VÀ SƠ ĐỒ GHẾ
+(Áp dụng cho: nghiệp vụ 2)
+Mã chuyến xe: ..........................................    Biển số xe: ..........................................
+STT
+Mã vé
+Ghế
+Họ tên khách
+Số điện thoại
+Điểm đón/trả
+Trạng thái
+1
+VE001
+A01
+Nguyễn Văn A
+09xxxxxxxx
+Bến A - Bến B
+Valid
+2
+VE002
+A02
+Trần Thị B
+09xxxxxxxx
+Bến A - Bến C
+CheckedIn
+TX_BM3: KIỂM TRA VÉ VÀ XÁC NHẬN KHÁCH LÊN XE
+(Áp dụng cho: nghiệp vụ 3, 4 và 5)
+Mã vé / QR code: .....................................................................................
+Kết quả kiểm tra: [ ] Hợp lệ[ ] Không hợp lệ[ ] Vé đã hủy[ ] Sai chuyến
+Trạng thái cập nhật: [ ] CheckedIn[ ] NoShow
+Thời điểm xác nhận: ........h........ ngày ....../....../............
+Người kiểm vé: .........................................................................................
+Nút bấm: [Xác nhận khách lên xe] / [Từ chối xác nhận]
+TX_BM4: CẬP NHẬT TRẠNG THÁI CHUYẾN Ở MỨC CƠ BẢN
+(Áp dụng cho: nghiệp vụ 6)
+Mã chuyến xe: ...........................................................................................
+Trạng thái mới: [ ] Boarding[ ] Departed[ ] Delayed[ ] Completed
+Ghi chú trễ/sự cố đơn giản: .......................................................................
+Nút bấm: [Cập nhật trạng thái]
+Lưu ý: tài xế/phụ xe không được tạo chuyến, xóa chuyến, thay đổi giá vé, thay đổi tuyến hoặc hủy chuyến nếu không có quyền quản lý nhà xe.
+2.5. Bộ phận Quản trị hệ thống (Mã AD)
+Quản trị viên hệ thống là người quản lý toàn bộ website đặt vé xe khách. Vai trò này đảm bảo hệ thống hoạt động đúng, dữ liệu được kiểm soát và các nhà xe tham gia nền tảng được phê duyệt hợp lệ.
+STT
+Chức năng
+Quy định / Công thức liên quan
+Biểu mẫu liên quan
+Mô tả
+1
+Đăng nhập / Đăng xuất quản trị
+QD_ACC_01, QD_ACC_02, QD_ACC_03
+AD_BM1
+Admin đăng nhập vào cổng quản trị và có thể dùng xác thực bổ sung.
+2
+Quản lý tài khoản và phân quyền
+QD_ACC_04
+AD_BM2
+Tạo, khóa, mở khóa, vô hiệu hóa tài khoản; phân quyền theo vai trò.
+3
+Phê duyệt và quản lý nhà xe
+NX_QD_01
+AD_BM3
+Duyệt/từ chối hồ sơ nhà xe, khóa/mở khóa nhà xe vi phạm.
+4
+Quản lý danh mục dùng chung
+DM_QD_01
+AD_BM4
+Tỉnh/thành, bến xe, địa điểm, loại xe, tiện ích, phương thức thanh toán.
+5
+Quản lý tuyến xe toàn hệ thống
+NX_QD_02
+AD_BM5
+Tạo hoặc chuẩn hóa danh mục tuyến dùng chung nếu hệ thống yêu cầu.
+6
+Quản lý đánh giá và nội dung
+QD_REVIEW_01
+AD_BM6
+Ẩn/hiện đánh giá vi phạm, quản lý chính sách, hướng dẫn, điều khoản.
+7
+Cấu hình hệ thống
+QD_SYS_01
+AD_BM7
+Cấu hình thời gian giữ ghế, phí nền tảng, bảo trì, sao lưu/khôi phục.
+8
+Thống kê, báo cáo và audit
+BC_AD_01
+AD_BM8
+Thống kê toàn hệ thống, nhật ký hoạt động và đối soát giao dịch.
+AD_BM1: MÀN HÌNH ĐĂNG NHẬP QUẢN TRỊ
+(Áp dụng cho: chức năng 1)
+Tên đăng nhập / Admin ID: ........................................................................
+Mật khẩu quản trị: ....................................................................................
+Mã xác thực 2 lớp (nếu có): [ _ _ _ _ _ _ ]
+Nút bấm: [Đăng nhập]
+AD_BM2: BẢNG QUẢN LÝ VÀ PHÂN QUYỀN TÀI KHOẢN
+(Áp dụng cho: chức năng 2)
+STT
+Email / SĐT
+Vai trò
+Trạng thái
+Thao tác
+1
+customer01@...
+Customer
+Hoạt động
+Khóa / Sửa
+2
+nhaxe01@...
+BusCompanyManager
+Chờ duyệt
+Duyệt / Từ chối
+3
+driver01@...
+Driver
+Hoạt động
+Khóa / Sửa
+4
+admin01@...
+Admin
+Hoạt động
+Phân quyền
+AD_BM3: BẢNG XÉT DUYỆT VÀ QUẢN LÝ NHÀ XE
+(Áp dụng cho: chức năng 3)
+Bộ lọc: [Tất cả] [Chờ phê duyệt] [Đang hoạt động] [Bị khóa]
+Tên nhà xe
+Mã số thuế
+Hồ sơ
+Trạng thái
+Thao tác
+Nhà xe A
+0123456789
+Đã nộp
+Chờ phê duyệt
+Duyệt / Từ chối
+Nhà xe B
+9876543210
+Đã nộp
+Hoạt động
+Khóa / Mở khóa
+AD_BM4: DANH MỤC DÙNG CHUNG
+(Áp dụng cho: chức năng 4)
+Danh mục quản lý: tỉnh/thành phố, bến xe, địa điểm, loại xe, tiện ích xe, phương thức thanh toán.
+Mã danh mục
+Tên danh mục
+Giá trị
+Trạng thái
+Thao tác
+DM01
+Loại xe
+Limousine
+Kích hoạt
+Sửa / Ẩn
+DM02
+Tiện ích
+Wifi
+Kích hoạt
+Sửa / Ẩn
+AD_BM5: DANH MỤC TUYẾN XE TOÀN HỆ THỐNG
+(Áp dụng cho: chức năng 5)
+Mã tuyến
+Điểm đầu
+Điểm cuối
+Số nhà xe khai thác
+Trạng thái
+SG-DL
+TP. Hồ Chí Minh
+Đà Lạt
+15
+Kích hoạt
+HN-SP
+Hà Nội
+Sa Pa
+20
+Kích hoạt
+AD_BM6: KIỂM DUYỆT ĐÁNH GIÁ VÀ NỘI DUNG
+(Áp dụng cho: chức năng 6)
+STT
+Khách đánh giá
+Nhà xe
+Số sao
+Nội dung
+Thao tác
+1
+customer01
+Nhà xe A
+5
+Dịch vụ tốt
+Giữ lại / Ẩn
+2
+customer02
+Nhà xe B
+1
+Nội dung cần kiểm tra
+Giữ lại / Ẩn
+AD_BM7: BẢNG CẤU HÌNH HỆ THỐNG
+(Áp dụng cho: chức năng 7)
+Thời gian giữ ghế: .......................... phút
+Số ghế tối đa mỗi lần đặt: .......................... ghế
+Phí nền tảng (nếu có): .......................... %
+Trạng thái bảo trì: [ ] Bật[ ] Tắt
+Sao lưu dữ liệu: [Sao lưu ngay] / [Khôi phục từ bản sao lưu]
+AD_BM8: BÁO CÁO TỔNG HỢP VÀ NHẬT KÝ HỆ THỐNG
+(Áp dụng cho: chức năng 8)
+Kỳ báo cáo: Từ ngày ....../....../............ đến ngày ....../....../............
+Tổng số nhà xe đang hoạt động: ................................................................
+Tổng số vé bán ra toàn hệ thống: ..............................................................
+Tổng dòng tiền giao dịch: ..........................................................................
+Doanh thu hệ thống từ phí nền tảng: .........................................................
+Thời gian
+User
+Hành động
+Đối tượng tác động
+IP
+10:05 03/04
+admin01
+Khóa nhà xe
+Nhà xe B
+192.168.1.1
+11:30 03/04
+customer01
+Đặt vé
+Mã vé VE001
+14.161.x.x
+2.6. Actor ngoài hệ thống: Cổng thanh toán (Mã PG)
+Cổng thanh toán là hệ thống bên ngoài tích hợp với website để xử lý giao dịch thanh toán trực tuyến. Cổng thanh toán không phải người dùng đăng nhập nhưng vẫn được xem là actor ngoài hệ thống vì có trao đổi dữ liệu với website.
+STT
+Chức năng
+Loại tương tác
+Mô tả
+1
+Tiếp nhận yêu cầu thanh toán
+Dữ liệu vào
+Nhận mã đơn, số tiền, nội dung thanh toán từ website.
+2
+Xử lý giao dịch
+Xử lý
+Thực hiện giao dịch qua ví điện tử, thẻ ngân hàng hoặc phương thức được hỗ trợ.
+3
+Trả kết quả thanh toán
+Dữ liệu ra
+Gửi kết quả thành công/thất bại/đang xử lý qua callback hoặc webhook.
+4
+Cung cấp mã giao dịch
+Đối soát
+Website lưu mã giao dịch để tra cứu và đối soát.
+5
+Hỗ trợ hoàn tiền
+Xử lý
+Thực hiện hoàn tiền nếu vé hủy đủ điều kiện hoặc nhà xe hủy chuyến.
+3. DANH MỤC QUY ĐỊNH VÀ CÔNG THỨC NGHIỆP VỤ
+3.1. Quy định tài khoản (Mã QD_ACC)
+STT
+Mã quy định
+Tên quy định
+Nội dung chi tiết
+1
+QD_ACC_01
+Định danh duy nhất
+Tài khoản được định danh bằng email hoặc số điện thoại. Hệ thống không cho phép trùng lặp.
+2
+QD_ACC_02
+Ràng buộc mật khẩu
+Mật khẩu tối thiểu 6 ký tự; khuyến nghị kết hợp chữ, số và ký tự đặc biệt.
+3
+QD_ACC_03
+Xác thực thao tác quan trọng
+Đổi mật khẩu, thanh toán, yêu cầu khóa tài khoản hoặc xác nhận giao dịch quan trọng cần OTP nếu hệ thống hỗ trợ.
+4
+QD_ACC_04
+Không xóa cứng dữ liệu liên quan giao dịch
+Khi người dùng yêu cầu khóa/vô hiệu hóa tài khoản, hệ thống ẩn hoặc vô hiệu hóa thông tin đăng nhập nhưng vẫn lưu lịch sử đặt vé, thanh toán và audit.
+3.2. Quy định đặt vé và giữ chỗ (Mã QD_BOOK)
+STT
+Mã quy định
+Tên quy định
+Nội dung chi tiết
+1
+QD_BOOK_01
+Bắt buộc đăng nhập để đặt vé
+Khách hàng phải đăng nhập trước khi chọn ghế và tạo đơn đặt vé.
+2
+QD_BOOK_02
+Khóa ghế tạm thời
+Khi khách chọn ghế và xác nhận đặt vé, hệ thống chuyển ghế sang Locked trong thời gian cấu hình, mặc định 15 phút.
+3
+QD_BOOK_03
+Hết hạn giữ chỗ
+Nếu khách không hoàn tất thanh toán trước thời hạn, đơn chuyển sang Expired và ghế được mở lại Available.
+4
+QD_BOOK_04
+Giới hạn số ghế
+Mỗi tài khoản khách hàng thông thường không được đặt quá 05 ghế trong một lần đặt hoặc trên một chuyến, tùy cấu hình.
+5
+QD_BOOK_05
+Một ghế không được bán trùng
+Tại cùng một thời điểm, một ghế chỉ được thuộc một trong các trạng thái Available, Locked, Booked hoặc Unavailable.
+3.3. Quy định trạng thái ghế, vé, đơn đặt vé và chuyến xe
+Hệ thống cần quản lý rõ vòng đời của ghế, đơn đặt vé, thanh toán, vé và chuyến xe để tránh trùng chỗ, sai trạng thái hoặc phát hành vé không hợp lệ.
+Bảng 3.1: Trạng thái ghế
+Trạng thái
+Ý nghĩa
+Available
+Ghế còn trống và có thể đặt.
+Locked
+Ghế đang được giữ tạm thời trong quá trình khách đặt vé.
+Booked
+Ghế đã được đặt thành công.
+Unavailable
+Ghế không mở bán hoặc tạm ngừng sử dụng.
+Bảng 3.2: Trạng thái đơn đặt vé
+Trạng thái
+Ý nghĩa
+Pending
+Đơn đã được tạo nhưng đang chờ thanh toán.
+Confirmed
+Đơn đã được xác nhận sau khi thanh toán thành công hoặc được nhân viên xác nhận hợp lệ.
+Cancelled
+Đơn đã bị hủy theo yêu cầu hoặc do nhà xe/hệ thống xử lý.
+Expired
+Đơn hết hạn do khách không thanh toán trong thời gian giữ ghế.
+Completed
+Chuyến đi liên quan đến đơn đặt vé đã hoàn thành.
+Bảng 3.3: Trạng thái thanh toán
+Trạng thái
+Ý nghĩa
+Unpaid
+Chưa thanh toán.
+Processing
+Đang xử lý thanh toán.
+Paid
+Đã thanh toán thành công.
+Failed
+Thanh toán thất bại.
+Refunded
+Đã hoàn tiền.
+PartiallyRefunded
+Đã hoàn tiền một phần.
+Bảng 3.4: Trạng thái vé
+Trạng thái
+Ý nghĩa
+Issued
+Vé đã được phát hành.
+Valid
+Vé còn hiệu lực để sử dụng.
+CheckedIn
+Vé đã được tài xế/phụ xe hoặc nhân viên xác nhận khi khách lên xe.
+NoShow
+Khách không lên xe dù vé còn hiệu lực hoặc chuyến đã khởi hành.
+Cancelled
+Vé đã bị hủy.
+Used
+Vé đã được sử dụng hoặc chuyến đi đã hoàn thành.
+Expired
+Vé hết hiệu lực do chuyến đã qua hoặc đơn không hoàn tất.
+Bảng 3.5: Trạng thái chuyến xe
+Trạng thái
+Ý nghĩa
+Scheduled
+Chuyến xe đã được tạo và đang mở bán hoặc sắp khởi hành.
+SoldOut
+Chuyến xe đã hết ghế trống.
+Boarding
+Chuyến xe đang trong giai đoạn đón khách/lên xe.
+Departed
+Chuyến xe đã khởi hành.
+Delayed
+Chuyến xe bị trễ so với giờ dự kiến.
+Cancelled
+Chuyến xe đã bị hủy.
+Completed
+Chuyến xe đã hoàn thành.
+3.4. Quy định vận hành trong phạm vi website đặt vé
+Mã quy định
+Tên quy định
+Nội dung chi tiết
+QD_OP_01
+Chốt danh sách hành khách
+Danh sách hành khách được chốt trước giờ khởi hành 15 phút hoặc theo cấu hình nhà xe để phục vụ kiểm vé.
+QD_OP_02
+Thay đổi giá vé
+Nhà xe có thể cập nhật giá vé cho các chuyến chưa bán hoặc theo quy định. Giá vé đã thanh toán của khách cũ không thay đổi.
+QD_OP_03
+Hủy chuyến
+Nếu nhà xe hủy chuyến, hệ thống cập nhật chuyến thành Cancelled, thông báo khách hàng và tạo yêu cầu hoàn tiền theo chính sách.
+QD_OP_04
+Giới hạn quyền tài xế/phụ xe
+Tài xế/phụ xe chỉ được xem chuyến phân công, danh sách khách, kiểm vé và cập nhật trạng thái cơ bản; không được quản lý tuyến, giá, xe hoặc dữ liệu thanh toán nhạy cảm.
+3.5. Quy định thanh toán, hủy vé và hoàn tiền
+Mã quy định
+Tên quy định
+Nội dung chi tiết
+QD_PAY_01
+Tạo giao dịch thanh toán
+Mỗi đơn đặt vé cần sinh một giao dịch thanh toán tương ứng với số tiền, phương thức và thời điểm thanh toán.
+QD_PAY_02
+Xác nhận kết quả thanh toán
+Website chỉ phát hành vé điện tử khi nhận được kết quả thanh toán thành công hoặc xác nhận thủ công hợp lệ.
+QD_PAY_03
+Thanh toán thủ công
+Nhân viên nhà xe chỉ được xác nhận thanh toán thủ công nếu có quyền và có minh chứng thanh toán.
+QD_CANCEL_01
+Hủy vé theo chính sách
+Khách hàng được hủy vé khi vé/chuyến còn đủ điều kiện theo thời gian, trạng thái và chính sách của nhà xe.
+QD_REFUND_01
+Hoàn tiền
+Nếu vé đã thanh toán và đủ điều kiện hoàn tiền, hệ thống tạo bản ghi Refund để theo dõi trạng thái hoàn tiền.
+3.6. Luồng nghiệp vụ chính
+3.6.1. Luồng đặt vé bắt buộc đăng nhập
+1. Khách hàng đăng ký hoặc đăng nhập vào website.
+2. Khách hàng nhập điểm đi, điểm đến và ngày khởi hành để tìm chuyến.
+3. Hệ thống hiển thị danh sách chuyến phù hợp.
+4. Khách hàng chọn chuyến xe cần đặt và xem chi tiết chuyến.
+5. Khách hàng chọn điểm đón, điểm trả và ghế còn trống.
+6. Hệ thống khóa ghế tạm thời trong thời gian quy định.
+7. Khách hàng nhập thông tin hành khách và xác nhận thông tin đặt vé.
+8. Hệ thống tạo đơn đặt vé với trạng thái Pending.
+9. Khách hàng thực hiện thanh toán.
+10.  Cổng thanh toán trả kết quả về hệ thống.
+11.  Nếu thanh toán thành công, hệ thống cập nhật đơn thành Confirmed, thanh toán thành Paid và phát hành vé điện tử.
+12.  Nếu thanh toán thất bại hoặc quá hạn, hệ thống cập nhật đơn thành Failed/Expired và mở lại ghế.
+3.6.2. Luồng hủy vé
+13.  Khách hàng đăng nhập và mở danh sách vé đã đặt.
+14.  Khách hàng chọn vé cần hủy.
+15.  Hệ thống kiểm tra trạng thái vé, trạng thái chuyến và chính sách hủy vé.
+16.  Nếu đủ điều kiện, hệ thống cập nhật vé/đơn đặt vé thành Cancelled.
+17.  Hệ thống mở lại ghế nếu chuyến chưa khởi hành và còn được phép bán.
+18.  Nếu vé đã thanh toán, hệ thống tạo yêu cầu hoàn tiền theo chính sách.
+19.  Khách hàng nhận thông báo kết quả hủy vé và hoàn tiền nếu có.
+3.6.3. Luồng nhà xe đăng bán chuyến
+20.  Quản lý nhà xe đăng nhập hệ thống.
+21.  Nhà xe cập nhật thông tin nhà xe, loại xe, xe và sơ đồ ghế.
+22.  Nhà xe tạo tuyến xe hoặc chọn tuyến đã có.
+23.  Nhà xe tạo chuyến theo tuyến, ngày giờ khởi hành, xe sử dụng, giá vé và số ghế mở bán.
+24.  Hệ thống kiểm tra thông tin chuyến và mở bán vé.
+25.  Khách hàng có thể tìm kiếm và đặt vé trên chuyến đã được mở bán.
+26.  Nhà xe theo dõi danh sách đơn đặt vé, số ghế đã bán và doanh thu của chuyến.
+3.6.4. Luồng kiểm vé khi khách lên xe
+27.  Tài xế/phụ xe đăng nhập vào giao diện được phân quyền.
+28.  Hệ thống hiển thị các chuyến được phân công.
+29.  Tài xế/phụ xe chọn chuyến cần kiểm vé.
+30.  Hệ thống hiển thị danh sách hành khách và sơ đồ ghế của chuyến.
+31.  Khách hàng xuất trình vé điện tử, mã vé hoặc QR code.
+32.  Tài xế/phụ xe kiểm tra mã vé trên hệ thống.
+33.  Nếu vé hợp lệ, hệ thống cập nhật trạng thái vé thành CheckedIn và ghi nhận thời điểm kiểm vé.
+34.  Nếu vé không hợp lệ, đã hủy hoặc sai chuyến, hệ thống hiển thị cảnh báo để từ chối xác nhận.
+4. YÊU CẦU CHẤT LƯỢNG HỆ THỐNG
+STT
+Yêu cầu chất lượng
+Mô tả áp dụng cho hệ thống
+1
+Hiệu năng
+Hệ thống phản hồi nhanh khi tìm chuyến, xem chi tiết chuyến và xem sơ đồ ghế; đề xuất thời gian phản hồi tra cứu không quá 3 giây trong điều kiện tải bình thường.
+2
+Tính sẵn sàng
+Các chức năng trọng yếu như đặt vé, thanh toán, tra cứu vé và kiểm vé cần hoạt động ổn định, hạn chế gián đoạn.
+3
+Tính toàn vẹn dữ liệu
+Trạng thái ghế, đơn đặt vé, vé và thanh toán phải nhất quán trong các trường hợp đặt vé, thanh toán, hủy vé hoặc hết thời gian giữ chỗ.
+4
+Bảo mật
+Hệ thống phải có đăng nhập, mã hóa mật khẩu, phân quyền theo vai trò, bảo vệ thông tin cá nhân và không lưu dữ liệu thẻ thanh toán nhạy cảm nếu tích hợp cổng thanh toán.
+5
+Độ tin cậy
+Các nghiệp vụ đặt vé, thanh toán, hủy vé, hoàn tiền và kiểm vé phải xử lý đúng, có thông báo kết quả rõ ràng và hạn chế sai trạng thái.
+6
+Khả năng khôi phục
+Hệ thống cần có cơ chế sao lưu và phục hồi dữ liệu định kỳ, khuyến nghị sao lưu hằng ngày đối với cơ sở dữ liệu chính.
+7
+Khả năng kiểm soát và truy vết
+Hệ thống lưu nhật ký hoạt động quan trọng như đăng nhập, đặt vé, thanh toán, hủy vé, cập nhật chuyến, phân quyền và thao tác quản trị.
+8
+Khả năng sử dụng
+Giao diện dễ hiểu, dễ thao tác, phù hợp với khách hàng, nhà xe, nhân viên, tài xế/phụ xe và quản trị viên.
+9
+Khả năng mở rộng
+Kiến trúc cần hỗ trợ mở rộng số lượng nhà xe, tuyến xe, chuyến xe, người dùng và giao dịch mà không làm giảm đáng kể hiệu năng.
+10
+Khả năng bảo trì
+Hệ thống nên chia theo mô-đun như tài khoản, nhà xe, tuyến/chuyến, ghế, đặt vé, thanh toán, báo cáo, đánh giá và audit để thuận tiện nâng cấp.
+11
+Khả năng tương thích
+Website cần hoạt động tốt trên trình duyệt phổ biến và giao diện đáp ứng cho máy tính, máy tính bảng, điện thoại.
+12
+Khả năng kiểm thử
+Mỗi nghiệp vụ chính cần có dữ liệu kiểm thử, trạng thái đầu vào/đầu ra rõ ràng và tiêu chí nghiệm thu cụ thể.
+ 
+

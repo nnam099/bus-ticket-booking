@@ -6,12 +6,12 @@ import { register, clearError } from '../../store/slices/authSlice';
 export default function RegisterPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, token } = useSelector(s => s.auth);
+  const { loading, error, user } = useSelector(s => s.auth);
   const [form, setForm] = useState({ fullName: '', email: '', phone: '', password: '', confirmPassword: '' });
   const [localError, setLocalError] = useState(null);
 
   useEffect(() => { dispatch(clearError()); }, []);
-  useEffect(() => { if (token) navigate('/dashboard', { replace: true }); }, [token]);
+  useEffect(() => { if (user) navigate('/dashboard', { replace: true }); }, [user]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

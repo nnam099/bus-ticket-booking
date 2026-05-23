@@ -6,20 +6,20 @@ import { login, clearError } from '../../store/slices/authSlice';
 export default function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error, token, user } = useSelector(s => s.auth);
+  const { loading, error, user } = useSelector(s => s.auth);
   const [form, setForm] = useState({ identifier: '', password: '' });
 
   useEffect(() => { dispatch(clearError()); }, []);
 
   useEffect(() => {
-    if (token && user) {
+    if (user) {
       const roles = user.roles || [];
       if (roles.includes('ADMIN')) navigate('/admin', { replace: true });
       else if (roles.includes('BUS_OPERATOR')) navigate('/operator', { replace: true });
       else if (roles.includes('STAFF')) navigate('/staff', { replace: true });
       else navigate('/dashboard', { replace: true });
     }
-  }, [token, user]);
+  }, [user]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

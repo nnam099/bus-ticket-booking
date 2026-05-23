@@ -24,6 +24,7 @@ const adminRoutes = require('./routes/admin.routes');
 const staffRoutes = require('./routes/staff.routes');
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Security
 app.use(helmet());
