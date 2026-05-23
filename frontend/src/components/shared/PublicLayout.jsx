@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 
 export default function PublicLayout() {
-  const { user, token } = useSelector(s => s.auth);
+  const { user } = useSelector(s => s.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -21,29 +21,30 @@ export default function PublicLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <div className="min-h-screen flex flex-col bg-gray-50/50">
+      <nav className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/50 sticky top-0 z-50 transition-all">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 font-bold text-xl text-brand">
+          <Link to="/" className="flex items-center gap-2 font-black text-2xl bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent hover:scale-105 transition-transform">
             🚌 BusTicket
           </Link>
 
           <div className="flex items-center gap-4">
-            {token ? (
+            {user ? (
               <>
-                <Link to={getDashboardLink()} className="text-sm text-gray-600 hover:text-brand transition-colors">
+                <Link to={getDashboardLink()} className="font-medium text-sm text-gray-700 hover:text-brand transition-colors flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center text-brand">👤</span>
                   {user?.customer?.fullName || user?.busOperator?.companyName || user?.email || 'Tài khoản'}
                 </Link>
-                <button onClick={handleLogout} className="btn-outline text-sm py-1.5">
+                <button onClick={handleLogout} className="btn-outline text-sm py-1.5 px-4 shadow-sm hover:shadow-md border-brand/20">
                   Đăng xuất
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="text-sm text-gray-600 hover:text-brand transition-colors">
+                <Link to="/login" className="font-medium text-sm text-gray-600 hover:text-brand transition-colors">
                   Đăng nhập
                 </Link>
-                <Link to="/register" className="btn-primary text-sm py-1.5">
+                <Link to="/register" className="btn-primary text-sm py-1.5 px-5 shadow-md shadow-brand/30 hover:shadow-brand/50">
                   Đăng ký
                 </Link>
               </>

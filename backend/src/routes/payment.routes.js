@@ -99,7 +99,7 @@ router.post('/initiate', authenticate, authorize('CUSTOMER'), async (req, res, n
       data: { orderId, amount: order.totalAmount, method, gateway, status: 'PENDING' },
     });
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = process.env.CLIENT_URL || req.headers.origin || 'http://localhost';
     const paymentUrl = `${clientUrl}/payment/callback?paymentId=${payment.id}&mockStatus=success&amount=${order.totalAmount}`;
 
     res.json({ success: true, data: { paymentId: payment.id, paymentUrl } });

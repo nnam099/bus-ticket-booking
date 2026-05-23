@@ -30,6 +30,8 @@ router.post(
       if (!req.body.identifier && !req.body.email && !req.body.phone) throw new Error('Vui long nhap email hoac so dien thoai.');
       return true;
     }),
+    body('password').notEmpty().withMessage('Mật khẩu không được để trống.'),
+  ],
   authController.login
 );
 

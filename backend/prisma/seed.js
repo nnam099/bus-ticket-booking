@@ -249,8 +249,8 @@ async function main() {
   const routeDefinitions = [
     {
       id: 'route-hcm-dalat',
-      originCity: 'TP. Ho Chi Minh',
-      destinationCity: 'Da Lat',
+      originCity: 'Hồ Chí Minh',
+      destinationCity: 'Đà Lạt',
       originAddress: 'Ben xe Mien Dong Moi',
       destinationAddress: 'Ben xe Lien tinh Da Lat',
       distanceKm: 305,
@@ -262,7 +262,7 @@ async function main() {
     },
     {
       id: 'route-hcm-nhatrang',
-      originCity: 'TP. Ho Chi Minh',
+      originCity: 'Hồ Chí Minh',
       destinationCity: 'Nha Trang',
       originAddress: 'Ben xe Mien Dong Moi',
       destinationAddress: 'Ben xe Phia Nam Nha Trang',
@@ -275,8 +275,8 @@ async function main() {
     },
     {
       id: 'route-hcm-cantho',
-      originCity: 'TP. Ho Chi Minh',
-      destinationCity: 'Can Tho',
+      originCity: 'Hồ Chí Minh',
+      destinationCity: 'Cần Thơ',
       originAddress: 'Ben xe Mien Tay',
       destinationAddress: 'Ben xe Trung tam Can Tho',
       distanceKm: 170,
@@ -288,8 +288,8 @@ async function main() {
     },
     {
       id: 'route-hanoi-haiphong',
-      originCity: 'Ha Noi',
-      destinationCity: 'Hai Phong',
+      originCity: 'Hà Nội',
+      destinationCity: 'Hải Phòng',
       originAddress: 'Ben xe Gia Lam',
       destinationAddress: 'Ben xe Niem Nghia',
       distanceKm: 120,
@@ -301,8 +301,8 @@ async function main() {
     },
     {
       id: 'route-danang-hue',
-      originCity: 'Da Nang',
-      destinationCity: 'Hue',
+      originCity: 'Đà Nẵng',
+      destinationCity: 'Huế',
       originAddress: 'Ben xe Trung tam Da Nang',
       destinationAddress: 'Ben xe Phia Nam Hue',
       distanceKm: 100,
@@ -342,14 +342,13 @@ async function main() {
     routes.push({ ...routeData, route });
   }
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   let tripCount = 0;
-  for (let dayOffset = 0; dayOffset < 14; dayOffset += 1) {
-    const serviceDate = new Date(tomorrow);
-    serviceDate.setDate(tomorrow.getDate() + dayOffset);
+  for (let dayOffset = 0; dayOffset < 60; dayOffset += 1) {
+    const serviceDate = new Date(today);
+    serviceDate.setDate(today.getDate() + dayOffset);
 
     for (const item of routes) {
       for (const time of item.times) {

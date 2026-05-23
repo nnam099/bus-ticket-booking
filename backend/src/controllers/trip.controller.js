@@ -23,14 +23,15 @@ const searchTrips = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Vui lòng nhập điểm đi, điểm đến và ngày.' });
     }
 
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
+    const startOfDay = new Date(`${date}T00:00:00+07:00`);
+    const endOfDay = new Date(`${date}T23:59:59.999+07:00`);
+
+    const now = new Date();
+    const minDepartureTime = startOfDay > now ? startOfDay : now;
 
     const where = {
       status: { in: ['SCHEDULED', 'BOARDING'] },
-      departureTime: { gte: startOfDay, lte: endOfDay },
+      departureTime: { gte: minDepartureTime, lte: endOfDay },
       route: {
         originCity: { contains: origin, mode: 'insensitive' },
         destinationCity: { contains: destination, mode: 'insensitive' },
