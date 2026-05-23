@@ -1,4 +1,4 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 
@@ -6,6 +6,13 @@ export default function PublicLayout() {
   const { user } = useSelector(s => s.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  // Ngăn chặn các tài khoản nội bộ (Admin, Operator, Staff) truy cập trang khách hàng
+  if (user?.roles) {
+    if (user.roles.includes('ADMIN')) return <Navigate to="/admin" replace />;
+    if (user.roles.includes('BUS_OPERATOR')) return <Navigate to="/operator" replace />;
+    if (user.roles.includes('STAFF')) return <Navigate to="/staff" replace />;
+  }
 
   const handleLogout = () => {
     dispatch(logout());
