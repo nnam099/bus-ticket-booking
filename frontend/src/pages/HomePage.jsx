@@ -4,6 +4,76 @@ import { useDispatch } from 'react-redux';
 import { setSearchParams } from '../store/slices/tripSlice';
 import { format } from 'date-fns';
 
+const cityOptions = [
+  'Hồ Chí Minh',
+  'Đà Lạt',
+  'Nha Trang',
+  'Cần Thơ',
+  'Hà Nội',
+  'Hải Phòng',
+  'Đà Nẵng',
+  'Huế',
+];
+
+const popularRoutes = [
+  { origin: 'Hồ Chí Minh', destination: 'Đà Lạt' },
+  { origin: 'Đà Lạt', destination: 'Hồ Chí Minh' },
+  { origin: 'Hồ Chí Minh', destination: 'Nha Trang' },
+  { origin: 'Nha Trang', destination: 'Hồ Chí Minh' },
+  { origin: 'Hồ Chí Minh', destination: 'Cần Thơ' },
+  { origin: 'Cần Thơ', destination: 'Hồ Chí Minh' },
+  { origin: 'Hà Nội', destination: 'Hải Phòng' },
+  { origin: 'Hải Phòng', destination: 'Hà Nội' },
+  { origin: 'Đà Nẵng', destination: 'Huế' },
+  { origin: 'Huế', destination: 'Đà Nẵng' },
+];
+
+const normalizeText = (value) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+
+function CitySuggestInput({ label, icon, placeholder, value, onChange }) {
+  const [focused, setFocused] = useState(false);
+  const query = normalizeText(value.trim());
+  const suggestions = cityOptions.filter((city) => !query || normalizeText(city).includes(query));
+
+  return (
+    <div className="relative group">
+      <label className="label text-left text-gray-600 group-hover:text-brand transition-colors">{label}</label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl">{icon}</span>
+        <input
+          className="input pl-10 bg-gray-50/50"
+          placeholder={placeholder}
+          value={value}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete="off"
+          required
+        />
+        {focused && suggestions.length > 0 && (
+          <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
+            {suggestions.map((city) => (
+              <button
+                key={city}
+                type="button"
+                className="w-full px-4 py-3 text-left font-semibold text-gray-700 hover:bg-orange-50 hover:text-brand transition-colors"
+                onMouseDown={() => onChange(city)}
+              >
+                {city}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -15,16 +85,8 @@ export default function HomePage() {
     e.preventDefault();
     if (!form.origin || !form.destination || !form.date) return;
     dispatch(setSearchParams(form));
-    navigate(`/search?origin=${form.origin}&destination=${form.destination}&date=${form.date}`);
+    navigate(`/search?origin=${encodeURIComponent(form.origin)}&destination=${encodeURIComponent(form.destination)}&date=${form.date}`);
   };
-
-  const popularRoutes = [
-    { origin: 'Hồ Chí Minh', destination: 'Đà Lạt' },
-    { origin: 'Hồ Chí Minh', destination: 'Nha Trang' },
-    { origin: 'Hồ Chí Minh', destination: 'Cần Thơ' },
-    { origin: 'Hà Nội', destination: 'Hải Phòng' },
-    { origin: 'Đà Nẵng', destination: 'Huế' },
-  ];
 
   return (
     <div>
@@ -47,22 +109,20 @@ export default function HomePage() {
           {/* Search form */}
           <form onSubmit={handleSearch} className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl text-gray-800 transform hover:scale-[1.01] transition-transform duration-300 border border-white/50">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="relative group">
-                <label className="label text-left text-gray-600 group-hover:text-brand transition-colors">Điểm đi</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl">📍</span>
-                  <input className="input pl-10 bg-gray-50/50" placeholder="VD: Hồ Chí Minh"
-                    value={form.origin} onChange={e => setForm({ ...form, origin: e.target.value })} required />
-                </div>
-              </div>
-              <div className="relative group">
-                <label className="label text-left text-gray-600 group-hover:text-brand transition-colors">Điểm đến</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl">🚩</span>
-                  <input className="input pl-10 bg-gray-50/50" placeholder="VD: Đà Lạt"
-                    value={form.destination} onChange={e => setForm({ ...form, destination: e.target.value })} required />
-                </div>
-              </div>
+              <CitySuggestInput
+                label="Điểm đi"
+                icon="📍"
+                placeholder="VD: Hồ Chí Minh"
+                value={form.origin}
+                onChange={(origin) => setForm({ ...form, origin })}
+              />
+              <CitySuggestInput
+                label="Điểm đến"
+                icon="🚩"
+                placeholder="VD: Đà Lạt"
+                value={form.destination}
+                onChange={(destination) => setForm({ ...form, destination })}
+              />
               <div className="relative group">
                 <label className="label text-left text-gray-600 group-hover:text-brand transition-colors">Ngày đi</label>
                 <input type="date" className="input bg-gray-50/50" min={today}
@@ -86,7 +146,7 @@ export default function HomePage() {
           {popularRoutes.map((r, i) => (
             <button key={i} onClick={() => {
               dispatch(setSearchParams({ origin: r.origin, destination: r.destination, date: today }));
-              navigate(`/search?origin=${r.origin}&destination=${r.destination}&date=${today}`);
+              navigate(`/search?origin=${encodeURIComponent(r.origin)}&destination=${encodeURIComponent(r.destination)}&date=${today}`);
             }}
               className="card group cursor-pointer border-transparent bg-white shadow-sm hover:border-brand/30 hover:bg-orange-50/30">
               <div className="flex items-center gap-4">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { operatorAPI } from '../../services/api';
 
 export default function OperatorDashboard() {
@@ -41,11 +42,11 @@ export default function OperatorDashboard() {
           { to: '/operator/trips', icon: '📅', label: 'Chuyến xe' },
           { to: '/operator/reports', icon: '📈', label: 'Báo cáo' },
         ].map(item => (
-          <a key={item.to} href={item.to}
+          <Link key={item.to} to={item.to}
             className="card text-center hover:shadow-md transition-shadow cursor-pointer">
             <div className="text-3xl mb-1">{item.icon}</div>
             <div className="text-sm font-medium text-gray-700">{item.label}</div>
-          </a>
+          </Link>
         ))}
       </div>
     </div>

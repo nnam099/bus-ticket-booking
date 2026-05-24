@@ -144,33 +144,52 @@ async function main() {
     create: { userId: customerUser.id, fullName: 'Nguyen Van Demo' },
   });
 
-  const staffUser = await prisma.user.upsert({
-    where: { email: 'driver@demo.vn' },
-    update: { isActive: true, isAnonymized: false },
-    create: {
+  async function ensureDriver({ email, phone, fullName, licenseNo }) {
+    const staffUser = await prisma.user.upsert({
+      where: { email },
+      update: { isActive: true, isAnonymized: false, phone },
+      create: { email, phone, passwordHash: demoPassword },
+    });
+    await attachRole(staffUser.id, staffRole.id);
+    return prisma.staff.upsert({
+      where: { userId: staffUser.id },
+      update: { fullName, role: 'DRIVER', licenseNo, phone, operatorId: operator.id },
+      create: { userId: staffUser.id, operatorId: operator.id, fullName, role: 'DRIVER', licenseNo, phone },
+    });
+  }
+
+  const drivers = {
+    hcmDalat: await ensureDriver({
       email: 'driver@demo.vn',
       phone: '0900000004',
-      passwordHash: demoPassword,
-    },
-  });
-  await attachRole(staffUser.id, staffRole.id);
-  const driver = await prisma.staff.upsert({
-    where: { userId: staffUser.id },
-    update: {
       fullName: 'Tran Van Tai',
-      role: 'DRIVER',
       licenseNo: 'GPLX-DEMO-001',
-      phone: '0900000004',
-    },
-    create: {
-      userId: staffUser.id,
-      operatorId: operator.id,
-      fullName: 'Tran Van Tai',
-      role: 'DRIVER',
-      licenseNo: 'GPLX-DEMO-001',
-      phone: '0900000004',
-    },
-  });
+    }),
+    hcmNhaTrang: await ensureDriver({
+      email: 'driver.nhatrang@demo.vn',
+      phone: '0900000005',
+      fullName: 'Pham Van Bien',
+      licenseNo: 'GPLX-DEMO-002',
+    }),
+    hcmCanTho: await ensureDriver({
+      email: 'driver.cantho@demo.vn',
+      phone: '0900000006',
+      fullName: 'Le Van Song',
+      licenseNo: 'GPLX-DEMO-003',
+    }),
+    haNoiHaiPhong: await ensureDriver({
+      email: 'driver.haiphong@demo.vn',
+      phone: '0900000007',
+      fullName: 'Nguyen Van Bac',
+      licenseNo: 'GPLX-DEMO-004',
+    }),
+    daNangHue: await ensureDriver({
+      email: 'driver.hue@demo.vn',
+      phone: '0900000008',
+      fullName: 'Hoang Van Trung',
+      licenseNo: 'GPLX-DEMO-005',
+    }),
+  };
 
   const limousine22 = await prisma.vehicleType.upsert({
     where: { id: 'vt-limousine-22' },
@@ -246,77 +265,138 @@ async function main() {
     }),
   ]);
 
-  const routeDefinitions = [
+  const corridorDefinitions = [
     {
-      id: 'route-hcm-dalat',
-      originCity: 'Hồ Chí Minh',
-      destinationCity: 'Đà Lạt',
-      originAddress: 'Ben xe Mien Dong Moi',
-      destinationAddress: 'Ben xe Lien tinh Da Lat',
+      key: 'hcm-dalat',
+      outwardId: 'route-hcm-dalat',
+      returnId: 'route-dalat-hcm',
+      outward: {
+        originCity: 'Hồ Chí Minh',
+        destinationCity: 'Đà Lạt',
+        originAddress: 'Bến xe Miền Đông Mới',
+        destinationAddress: 'Bến xe liên tỉnh Đà Lạt',
+      },
       distanceKm: 305,
       durationMinutes: 390,
       basePrice: 280000,
-      times: ['06:00', '09:00', '13:00', '22:00'],
       vehicle: vehicles.hcmDalat,
       vehicleType: sleeper40,
+      driver: drivers.hcmDalat,
+      cycleTimes: ['06:00', '14:00', '22:00'],
     },
     {
-      id: 'route-hcm-nhatrang',
-      originCity: 'Hồ Chí Minh',
-      destinationCity: 'Nha Trang',
-      originAddress: 'Ben xe Mien Dong Moi',
-      destinationAddress: 'Ben xe Phia Nam Nha Trang',
+      key: 'hcm-nhatrang',
+      outwardId: 'route-hcm-nhatrang',
+      returnId: 'route-nhatrang-hcm',
+      outward: {
+        originCity: 'Hồ Chí Minh',
+        destinationCity: 'Nha Trang',
+        originAddress: 'Bến xe Miền Đông Mới',
+        destinationAddress: 'Bến xe phía Nam Nha Trang',
+      },
       distanceKm: 430,
       durationMinutes: 510,
       basePrice: 320000,
-      times: ['07:00', '20:00', '22:30'],
       vehicle: vehicles.hcmNhaTrang,
       vehicleType: sleeper40,
+      driver: drivers.hcmNhaTrang,
+      cycleTimes: ['07:00', '17:00'],
     },
     {
-      id: 'route-hcm-cantho',
-      originCity: 'Hồ Chí Minh',
-      destinationCity: 'Cần Thơ',
-      originAddress: 'Ben xe Mien Tay',
-      destinationAddress: 'Ben xe Trung tam Can Tho',
+      key: 'hcm-cantho',
+      outwardId: 'route-hcm-cantho',
+      returnId: 'route-cantho-hcm',
+      outward: {
+        originCity: 'Hồ Chí Minh',
+        destinationCity: 'Cần Thơ',
+        originAddress: 'Bến xe Miền Tây',
+        destinationAddress: 'Bến xe trung tâm Cần Thơ',
+      },
       distanceKm: 170,
       durationMinutes: 210,
       basePrice: 180000,
-      times: ['05:30', '08:30', '14:00', '18:00'],
       vehicle: vehicles.hcmCanTho,
       vehicleType: limousine22,
+      driver: drivers.hcmCanTho,
+      cycleTimes: ['05:30', '10:30', '15:30', '20:30'],
     },
     {
-      id: 'route-hanoi-haiphong',
-      originCity: 'Hà Nội',
-      destinationCity: 'Hải Phòng',
-      originAddress: 'Ben xe Gia Lam',
-      destinationAddress: 'Ben xe Niem Nghia',
+      key: 'hanoi-haiphong',
+      outwardId: 'route-hanoi-haiphong',
+      returnId: 'route-haiphong-hanoi',
+      outward: {
+        originCity: 'Hà Nội',
+        destinationCity: 'Hải Phòng',
+        originAddress: 'Bến xe Gia Lâm',
+        destinationAddress: 'Bến xe Niệm Nghĩa',
+      },
       distanceKm: 120,
       durationMinutes: 150,
       basePrice: 150000,
-      times: ['06:30', '10:00', '15:00', '19:00'],
       vehicle: vehicles.haNoiHaiPhong,
       vehicleType: limousine22,
+      driver: drivers.haNoiHaiPhong,
+      cycleTimes: ['06:30', '10:30', '14:30', '18:30'],
     },
     {
-      id: 'route-danang-hue',
-      originCity: 'Đà Nẵng',
-      destinationCity: 'Huế',
-      originAddress: 'Ben xe Trung tam Da Nang',
-      destinationAddress: 'Ben xe Phia Nam Hue',
+      key: 'danang-hue',
+      outwardId: 'route-danang-hue',
+      returnId: 'route-hue-danang',
+      outward: {
+        originCity: 'Đà Nẵng',
+        destinationCity: 'Huế',
+        originAddress: 'Bến xe trung tâm Đà Nẵng',
+        destinationAddress: 'Bến xe phía Nam Huế',
+      },
       distanceKm: 100,
       durationMinutes: 150,
       basePrice: 140000,
-      times: ['07:00', '11:00', '16:00'],
       vehicle: vehicles.daNangHue,
       vehicleType: limousine22,
+      driver: drivers.daNangHue,
+      cycleTimes: ['07:00', '11:00', '15:00', '19:00'],
     },
   ];
 
-  const routes = [];
+  const routeDefinitions = corridorDefinitions.flatMap((corridor) => [
+    {
+      id: corridor.outwardId,
+      originCity: corridor.outward.originCity,
+      destinationCity: corridor.outward.destinationCity,
+      originAddress: corridor.outward.originAddress,
+      destinationAddress: corridor.outward.destinationAddress,
+      distanceKm: corridor.distanceKm,
+      durationMinutes: corridor.durationMinutes,
+    },
+    {
+      id: corridor.returnId,
+      originCity: corridor.outward.destinationCity,
+      destinationCity: corridor.outward.originCity,
+      originAddress: corridor.outward.destinationAddress,
+      destinationAddress: corridor.outward.originAddress,
+      distanceKm: corridor.distanceKm,
+      durationMinutes: corridor.durationMinutes,
+    },
+  ]);
+  const routeIds = routeDefinitions.map((route) => route.id);
+
+  await prisma.review.deleteMany({
+    where: { ticketDetail: { tripSeat: { trip: { routeId: { in: routeIds } } } } },
+  });
+  await prisma.payment.deleteMany({
+    where: { order: { ticketDetails: { some: { tripSeat: { trip: { routeId: { in: routeIds } } } } } } },
+  });
+  await prisma.ticketDetail.deleteMany({
+    where: { tripSeat: { trip: { routeId: { in: routeIds } } } },
+  });
+  await prisma.order.deleteMany({ where: { ticketDetails: { none: {} } } });
+  await prisma.tripStaff.deleteMany({ where: { trip: { routeId: { in: routeIds } } } });
+  await prisma.tripSeat.deleteMany({ where: { trip: { routeId: { in: routeIds } } } });
+  await prisma.trip.deleteMany({ where: { routeId: { in: routeIds } } });
+
+  const routeById = {};
   for (const routeData of routeDefinitions) {
-    const route = await prisma.route.upsert({
+    routeById[routeData.id] = await prisma.route.upsert({
       where: { id: routeData.id },
       update: {
         operatorId: operator.id,
@@ -339,7 +419,6 @@ async function main() {
         durationMinutes: routeData.durationMinutes,
       },
     });
-    routes.push({ ...routeData, route });
   }
 
   const today = new Date();
@@ -350,41 +429,35 @@ async function main() {
     const serviceDate = new Date(today);
     serviceDate.setDate(today.getDate() + dayOffset);
 
-    for (const item of routes) {
-      for (const time of item.times) {
+    for (const corridor of corridorDefinitions) {
+      const returnsToOriginDaily = corridor.cycleTimes.length % 2 === 0;
+      const startsOutward = returnsToOriginDaily || dayOffset % 2 === 0;
+
+      for (const [index, time] of corridor.cycleTimes.entries()) {
+        const isOutward = index % 2 === 0 ? startsOutward : !startsOutward;
+        const routeId = isOutward ? corridor.outwardId : corridor.returnId;
+        const route = routeById[routeId];
         const [hour, minute] = time.split(':').map(Number);
         const departureTime = new Date(serviceDate);
         departureTime.setHours(hour, minute, 0, 0);
-        const estimatedArrival = addMinutes(departureTime, item.durationMinutes);
-        const tripId = `trip-${item.route.id}-${formatDateId(serviceDate)}-${time.replace(':', '')}`;
+        const estimatedArrival = addMinutes(departureTime, corridor.durationMinutes);
+        const tripId = `trip-${route.id}-${formatDateId(serviceDate)}-${time.replace(':', '')}`;
 
-        const trip = await prisma.trip.upsert({
-          where: { id: tripId },
-          update: {
-            routeId: item.route.id,
-            vehicleId: item.vehicle.id,
-            departureTime,
-            estimatedArrival,
-            basePrice: item.basePrice,
-            status: 'SCHEDULED',
-            cancelReason: null,
-          },
-          create: {
+        const trip = await prisma.trip.create({
+          data: {
             id: tripId,
-            routeId: item.route.id,
-            vehicleId: item.vehicle.id,
+            routeId: route.id,
+            vehicleId: corridor.vehicle.id,
             departureTime,
             estimatedArrival,
-            basePrice: item.basePrice,
+            basePrice: corridor.basePrice,
             status: 'SCHEDULED',
           },
         });
 
-        await ensureTripSeats(trip.id, item.vehicleType.id);
-        await prisma.tripStaff.upsert({
-          where: { tripId_staffId: { tripId: trip.id, staffId: driver.id } },
-          update: { role: 'DRIVER' },
-          create: { tripId: trip.id, staffId: driver.id, role: 'DRIVER' },
+        await ensureTripSeats(trip.id, corridor.vehicleType.id);
+        await prisma.tripStaff.create({
+          data: { tripId: trip.id, staffId: corridor.driver.id, role: 'DRIVER' },
         });
         tripCount += 1;
       }
@@ -407,7 +480,7 @@ async function main() {
     });
   }
 
-  console.log(`Seed completed. Generated ${routes.length} routes and ${tripCount} trips.`);
+  console.log(`Seed completed. Generated ${routeDefinitions.length} routes and ${tripCount} trips.`);
 }
 
 main()
