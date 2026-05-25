@@ -25,6 +25,8 @@ const verifyPaymentSignature = (payload, signature) => {
 
 const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
   let expiredBooking = false;
+  let lockOwnerCustomerId;
+  const lockKeysToClear = [];
 
   await prisma.$transaction(async (tx) => {
     const payment = await tx.payment.findUnique({
@@ -47,6 +49,7 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
     }
 
     if (payment.status === 'SUCCESS' || payment.status === 'REFUNDED') return;
+    lockOwnerCustomerId = payment.order.customerId;
 
     const isSuccess = status === 'success';
     await tx.payment.update({
@@ -70,7 +73,7 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
       });
 
       for (const ticket of payment.order.ticketDetails) {
-        await redisClient.del(`seat_lock:${ticket.tripSeat.tripId}:${ticket.tripSeatId}`);
+        lockKeysToClear.push(`seat_lock:${ticket.tripSeat.tripId}:${ticket.tripSeatId}`);
       }
       return;
     }
@@ -100,7 +103,7 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
       });
 
       for (const ticket of payment.order.ticketDetails) {
-        await redisClient.del(`seat_lock:${ticket.tripSeat.tripId}:${ticket.tripSeatId}`);
+        lockKeysToClear.push(`seat_lock:${ticket.tripSeat.tripId}:${ticket.tripSeatId}`);
       }
       return;
     }
@@ -121,9 +124,16 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
     await tx.ticketDetail.updateMany({ where: { orderId: payment.orderId }, data: { status: 'PAID' } });
 
     for (const ticket of payment.order.ticketDetails) {
-      await redisClient.del(`seat_lock:${ticket.tripSeat.tripId}:${ticket.tripSeatId}`);
+      lockKeysToClear.push(`seat_lock:${ticket.tripSeat.tripId}:${ticket.tripSeatId}`);
     }
   });
+
+  for (const lockKey of lockKeysToClear) {
+    const owner = await redisClient.get(lockKey);
+    if (owner === lockOwnerCustomerId) {
+      await redisClient.del(lockKey);
+    }
+  }
 
   if (expiredBooking) {
     const error = new Error('Phiên giữ chỗ đã hết hạn. Thanh toán không thể hoàn tất.');
