@@ -1,6 +1,21 @@
 // AdminUsersPage.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api';
+
+const userTabs = [
+  { key: 'ALL', label: 'Tất cả' },
+  { key: 'CUSTOMER', label: 'Khách hàng' },
+  { key: 'STAFF', label: 'Nhân viên' },
+  { key: 'BUS_OPERATOR', label: 'Nhà xe' },
+  { key: 'ADMIN', label: 'Admin' },
+];
+
+const roleLabels = {
+  ADMIN: 'Admin',
+  CUSTOMER: 'Khách hàng',
+  STAFF: 'Nhân viên',
+  BUS_OPERATOR: 'Nhà xe',
+};
 
 const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', {
   style: 'currency',
@@ -18,8 +33,35 @@ const ticketStatusClass = {
   REFUNDED: 'bg-purple-100 text-purple-700',
 };
 
+const getRoles = (user) => user.userRoles?.map(ur => ur.role?.name).filter(Boolean) || [];
+const hasRole = (user, role) => getRoles(user).includes(role);
+
+const getDisplayName = (user) =>
+  user.customer?.fullName ||
+  user.staff?.fullName ||
+  user.busOperator?.companyName ||
+  user.email ||
+  user.phone ||
+  'Không có tên';
+
+const getRoleDescription = (user) => {
+  if (hasRole(user, 'CUSTOMER')) {
+    return `${user.customer?._count?.orders || 0} đơn đặt vé • ${user.customer?._count?.reviews || 0} đánh giá`;
+  }
+  if (hasRole(user, 'STAFF')) {
+    return `${user.staff?.role || 'STAFF'} • ${user.staff?._count?.tripStaffs || 0} chuyến được phân công`;
+  }
+  if (hasRole(user, 'BUS_OPERATOR')) {
+    const status = user.busOperator?.isApproved ? 'Đã duyệt' : 'Chờ duyệt';
+    return `${status} • ${user.busOperator?._count?.routes || 0} tuyến • ${user.busOperator?._count?.vehicles || 0} xe`;
+  }
+  if (hasRole(user, 'ADMIN')) return 'Quản trị hệ thống';
+  return 'Tài khoản hệ thống';
+};
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
+  const [activeTab, setActiveTab] = useState('ALL');
   const [loading, setLoading] = useState(true);
   const [ticketPanel, setTicketPanel] = useState(null);
   const [ticketLoading, setTicketLoading] = useState(false);
@@ -28,6 +70,15 @@ export default function AdminUsersPage() {
     api.get('/admin/users').then(r => setUsers(r.data.data)).catch(() => setUsers([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const tabCounts = useMemo(() => userTabs.reduce((counts, tab) => {
+    counts[tab.key] = tab.key === 'ALL' ? users.length : users.filter(user => hasRole(user, tab.key)).length;
+    return counts;
+  }, {}), [users]);
+
+  const filteredUsers = useMemo(() => (
+    activeTab === 'ALL' ? users : users.filter(user => hasRole(user, activeTab))
+  ), [activeTab, users]);
 
   const handleToggle = async (id) => {
     try {
@@ -136,33 +187,65 @@ export default function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Quản lý người dùng</h1>
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Quản lý người dùng</h1>
+          <p className="mt-1 text-sm text-gray-500">Phân loại tài khoản theo khách hàng, nhân viên, nhà xe và admin.</p>
+        </div>
+      </div>
+
+      <div className="mb-5 flex flex-wrap gap-2">
+        {userTabs.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => {
+              setActiveTab(tab.key);
+              setTicketPanel(null);
+            }}
+            className={`rounded-lg border px-3 py-2 text-sm font-medium transition
+              ${activeTab === tab.key ? 'border-brand bg-brand text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+          >
+            {tab.label} ({tabCounts[tab.key] || 0})
+          </button>
+        ))}
+      </div>
+
       <div className="space-y-3">
-        {users.map(u => {
+        {filteredUsers.map(u => {
+          const roles = getRoles(u);
           const isSelected = ticketPanel?.user?.id === u.id;
+          const canViewTickets = hasRole(u, 'CUSTOMER') && u.customer;
 
           return (
             <div key={u.id} className="space-y-3">
-              <div className="card flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-gray-800">{u.email || u.phone}</p>
+              <div className="card flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-gray-800">{getDisplayName(u)}</p>
+                    {roles.map(role => (
+                      <span key={role} className="badge bg-gray-100 text-gray-700">{roleLabels[role] || role}</span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-600">{u.email || u.phone}</p>
                   <p className="text-sm text-gray-500">
-                    {u.userRoles?.map(ur => ur.role?.name).join(', ')} •{' '}
-                    Tạo: {new Date(u.createdAt).toLocaleDateString('vi-VN')}
+                    {getRoleDescription(u)} • Tạo: {new Date(u.createdAt).toLocaleDateString('vi-VN')}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+
+                <div className="flex flex-wrap items-center gap-3">
                   <span className={`badge ${u.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
                     {u.isActive ? 'Hoạt động' : 'Bị khóa'}
                   </span>
-                  <button
-                    onClick={() => handleViewTickets(u)}
-                    disabled={ticketLoading && isSelected}
-                    className={`text-sm px-3 py-1 rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-70
-                      ${isSelected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-blue-300 text-blue-600 hover:bg-blue-50'}`}
-                  >
-                    {ticketLoading && isSelected ? 'Đang tải...' : 'Xem vé'}
-                  </button>
+                  {canViewTickets && (
+                    <button
+                      onClick={() => handleViewTickets(u)}
+                      disabled={ticketLoading && isSelected}
+                      className={`text-sm px-3 py-1 rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-70
+                        ${isSelected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-blue-300 text-blue-600 hover:bg-blue-50'}`}
+                    >
+                      {ticketLoading && isSelected ? 'Đang tải...' : 'Xem vé'}
+                    </button>
+                  )}
                   <button onClick={() => handleToggle(u.id)}
                     className={`text-sm px-3 py-1 rounded-lg border transition
                       ${u.isActive ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-green-300 text-green-600 hover:bg-green-50'}`}>
@@ -174,9 +257,9 @@ export default function AdminUsersPage() {
             </div>
           );
         })}
-        {users.length === 0 && (
+        {filteredUsers.length === 0 && (
           <div className="card text-center py-12 text-gray-500">
-            <p>Không có người dùng nào.</p>
+            <p>Không có tài khoản nào trong nhóm này.</p>
           </div>
         )}
       </div>

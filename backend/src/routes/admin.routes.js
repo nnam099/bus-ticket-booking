@@ -132,9 +132,30 @@ router.get('/users', async (req, res, next) => {
         createdAt: true,
         updatedAt: true,
         userRoles: { include: { role: true } },
-        customer: { select: { id: true, fullName: true, avatarUrl: true } },
-        busOperator: { select: { id: true, companyName: true, isApproved: true } },
-        staff: { select: { id: true, fullName: true, role: true } },
+        customer: {
+          select: {
+            id: true,
+            fullName: true,
+            avatarUrl: true,
+            _count: { select: { orders: true, reviews: true } },
+          },
+        },
+        busOperator: {
+          select: {
+            id: true,
+            companyName: true,
+            isApproved: true,
+            _count: { select: { routes: true, vehicles: true } },
+          },
+        },
+        staff: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+            _count: { select: { tripStaffs: true } },
+          },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
