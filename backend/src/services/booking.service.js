@@ -58,6 +58,10 @@ const lockSeats = async (tripId, seatIds, customerId) => {
     for (const lockedId of lockResults) {
       await redisClient.del(`seat_lock:${tripId}:${lockedId}`);
     }
+    await prisma.tripSeat.updateMany({
+      where: { id: { in: seatIds }, tripId, status: 'PROCESSING', lockedBy: customerId },
+      data: { status: 'AVAILABLE', lockedAt: null, lockedBy: null, lockExpiresAt: null },
+    });
     throw new Error('Một hoặc nhiều ghế không còn khả dụng. Vui lòng chọn lại.');
   }
 
