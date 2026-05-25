@@ -4,6 +4,26 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
 
+const parseOptionalFloat = (value) => {
+  if (value === undefined || value === '') return undefined;
+  return Number.parseFloat(value);
+};
+
+const parseOptionalInt = (value) => {
+  if (value === undefined || value === '') return undefined;
+  return Number.parseInt(value, 10);
+};
+
+const routeDataFromBody = (body) => ({
+  originCity: body.originCity,
+  destinationCity: body.destinationCity,
+  originAddress: body.originAddress,
+  destinationAddress: body.destinationAddress,
+  distanceKm: parseOptionalFloat(body.distanceKm),
+  durationMinutes: parseOptionalInt(body.durationMinutes),
+  isActive: body.isActive,
+});
+
 router.get('/', async (req, res, next) => {
   try {
     const { origin, destination } = req.query;
@@ -22,7 +42,7 @@ router.get('/', async (req, res, next) => {
 router.post('/', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
   try {
     const operatorId = req.user.busOperator?.id;
-    const route = await prisma.route.create({ data: { operatorId, ...req.body } });
+    const route = await prisma.route.create({ data: { ...routeDataFromBody(req.body), operatorId } });
     res.status(201).json({ success: true, data: route });
   } catch (err) { next(err); }
 });
@@ -32,7 +52,7 @@ router.put('/:id', authenticate, authorize('BUS_OPERATOR'), async (req, res, nex
     const operatorId = req.user.busOperator?.id;
     const existing = await prisma.route.findFirst({ where: { id: req.params.id, operatorId } });
     if (!existing) return res.status(403).json({ success: false, message: 'Không có quyền chỉnh sửa tuyến này.' });
-    const route = await prisma.route.update({ where: { id: req.params.id }, data: req.body });
+    const route = await prisma.route.update({ where: { id: req.params.id }, data: routeDataFromBody(req.body) });
     res.json({ success: true, data: route });
   } catch (err) { next(err); }
 });

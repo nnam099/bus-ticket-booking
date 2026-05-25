@@ -4,6 +4,18 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
 
+const parseOptionalInt = (value) => {
+  if (value === undefined || value === '') return undefined;
+  return Number.parseInt(value, 10);
+};
+
+const vehicleDataFromBody = (body) => ({
+  vehicleTypeId: body.vehicleTypeId,
+  licensePlate: body.licensePlate,
+  manufactureYear: parseOptionalInt(body.manufactureYear),
+  isActive: body.isActive,
+});
+
 router.get('/', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
   try {
     const operatorId = req.user.busOperator?.id;
@@ -17,9 +29,8 @@ router.get('/', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) 
 
 router.post('/', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
   try {
-    const { vehicleTypeId, licensePlate, manufactureYear } = req.body;
     const operatorId = req.user.busOperator?.id;
-    const vehicle = await prisma.vehicle.create({ data: { operatorId, vehicleTypeId, licensePlate, manufactureYear } });
+    const vehicle = await prisma.vehicle.create({ data: { ...vehicleDataFromBody(req.body), operatorId } });
     res.status(201).json({ success: true, data: vehicle });
   } catch (err) { next(err); }
 });
@@ -29,7 +40,7 @@ router.put('/:id', authenticate, authorize('BUS_OPERATOR'), async (req, res, nex
     const operatorId = req.user.busOperator?.id;
     const existing = await prisma.vehicle.findFirst({ where: { id: req.params.id, operatorId } });
     if (!existing) return res.status(403).json({ success: false, message: 'Không có quyền chỉnh sửa xe này.' });
-    const vehicle = await prisma.vehicle.update({ where: { id: req.params.id }, data: req.body });
+    const vehicle = await prisma.vehicle.update({ where: { id: req.params.id }, data: vehicleDataFromBody(req.body) });
     res.json({ success: true, data: vehicle });
   } catch (err) { next(err); }
 });
