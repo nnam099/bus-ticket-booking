@@ -23,6 +23,8 @@ const verifyPaymentSignature = (payload, signature) => {
 };
 
 const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
+  let expiredBooking = false;
+
   await prisma.$transaction(async (tx) => {
     const payment = await tx.payment.findUnique({
       where: { id: paymentId },
@@ -62,7 +64,7 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
       await tx.order.update({ where: { id: payment.orderId }, data: { status: 'CANCELLED' } });
       await tx.ticketDetail.deleteMany({ where: { id: { in: ticketIds }, status: 'PENDING' } });
       await tx.tripSeat.updateMany({
-        where: { id: { in: seatIds }, status: 'PROCESSING' },
+        where: { id: { in: seatIds }, status: 'PROCESSING', lockedBy: payment.order.customerId },
         data: { status: 'AVAILABLE', lockedBy: null, lockedAt: null, lockExpiresAt: null },
       });
 
@@ -72,17 +74,62 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
       return;
     }
 
-    await tx.order.update({ where: { id: payment.orderId }, data: { status: 'PAID' } });
-    await tx.ticketDetail.updateMany({ where: { orderId: payment.orderId }, data: { status: 'PAID' } });
-    await tx.tripSeat.updateMany({
-      where: { id: { in: seatIds } },
+    const now = new Date();
+    const canCompleteBooking = payment.order.status === 'PENDING'
+      && payment.order.ticketDetails.length > 0
+      && payment.order.ticketDetails.every((ticket) => (
+        ticket.status === 'PENDING'
+        && ticket.tripSeat.status === 'PROCESSING'
+        && ticket.tripSeat.lockedBy === payment.order.customerId
+        && ticket.tripSeat.lockExpiresAt
+        && ticket.tripSeat.lockExpiresAt > now
+      ));
+
+    if (!canCompleteBooking) {
+      expiredBooking = true;
+      await tx.payment.update({
+        where: { id: paymentId },
+        data: { status: 'FAILED', gatewayTxnId, paidAt: null },
+      });
+      await tx.order.update({ where: { id: payment.orderId }, data: { status: 'CANCELLED' } });
+      await tx.ticketDetail.deleteMany({ where: { id: { in: ticketIds }, status: 'PENDING' } });
+      await tx.tripSeat.updateMany({
+        where: { id: { in: seatIds }, status: 'PROCESSING', lockedBy: payment.order.customerId },
+        data: { status: 'AVAILABLE', lockedBy: null, lockedAt: null, lockExpiresAt: null },
+      });
+
+      for (const ticket of payment.order.ticketDetails) {
+        await redisClient.del(`seat_lock:${ticket.tripSeat.tripId}:${ticket.tripSeatId}`);
+      }
+      return;
+    }
+
+    const bookedSeats = await tx.tripSeat.updateMany({
+      where: { id: { in: seatIds }, status: 'PROCESSING', lockedBy: payment.order.customerId },
       data: { status: 'BOOKED', lockedBy: null, lockedAt: null, lockExpiresAt: null },
     });
+
+    if (bookedSeats.count !== seatIds.length) {
+      const error = new Error('Phiên giữ chỗ đã hết hạn. Thanh toán không thể hoàn tất.');
+      error.statusCode = 409;
+      error.isOperational = true;
+      throw error;
+    }
+
+    await tx.order.update({ where: { id: payment.orderId }, data: { status: 'PAID' } });
+    await tx.ticketDetail.updateMany({ where: { orderId: payment.orderId }, data: { status: 'PAID' } });
 
     for (const ticket of payment.order.ticketDetails) {
       await redisClient.del(`seat_lock:${ticket.tripSeat.tripId}:${ticket.tripSeatId}`);
     }
   });
+
+  if (expiredBooking) {
+    const error = new Error('Phiên giữ chỗ đã hết hạn. Thanh toán không thể hoàn tất.');
+    error.statusCode = 409;
+    error.isOperational = true;
+    throw error;
+  }
 };
 
 // POST /api/payments/initiate - Khoi tao giao dich thanh toan
