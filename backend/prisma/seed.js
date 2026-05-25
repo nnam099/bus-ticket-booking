@@ -208,6 +208,24 @@ async function main() {
       address: '27 Nguyen Tat Thanh, Buon Ma Thuot',
       description: 'Nha xe chuyen cac tuyen Tay Nguyen va xe giuong nam dem.',
     }),
+    eastern: await ensureOperator({
+      email: 'operator.eastern@demo.vn',
+      phone: '0900000026',
+      companyName: 'Eastern Express',
+      licenseNumber: 'NX-EAST-007',
+      hotline: '1900 7707',
+      address: '101 Nguyen Thai Hoc, Dong Nai',
+      description: 'Nha xe phuc vu mien Dong Nam Bo va Nam Trung Bo.',
+    }),
+    western: await ensureOperator({
+      email: 'operator.western@demo.vn',
+      phone: '0900000027',
+      companyName: 'Western Trans',
+      licenseNumber: 'NX-WEST-008',
+      hotline: '1900 8808',
+      address: '22 Le Duan, Kien Giang',
+      description: 'Nha xe phuc vu cac tinh mien Tay nam bo va bien.',
+    }),
   };
 
   const customerUser = await prisma.user.upsert({
@@ -346,6 +364,12 @@ async function main() {
       licenseNo: 'GPLX-DEMO-015',
       operator: operators.mekong,
     }),
+    hcmDaNang: await ensureDriver({ email: 'driver.hcm_danang@demo.vn', phone: '0900000028', fullName: 'Phan Van Tuan', licenseNo: 'GPLX-DEMO-016', operator: operators.demo }),
+    hanoiDaNang: await ensureDriver({ email: 'driver.hanoi_danang@demo.vn', phone: '0900000029', fullName: 'Bui Van Quang', licenseNo: 'GPLX-DEMO-017', operator: operators.north }),
+    daNangNhaTrang: await ensureDriver({ email: 'driver.danang_nhatrang@demo.vn', phone: '0900000030', fullName: 'Dinh Van Hai', licenseNo: 'GPLX-DEMO-018', operator: operators.central }),
+    canThoRachGia: await ensureDriver({ email: 'driver.cantho_rachgia@demo.vn', phone: '0900000031', fullName: 'Mai Van Kien', licenseNo: 'GPLX-DEMO-019', operator: operators.western }),
+    daLatNhaTrang: await ensureDriver({ email: 'driver.dalat_nhatrang@demo.vn', phone: '0900000032', fullName: 'Trinh Van Phuc', licenseNo: 'GPLX-DEMO-020', operator: operators.highland }),
+    haiPhongQuangNinh: await ensureDriver({ email: 'driver.haiphong_quangninh@demo.vn', phone: '0900000033', fullName: 'Dao Van Thanh', licenseNo: 'GPLX-DEMO-021', operator: operators.eastern }),
   };
 
   const limousine22 = await prisma.vehicleType.upsert({
@@ -404,6 +428,12 @@ async function main() {
     haNoiThanhHoa: await ensureVehicle({ id: 'veh-demo-limo-thanhhoa', vehicleType: limousine22, licensePlate: '29E-55667', manufactureYear: 2021, operator: operators.north }),
     haNoiVinh: await ensureVehicle({ id: 'veh-demo-sleeper-vinh', vehicleType: sleeper40, licensePlate: '29F-77889', manufactureYear: 2022, operator: operators.north }),
     canThoCaMau: await ensureVehicle({ id: 'veh-demo-limo-camau', vehicleType: limousine22, licensePlate: '65A-13580', manufactureYear: 2023, operator: operators.mekong }),
+    hcmDaNang: await ensureVehicle({ id: 'veh-demo-sleeper-hcm-danang', vehicleType: sleeper40, licensePlate: '51M-11223', manufactureYear: 2024, operator: operators.demo }),
+    hanoiDaNang: await ensureVehicle({ id: 'veh-demo-sleeper-hanoi-danang', vehicleType: sleeper40, licensePlate: '29G-33445', manufactureYear: 2023, operator: operators.north }),
+    daNangNhaTrang: await ensureVehicle({ id: 'veh-demo-limo-danang-nhatrang', vehicleType: limousine22, licensePlate: '43D-55667', manufactureYear: 2022, operator: operators.central }),
+    canThoRachGia: await ensureVehicle({ id: 'veh-demo-limo-cantho-rachgia', vehicleType: limousine22, licensePlate: '68A-77889', manufactureYear: 2023, operator: operators.western }),
+    daLatNhaTrang: await ensureVehicle({ id: 'veh-demo-limo-dalat-nhatrang', vehicleType: limousine22, licensePlate: '49B-99001', manufactureYear: 2021, operator: operators.highland }),
+    haiPhongQuangNinh: await ensureVehicle({ id: 'veh-demo-limo-haiphong-quangninh', vehicleType: limousine22, licensePlate: '15A-22334', manufactureYear: 2024, operator: operators.eastern }),
   };
 
   await Promise.all([
@@ -704,6 +734,66 @@ async function main() {
       vehicleType: limousine22,
       driver: drivers.canThoCaMau,
       cycleTimes: ['06:00', '11:00', '16:00', '21:00'],
+    },
+    {
+      key: 'hcm-danang',
+      operator: operators.demo,
+      outwardId: 'route-hcm-danang',
+      returnId: 'route-danang-hcm',
+      outward: { originCity: 'Hồ Chí Minh', destinationCity: 'Đà Nẵng', originAddress: 'Bến xe Miền Đông Mới', destinationAddress: 'Bến xe trung tâm Đà Nẵng' },
+      distanceKm: 950, durationMinutes: 1200, basePrice: 450000,
+      vehicle: vehicles.hcmDaNang, vehicleType: sleeper40, driver: drivers.hcmDaNang,
+      cycleTimes: ['08:00', '18:00'],
+    },
+    {
+      key: 'hanoi-danang',
+      operator: operators.north,
+      outwardId: 'route-hanoi-danang',
+      returnId: 'route-danang-hanoi',
+      outward: { originCity: 'Hà Nội', destinationCity: 'Đà Nẵng', originAddress: 'Bến xe Nước Ngầm', destinationAddress: 'Bến xe trung tâm Đà Nẵng' },
+      distanceKm: 760, durationMinutes: 900, basePrice: 400000,
+      vehicle: vehicles.hanoiDaNang, vehicleType: sleeper40, driver: drivers.hanoiDaNang,
+      cycleTimes: ['09:00', '19:00'],
+    },
+    {
+      key: 'danang-nhatrang',
+      operator: operators.central,
+      outwardId: 'route-danang-nhatrang',
+      returnId: 'route-nhatrang-danang',
+      outward: { originCity: 'Đà Nẵng', destinationCity: 'Nha Trang', originAddress: 'Bến xe trung tâm Đà Nẵng', destinationAddress: 'Bến xe phía Nam Nha Trang' },
+      distanceKm: 530, durationMinutes: 600, basePrice: 350000,
+      vehicle: vehicles.daNangNhaTrang, vehicleType: limousine22, driver: drivers.daNangNhaTrang,
+      cycleTimes: ['07:30', '20:30'],
+    },
+    {
+      key: 'cantho-rachgia',
+      operator: operators.western,
+      outwardId: 'route-cantho-rachgia',
+      returnId: 'route-rachgia-cantho',
+      outward: { originCity: 'Cần Thơ', destinationCity: 'Kiên Giang', originAddress: 'Bến xe trung tâm Cần Thơ', destinationAddress: 'Bến xe Rạch Giá' },
+      distanceKm: 110, durationMinutes: 150, basePrice: 130000,
+      vehicle: vehicles.canThoRachGia, vehicleType: limousine22, driver: drivers.canThoRachGia,
+      cycleTimes: ['06:00', '09:00', '12:00', '15:00', '18:00'],
+    },
+    {
+      key: 'dalat-nhatrang',
+      operator: operators.highland,
+      outwardId: 'route-dalat-nhatrang',
+      returnId: 'route-nhatrang-dalat',
+      outward: { originCity: 'Đà Lạt', destinationCity: 'Nha Trang', originAddress: 'Bến xe liên tỉnh Đà Lạt', destinationAddress: 'Bến xe phía Nam Nha Trang' },
+      distanceKm: 140, durationMinutes: 200, basePrice: 180000,
+      vehicle: vehicles.daLatNhaTrang, vehicleType: limousine22, driver: drivers.daLatNhaTrang,
+      cycleTimes: ['08:00', '13:00', '17:00'],
+    },
+    {
+      key: 'haiphong-quangninh',
+      operator: operators.eastern,
+      outwardId: 'route-haiphong-quangninh',
+      returnId: 'route-quangninh-haiphong',
+      outward: { originCity: 'Hải Phòng', destinationCity: 'Quảng Ninh', originAddress: 'Bến xe Niệm Nghĩa', destinationAddress: 'Bến xe Bãi Cháy' },
+      distanceKm: 80, durationMinutes: 100, basePrice: 100000,
+      vehicle: vehicles.haiPhongQuangNinh, vehicleType: limousine22, driver: drivers.haiPhongQuangNinh,
+      cycleTimes: ['06:30', '08:30', '10:30', '12:30', '14:30', '16:30', '18:30'],
     },
   ];
 
