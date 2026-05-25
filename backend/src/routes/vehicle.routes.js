@@ -1,7 +1,7 @@
 // vehicle.routes.js
 const express = require('express');
 const router = express.Router();
-const { authenticate, authorize } = require('../middlewares/auth.middleware');
+const { authenticate, authorize, requireApprovedOperator } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
 
 const parseOptionalInt = (value) => {
@@ -16,7 +16,7 @@ const vehicleDataFromBody = (body) => ({
   isActive: body.isActive,
 });
 
-router.get('/', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
+router.get('/', authenticate, authorize('BUS_OPERATOR'), requireApprovedOperator, async (req, res, next) => {
   try {
     const operatorId = req.user.busOperator?.id;
     const vehicles = await prisma.vehicle.findMany({
@@ -27,7 +27,7 @@ router.get('/', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) 
   } catch (err) { next(err); }
 });
 
-router.get('/types', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
+router.get('/types', authenticate, authorize('BUS_OPERATOR'), requireApprovedOperator, async (req, res, next) => {
   try {
     const vehicleTypes = await prisma.vehicleType.findMany({
       select: { id: true, name: true, seatCount: true, description: true },
@@ -37,7 +37,7 @@ router.get('/types', authenticate, authorize('BUS_OPERATOR'), async (req, res, n
   } catch (err) { next(err); }
 });
 
-router.post('/', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
+router.post('/', authenticate, authorize('BUS_OPERATOR'), requireApprovedOperator, async (req, res, next) => {
   try {
     const operatorId = req.user.busOperator?.id;
     const vehicle = await prisma.vehicle.create({ data: { ...vehicleDataFromBody(req.body), operatorId } });
@@ -45,7 +45,7 @@ router.post('/', authenticate, authorize('BUS_OPERATOR'), async (req, res, next)
   } catch (err) { next(err); }
 });
 
-router.put('/:id', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
+router.put('/:id', authenticate, authorize('BUS_OPERATOR'), requireApprovedOperator, async (req, res, next) => {
   try {
     const operatorId = req.user.busOperator?.id;
     const existing = await prisma.vehicle.findFirst({ where: { id: req.params.id, operatorId } });
@@ -55,7 +55,7 @@ router.put('/:id', authenticate, authorize('BUS_OPERATOR'), async (req, res, nex
   } catch (err) { next(err); }
 });
 
-router.delete('/:id', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
+router.delete('/:id', authenticate, authorize('BUS_OPERATOR'), requireApprovedOperator, async (req, res, next) => {
   try {
     const operatorId = req.user.busOperator?.id;
     const existing = await prisma.vehicle.findFirst({ where: { id: req.params.id, operatorId } });

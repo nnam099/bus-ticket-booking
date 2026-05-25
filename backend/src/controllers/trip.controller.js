@@ -3,7 +3,7 @@ const prisma = require('../config/prisma');
 const findManagedTrip = async (req, tripId) => {
   if (req.roles?.includes('BUS_OPERATOR')) {
     return prisma.trip.findFirst({
-      where: { id: tripId, vehicle: { operator: { userId: req.user.id } } },
+      where: { id: tripId, vehicle: { operator: { userId: req.user.id, isApproved: true } } },
     });
   }
 
@@ -36,6 +36,7 @@ const searchTrips = async (req, res, next) => {
         originCity: { contains: origin, mode: 'insensitive' },
         destinationCity: { contains: destination, mode: 'insensitive' },
         isActive: true,
+        operator: { isApproved: true },
       },
     };
     if (operatorId) where.vehicle = { operatorId };
@@ -61,7 +62,7 @@ const searchTrips = async (req, res, next) => {
 const getTripById = async (req, res, next) => {
   try {
     const trip = await prisma.trip.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id, route: { operator: { isApproved: true } } },
       include: {
         route: { include: { operator: true } },
         vehicle: { include: { vehicleType: { include: { seatLayouts: true } } } },
