@@ -1,7 +1,7 @@
 // user.routes.js
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middlewares/auth.middleware');
+const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const bcrypt = require('bcryptjs');
 const prisma = require('../config/prisma');
 
@@ -37,9 +37,12 @@ router.put('/me/password', authenticate, async (req, res, next) => {
 });
 
 // GET /api/users/me/tickets
-router.get('/me/tickets', authenticate, async (req, res, next) => {
+router.get('/me/tickets', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
   try {
     const customerId = req.user.customer?.id;
+    if (!customerId) {
+      return res.status(403).json({ success: false, message: 'Chỉ khách hàng mới có thể xem vé cá nhân.' });
+    }
     const tickets = await prisma.ticketDetail.findMany({
       where: { order: { customerId } },
       include: {
