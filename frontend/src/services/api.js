@@ -86,6 +86,7 @@ export const vehicleAPI = {
 // Route API
 export const routeAPI = {
   getAll: (params) => api.get('/routes', { params }),
+  getMine: () => api.get('/routes/operator/me'),
   create: (data) => api.post('/routes', data),
   update: (id, data) => api.put(`/routes/${id}`, data),
   delete: (id) => api.delete(`/routes/${id}`),

@@ -39,6 +39,17 @@ router.get('/', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+router.get('/operator/me', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
+  try {
+    const operatorId = req.user.busOperator?.id;
+    const routes = await prisma.route.findMany({
+      where: { operatorId },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ success: true, data: routes });
+  } catch (err) { next(err); }
+});
+
 router.post('/', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
   try {
     const operatorId = req.user.busOperator?.id;

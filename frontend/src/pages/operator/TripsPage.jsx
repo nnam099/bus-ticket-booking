@@ -20,7 +20,7 @@ export default function TripsPage() {
   const [loading, setLoading] = useState(false);
 
   const loadTrips = () => {
-    routeAPI.getAll().then(r => setRoutes(r.data.data));
+    routeAPI.getMine().then(r => setRoutes(r.data.data));
     vehicleAPI.getMyVehicles().then(r => setVehicles(r.data.data));
     tripAPI.getMine().then(r => setTrips(r.data.data));
   };
