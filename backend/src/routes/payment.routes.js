@@ -7,7 +7,8 @@ const prisma = require('../config/prisma');
 
 const verifyPaymentSignature = (payload, signature) => {
   const secret = process.env.PAYMENT_WEBHOOK_SECRET;
-  if (!secret) return true;
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  if (!secret) return ['development', 'test'].includes(nodeEnv);
   if (!signature) return false;
 
   const expected = crypto
