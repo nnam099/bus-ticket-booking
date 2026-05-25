@@ -5,7 +5,7 @@
 
 const prisma = require('../config/prisma');
 const { redisClient } = require('../config/redis');
-const { io } = require('../config/socket');
+const { getIo } = require('../config/socket');
 const QRCode = require('qrcode');
 const logger = require('../utils/logger');
 
@@ -62,7 +62,7 @@ const lockSeats = async (tripId, seatIds, customerId) => {
   }
 
   // Broadcast realtime seat status change
-  io?.to(`trip:${tripId}`).emit('seats:updated', {
+  getIo()?.to(`trip:${tripId}`).emit('seats:updated', {
     seatIds,
     status: 'PROCESSING',
   });
@@ -92,7 +92,7 @@ const releaseSeats = async (tripId, seatIds, customerId) => {
     data: { status: 'AVAILABLE', lockedAt: null, lockedBy: null, lockExpiresAt: null },
   });
 
-  io?.to(`trip:${tripId}`).emit('seats:updated', { seatIds, status: 'AVAILABLE' });
+  getIo()?.to(`trip:${tripId}`).emit('seats:updated', { seatIds, status: 'AVAILABLE' });
   logger.info(`Seats released: ${seatIds.join(',')} on trip ${tripId}`);
 };
 
@@ -120,7 +120,7 @@ const releaseExpiredSeatLocks = async () => {
   }, {});
 
   for (const [tripId, ids] of Object.entries(byTrip)) {
-    io?.to(`trip:${tripId}`).emit('seats:updated', { seatIds: ids, status: 'AVAILABLE' });
+    getIo()?.to(`trip:${tripId}`).emit('seats:updated', { seatIds: ids, status: 'AVAILABLE' });
   }
 
   logger.info(`Released ${expiredSeats.length} expired seat locks`);
@@ -207,7 +207,7 @@ const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, paym
     }
 
     if (isCashPayment) {
-      io?.to(`trip:${tripId}`).emit('seats:updated', { seatIds, status: 'BOOKED' });
+      getIo()?.to(`trip:${tripId}`).emit('seats:updated', { seatIds, status: 'BOOKED' });
     }
 
     return { order, tickets };

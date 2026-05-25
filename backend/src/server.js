@@ -9,10 +9,10 @@ const logger = require('./utils/logger');
 const PORT = process.env.PORT || 3000;
 
 const httpServer = createServer(app);
-initSocket(httpServer);
 
 const start = async () => {
   await connectRedis();
+  await initSocket(httpServer);
   await releaseExpiredSeatLocks();
   setInterval(() => {
     releaseExpiredSeatLocks().catch((error) => logger.error('Failed to release expired seat locks:', error));
