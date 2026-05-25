@@ -13,6 +13,16 @@ const cityOptions = [
   'Hải Phòng',
   'Đà Nẵng',
   'Huế',
+  'Vũng Tàu',
+  'Phan Thiết',
+  'Buôn Ma Thuột',
+  'Quy Nhơn',
+  'Quảng Ngãi',
+  'Lào Cai',
+  'Ninh Bình',
+  'Thanh Hóa',
+  'Vinh',
+  'Cà Mau',
 ];
 
 const popularRoutes = [
@@ -26,6 +36,13 @@ const popularRoutes = [
   { origin: 'Hải Phòng', destination: 'Hà Nội' },
   { origin: 'Đà Nẵng', destination: 'Huế' },
   { origin: 'Huế', destination: 'Đà Nẵng' },
+  { origin: 'Hồ Chí Minh', destination: 'Vũng Tàu' },
+  { origin: 'Hồ Chí Minh', destination: 'Phan Thiết' },
+  { origin: 'Hồ Chí Minh', destination: 'Buôn Ma Thuột' },
+  { origin: 'Hà Nội', destination: 'Lào Cai' },
+  { origin: 'Hà Nội', destination: 'Ninh Bình' },
+  { origin: 'Đà Nẵng', destination: 'Quảng Ngãi' },
+  { origin: 'Cần Thơ', destination: 'Cà Mau' },
 ];
 
 const normalizeText = (value) =>
