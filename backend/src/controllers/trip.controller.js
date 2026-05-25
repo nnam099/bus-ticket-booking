@@ -107,16 +107,41 @@ const createTrip = async (req, res, next) => {
   try {
     const { routeId, vehicleId, departureTime, estimatedArrival, basePrice } = req.body;
     const operatorId = req.user.busOperator?.id;
+    const departure = new Date(departureTime);
+    const arrival = new Date(estimatedArrival);
+    const parsedPrice = Number(basePrice);
+
+    if (Number.isNaN(departure.getTime()) || Number.isNaN(arrival.getTime())) {
+      return res.status(400).json({ success: false, message: 'Thời gian chuyến xe không hợp lệ.' });
+    }
+    if (arrival <= departure) {
+      return res.status(400).json({ success: false, message: 'Giờ đến dự kiến phải sau giờ khởi hành.' });
+    }
+    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      return res.status(400).json({ success: false, message: 'Giá vé phải lớn hơn 0.' });
+    }
 
     // Verify ownership
-    const vehicle = await prisma.vehicle.findFirst({ where: { id: vehicleId, operatorId } });
+    const vehicle = await prisma.vehicle.findFirst({ where: { id: vehicleId, operatorId, isActive: true } });
     if (!vehicle) return res.status(403).json({ success: false, message: 'Xe không thuộc nhà xe của bạn.' });
     const route = await prisma.route.findFirst({ where: { id: routeId, operatorId, isActive: true } });
     if (!route) return res.status(403).json({ success: false, message: 'Tuyến không thuộc nhà xe của bạn.' });
+    const overlappingTrip = await prisma.trip.findFirst({
+      where: {
+        vehicleId,
+        status: { not: 'CANCELLED' },
+        departureTime: { lt: arrival },
+        estimatedArrival: { gt: departure },
+      },
+      select: { id: true },
+    });
+    if (overlappingTrip) {
+      return res.status(409).json({ success: false, message: 'Xe đã có chuyến khác trong khung giờ này.' });
+    }
 
     const trip = await prisma.$transaction(async (tx) => {
       const newTrip = await tx.trip.create({
-        data: { routeId, vehicleId, departureTime: new Date(departureTime), estimatedArrival: new Date(estimatedArrival), basePrice },
+        data: { routeId, vehicleId, departureTime: departure, estimatedArrival: arrival, basePrice: parsedPrice },
       });
 
       // Auto-generate trip seats from vehicle seat layout
