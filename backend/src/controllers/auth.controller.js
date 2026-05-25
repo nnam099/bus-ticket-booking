@@ -202,6 +202,14 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
+/**
+ * POST /api/auth/logout
+ */
+const logout = (req, res) => {
+  res.clearCookie('token', { httpOnly: true, sameSite: 'strict' });
+  res.json({ success: true, message: 'Đăng xuất thành công.' });
+};
+
 // Helpers
 function generateToken(user) {
   if (!process.env.JWT_SECRET) {
@@ -221,4 +229,4 @@ function formatUser(user) {
   return rest;
 }
 
-module.exports = { register, login, sendOtp, verifyOtp, forgotPassword, resetPassword };
+module.exports = { register, login, sendOtp, verifyOtp, forgotPassword, resetPassword, logout };

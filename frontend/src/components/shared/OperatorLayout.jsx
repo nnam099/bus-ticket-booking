@@ -2,12 +2,21 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
+import { authAPI } from '../../services/api';
 
 export default function OperatorLayout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+    } finally {
+      dispatch(logout());
+      navigate('/');
+    }
+  };
 
   const links = [
     { to: '/operator', label: '📊 Dashboard' },
@@ -34,7 +43,7 @@ export default function OperatorLayout() {
             </Link>
           ))}
         </nav>
-        <button onClick={() => { dispatch(logout()); navigate('/'); }}
+        <button onClick={handleLogout}
           className="mx-2 mb-4 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition text-left">
           🚪 Đăng xuất
         </button>
