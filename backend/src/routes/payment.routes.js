@@ -23,6 +23,9 @@ const verifyPaymentSignature = (payload, signature) => {
   }
 };
 
+const PAYMENT_METHODS = ['E_WALLET', 'BANK_CARD', 'BANK_TRANSFER', 'CASH'];
+const PAYMENT_STATUSES = ['success', 'failed'];
+
 const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
   let expiredBooking = false;
   let lockOwnerCustomerId;
@@ -147,6 +150,12 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
 router.post('/initiate', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
   try {
     const { orderId, method, gateway } = req.body;
+    if (!orderId || !PAYMENT_METHODS.includes(method)) {
+      return res.status(400).json({ success: false, message: 'Thông tin thanh toán không hợp lệ.' });
+    }
+    if (gateway !== undefined && gateway !== null && typeof gateway !== 'string') {
+      return res.status(400).json({ success: false, message: 'Cổng thanh toán không hợp lệ.' });
+    }
 
     const order = await prisma.order.findFirst({
       where: { id: orderId, customer: { userId: req.user.id } },
@@ -168,6 +177,9 @@ router.post('/initiate', authenticate, authorize('CUSTOMER'), async (req, res, n
 router.post('/mock/complete', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
   try {
     const { paymentId, status = 'success' } = req.body;
+    if (!paymentId || !PAYMENT_STATUSES.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Thông tin giao dịch không hợp lệ.' });
+    }
     const payment = await prisma.payment.findFirst({
       where: { id: paymentId, order: { customer: { userId: req.user.id } } },
       select: { id: true },
@@ -192,6 +204,9 @@ router.post('/callback', async (req, res, next) => {
     }
 
     const { paymentId, status, gatewayTxnId } = req.body;
+    if (!paymentId || !PAYMENT_STATUSES.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Thông tin callback không hợp lệ.' });
+    }
     await applyPaymentResult({ paymentId, status, gatewayTxnId });
 
     res.json({ success: true });

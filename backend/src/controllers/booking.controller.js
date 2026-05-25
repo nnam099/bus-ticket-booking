@@ -1,10 +1,21 @@
 const { lockSeats: lockSeatsService, releaseSeats: releaseSeatsService, confirmBooking: confirmBookingService, cancelTicket: cancelTicketService } = require('../services/booking.service');
 
+const isValidSeatRequest = (tripId, seatIds) => (
+  typeof tripId === 'string'
+  && tripId.trim()
+  && Array.isArray(seatIds)
+  && seatIds.length > 0
+  && seatIds.every((id) => typeof id === 'string' && id.trim())
+);
+
 const lockSeats = async (req, res, next) => {
   try {
     const { tripId, seatIds } = req.body;
     const customerId = req.user.customer?.id;
     if (!customerId) return res.status(403).json({ success: false, message: 'Chỉ khách hàng mới có thể đặt vé.' });
+    if (!isValidSeatRequest(tripId, seatIds)) {
+      return res.status(400).json({ success: false, message: 'Thông tin giữ ghế không hợp lệ.' });
+    }
 
     const result = await lockSeatsService(tripId, seatIds, customerId);
     res.json({ success: true, message: `Giữ chỗ thành công. Bạn có ${process.env.BOOKING_LOCK_MINUTES || 15} phút để hoàn tất thanh toán.`, data: result });
@@ -19,6 +30,9 @@ const releaseSeats = async (req, res, next) => {
   try {
     const { tripId, seatIds } = req.body;
     const customerId = req.user.customer?.id;
+    if (!isValidSeatRequest(tripId, seatIds)) {
+      return res.status(400).json({ success: false, message: 'Thông tin hủy giữ chỗ không hợp lệ.' });
+    }
     await releaseSeatsService(tripId, seatIds, customerId);
     res.json({ success: true, message: 'Đã hủy giữ chỗ.' });
   } catch (err) {
@@ -30,6 +44,14 @@ const confirmBooking = async (req, res, next) => {
   try {
     const { tripId, seatIds, passengerInfo, paymentMethod } = req.body;
     const customerId = req.user.customer?.id;
+    const validPaymentMethods = ['CASH', 'E_WALLET', 'BANK_CARD', 'BANK_TRANSFER'];
+    const validPassengers = Array.isArray(passengerInfo)
+      && passengerInfo.length > 0
+      && passengerInfo.every((p) => p && typeof p.name === 'string' && p.name.trim());
+
+    if (!isValidSeatRequest(tripId, seatIds) || !validPassengers || !validPaymentMethods.includes(paymentMethod)) {
+      return res.status(400).json({ success: false, message: 'Thông tin đặt vé không hợp lệ.' });
+    }
 
     const result = await confirmBookingService({ customerId, tripId, seatIds, passengerInfo, paymentMethod });
     res.status(201).json({ success: true, message: 'Đặt vé thành công!', data: result });

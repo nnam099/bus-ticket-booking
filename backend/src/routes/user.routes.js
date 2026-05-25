@@ -13,13 +13,26 @@ router.get('/me', authenticate, async (req, res) => {
 });
 
 // PUT /api/users/me
-router.put('/me', authenticate, async (req, res, next) => {
+router.put('/me', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
   try {
     const { fullName, dateOfBirth, avatarUrl, phone } = req.body;
+    if (!req.user.customer?.id) {
+      return res.status(403).json({ success: false, message: 'Chỉ khách hàng mới có thể cập nhật hồ sơ cá nhân.' });
+    }
+    if (fullName !== undefined && (!String(fullName).trim() || String(fullName).length > 100)) {
+      return res.status(400).json({ success: false, message: 'Họ tên không hợp lệ.' });
+    }
+    if (phone !== undefined && phone !== '' && typeof phone !== 'string') {
+      return res.status(400).json({ success: false, message: 'Số điện thoại không hợp lệ.' });
+    }
+    const parsedDateOfBirth = dateOfBirth ? new Date(dateOfBirth) : undefined;
+    if (dateOfBirth && Number.isNaN(parsedDateOfBirth.getTime())) {
+      return res.status(400).json({ success: false, message: 'Ngày sinh không hợp lệ.' });
+    }
     await prisma.$transaction([
       prisma.customer.update({
         where: { userId: req.user.id },
-        data: { fullName, dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined, avatarUrl },
+        data: { fullName, dateOfBirth: parsedDateOfBirth, avatarUrl },
       }),
       prisma.user.update({
         where: { id: req.user.id },
@@ -40,6 +53,9 @@ router.put('/me', authenticate, async (req, res, next) => {
 router.put('/me/password', authenticate, async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+    }
     const valid = await bcrypt.compare(currentPassword, req.user.passwordHash);
     if (!valid) return res.status(400).json({ success: false, message: 'Mật khẩu hiện tại không đúng.' });
     const passwordHash = await bcrypt.hash(newPassword, 12);

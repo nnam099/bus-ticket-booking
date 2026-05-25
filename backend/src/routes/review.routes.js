@@ -9,6 +9,14 @@ router.post('/', authenticate, authorize('CUSTOMER'), async (req, res, next) => 
   try {
     const { ticketDetailId, rating, comment } = req.body;
     const customerId = req.user.customer?.id;
+    const parsedRating = Number(rating);
+
+    if (!ticketDetailId || !Number.isInteger(parsedRating)) {
+      return res.status(400).json({ success: false, message: 'Thông tin đánh giá không hợp lệ.' });
+    }
+    if (comment !== undefined && comment !== null && typeof comment !== 'string') {
+      return res.status(400).json({ success: false, message: 'Nội dung đánh giá không hợp lệ.' });
+    }
 
     // Verify ticket ownership & completion
     const ticket = await prisma.ticketDetail.findFirst({
@@ -16,10 +24,10 @@ router.post('/', authenticate, authorize('CUSTOMER'), async (req, res, next) => 
     });
     if (!ticket) return res.status(403).json({ success: false, message: 'Chỉ có thể đánh giá chuyến đã hoàn thành.' });
 
-    if (rating < 1 || rating > 5) return res.status(400).json({ success: false, message: 'Đánh giá phải từ 1 đến 5 sao.' });
+    if (parsedRating < 1 || parsedRating > 5) return res.status(400).json({ success: false, message: 'Đánh giá phải từ 1 đến 5 sao.' });
 
     const review = await prisma.review.create({
-      data: { ticketDetailId, customerId, rating, comment },
+      data: { ticketDetailId, customerId, rating: parsedRating, comment },
     });
     res.status(201).json({ success: true, data: review });
   } catch (err) { next(err); }
