@@ -115,6 +115,7 @@ export const adminAPI = {
   getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
   getPendingReviews: () => api.get('/admin/reviews/pending'),
   approveReview: (id) => api.patch(`/admin/reviews/${id}/approve`),
+  rejectReview: (id) => api.delete(`/admin/reviews/${id}`),
 };
 
 // Staff API

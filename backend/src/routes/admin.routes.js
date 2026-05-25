@@ -281,4 +281,36 @@ router.patch('/reviews/:id/approve', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// DELETE /api/admin/reviews/:id - Từ chối đánh giá chờ duyệt
+router.delete('/reviews/:id', async (req, res, next) => {
+  try {
+    const review = await prisma.review.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, rating: true, comment: true, isApproved: true },
+    });
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy đánh giá.' });
+    }
+    if (review.isApproved) {
+      return res.status(400).json({ success: false, message: 'Không thể từ chối đánh giá đã được duyệt.' });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.review.delete({ where: { id: review.id } });
+      await tx.auditLog.create({
+        data: {
+          userId: req.user.id,
+          action: 'REJECT_REVIEW',
+          resource: 'Review',
+          resourceId: review.id,
+          details: { rating: review.rating, comment: review.comment },
+          ...requestMeta(req),
+        },
+      });
+    });
+
+    res.json({ success: true, message: 'Đã từ chối đánh giá.' });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

@@ -20,9 +20,12 @@ export default function AdminReviewsPage() {
     } catch { alert('Duyệt đánh giá thất bại.'); }
   };
 
-  const handleReject = (id) => {
-    // In a real system you'd have a reject endpoint; here we just remove from UI
-    setReviews(prev => prev.filter(r => r.id !== id));
+  const handleReject = async (id) => {
+    if (!window.confirm('Từ chối và xóa đánh giá này?')) return;
+    try {
+      await adminAPI.rejectReview(id);
+      setReviews(prev => prev.filter(r => r.id !== id));
+    } catch { alert('Từ chối đánh giá thất bại.'); }
   };
 
   if (loading) return <div className="text-center py-16 text-gray-500">Đang tải...</div>;
