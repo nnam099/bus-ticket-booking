@@ -142,6 +142,70 @@ router.get('/users', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /api/admin/users/:id/tickets - Xem vé/chuyến đã đặt của một user
+router.get('/users/:id/tickets', async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        customer: { select: { id: true, fullName: true } },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
+    }
+    if (!user.customer) {
+      return res.json({ success: true, data: { user, tickets: [] } });
+    }
+
+    const tickets = await prisma.ticketDetail.findMany({
+      where: { order: { customerId: user.customer.id } },
+      include: {
+        order: {
+          select: {
+            id: true,
+            status: true,
+            totalAmount: true,
+            createdAt: true,
+            payments: {
+              select: { id: true, method: true, gateway: true, status: true, paidAt: true },
+              orderBy: { createdAt: 'desc' },
+            },
+          },
+        },
+        tripSeat: {
+          include: {
+            seatLayout: { select: { seatCode: true, floor: true } },
+            trip: {
+              include: {
+                route: {
+                  include: {
+                    operator: { select: { id: true, companyName: true, hotline: true } },
+                  },
+                },
+                vehicle: {
+                  select: {
+                    id: true,
+                    licensePlate: true,
+                    vehicleType: { select: { name: true, seatCount: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({ success: true, data: { user, tickets } });
+  } catch (err) { next(err); }
+});
+
 // GET /api/admin/stats - Thống kê hệ thống
 router.get('/stats', async (req, res, next) => {
   try {
