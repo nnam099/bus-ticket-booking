@@ -168,6 +168,13 @@ const updateTripStatus = async (req, res, next) => {
       }
     }
 
+    if (status === 'COMPLETED') {
+      await prisma.ticketDetail.updateMany({
+        where: { tripSeat: { tripId: trip.id }, status: { in: ['PAID', 'CHECKED_IN'] } },
+        data: { status: 'COMPLETED' },
+      });
+    }
+
     res.json({ success: true, data: trip });
   } catch (err) {
     next(err);
