@@ -4,17 +4,24 @@ import { vehicleAPI } from '../../services/api';
 
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState([]);
+  const [vehicleTypes, setVehicleTypes] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ licensePlate: '', vehicleTypeId: '', manufactureYear: '' });
 
-  useEffect(() => { vehicleAPI.getMyVehicles().then(r => setVehicles(r.data.data)); }, []);
+  const loadVehicles = () => vehicleAPI.getMyVehicles().then(r => setVehicles(r.data.data));
+
+  useEffect(() => {
+    loadVehicles();
+    vehicleAPI.getTypes().then(r => setVehicleTypes(r.data.data)).catch(() => setVehicleTypes([]));
+  }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
       await vehicleAPI.create(form);
       setShowForm(false);
-      vehicleAPI.getMyVehicles().then(r => setVehicles(r.data.data));
+      setForm({ licensePlate: '', vehicleTypeId: '', manufactureYear: '' });
+      loadVehicles();
     } catch (err) { alert(err.response?.data?.message || 'Lỗi'); }
   };
 
@@ -36,6 +43,15 @@ export default function VehiclesPage() {
         <div className="card mb-6">
           <form onSubmit={handleCreate} className="grid grid-cols-2 gap-3">
             <div><label className="label">Biển số xe</label><input className="input" placeholder="51B-12345" value={form.licensePlate} onChange={e => setForm({ ...form, licensePlate: e.target.value })} required /></div>
+            <div>
+              <label className="label">Loại xe</label>
+              <select className="input" value={form.vehicleTypeId} onChange={e => setForm({ ...form, vehicleTypeId: e.target.value })} required>
+                <option value="">Chọn loại xe</option>
+                {vehicleTypes.map(type => (
+                  <option key={type.id} value={type.id}>{type.name} - {type.seatCount} ghế</option>
+                ))}
+              </select>
+            </div>
             <div><label className="label">Năm sản xuất</label><input type="number" className="input" placeholder="2022" value={form.manufactureYear} onChange={e => setForm({ ...form, manufactureYear: e.target.value })} /></div>
             <div className="col-span-2"><button type="submit" className="btn-primary py-2">Thêm xe</button></div>
           </form>

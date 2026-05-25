@@ -77,6 +77,7 @@ export const operatorAPI = {
 // Vehicle API
 export const vehicleAPI = {
   getMyVehicles: () => api.get('/vehicles'),
+  getTypes: () => api.get('/vehicles/types'),
   create: (data) => api.post('/vehicles', data),
   update: (id, data) => api.put(`/vehicles/${id}`, data),
   delete: (id) => api.delete(`/vehicles/${id}`),
