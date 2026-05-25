@@ -15,12 +15,24 @@ router.get('/me', authenticate, async (req, res) => {
 // PUT /api/users/me
 router.put('/me', authenticate, async (req, res, next) => {
   try {
-    const { fullName, dateOfBirth, avatarUrl } = req.body;
-    await prisma.customer.update({
-      where: { userId: req.user.id },
-      data: { fullName, dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined, avatarUrl },
+    const { fullName, dateOfBirth, avatarUrl, phone } = req.body;
+    await prisma.$transaction([
+      prisma.customer.update({
+        where: { userId: req.user.id },
+        data: { fullName, dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined, avatarUrl },
+      }),
+      prisma.user.update({
+        where: { id: req.user.id },
+        data: { phone: phone === '' ? null : phone },
+      }),
+    ]);
+    const updated = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      include: { customer: true, userRoles: { include: { role: true } } },
     });
-    res.json({ success: true, message: 'Cập nhật thông tin thành công.' });
+    const data = { ...updated };
+    delete data.passwordHash;
+    res.json({ success: true, message: 'Cập nhật thông tin thành công.', data });
   } catch (err) { next(err); }
 });
 
