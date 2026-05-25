@@ -17,7 +17,10 @@ export default function TicketDetailPage() {
 
   useEffect(() => {
     ticketAPI.getById(id)
-      .then(r => setTicket(r.data.data))
+      .then((r) => {
+        setTicket(r.data.data);
+        setReviewed(Boolean(r.data.data.review));
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -40,6 +43,7 @@ export default function TicketDetailPage() {
       await reviewAPI.create({ ticketDetailId: id, rating, comment });
       setReviewed(true);
       setShowReview(false);
+      setTicket(prev => prev ? { ...prev, review: { rating, comment } } : prev);
       alert('Cảm ơn đánh giá của bạn!');
     } catch (err) {
       alert(err.response?.data?.message || 'Gửi đánh giá thất bại.');
