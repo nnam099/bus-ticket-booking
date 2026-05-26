@@ -32,7 +32,7 @@ router.get('/', async (req, res, next) => {
         isActive: true,
         ...(origin && { originCity: { contains: origin, mode: 'insensitive' } }),
         ...(destination && { destinationCity: { contains: destination, mode: 'insensitive' } }),
-        operator: { isApproved: true },
+        operator: { isApproved: true, user: { isActive: true } },
       },
       include: { operator: { select: { companyName: true, logoUrl: true } } },
     });

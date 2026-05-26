@@ -84,16 +84,8 @@ router.patch('/users/:id/toggle-active', async (req, res, next) => {
     if (!user) return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
 
     const isAdmin = user.userRoles.some((ur) => ur.role.name === 'ADMIN');
-    if (user.isActive && isAdmin) {
-      const activeAdmins = await prisma.user.count({
-        where: {
-          isActive: true,
-          userRoles: { some: { role: { name: 'ADMIN' } } },
-        },
-      });
-      if (activeAdmins <= 1) {
-        return res.status(400).json({ success: false, message: 'Không thể khóa admin cuối cùng của hệ thống.' });
-      }
+    if (isAdmin) {
+      return res.status(403).json({ success: false, message: 'Không thể khóa hoặc mở khóa tài khoản của quản trị viên khác.' });
     }
 
     const updated = await prisma.$transaction(async (tx) => {
@@ -153,6 +145,7 @@ router.get('/users', async (req, res, next) => {
             id: true,
             fullName: true,
             role: true,
+            operator: { select: { companyName: true } },
             _count: { select: { tripStaffs: true } },
           },
         },

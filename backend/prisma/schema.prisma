@@ -114,6 +114,7 @@ model BusOperator {
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   vehicles     Vehicle[]
   routes       Route[]
+  staffs       Staff[]
 
   @@map("bus_operators")
 }
@@ -134,6 +135,7 @@ model Staff {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  operator  BusOperator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
   tripStaffs TripStaff[]
 
   @@map("staffs")

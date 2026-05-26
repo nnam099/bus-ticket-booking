@@ -49,7 +49,9 @@ const getRoleDescription = (user) => {
     return `${user.customer?._count?.orders || 0} đơn đặt vé • ${user.customer?._count?.reviews || 0} đánh giá`;
   }
   if (hasRole(user, 'STAFF')) {
-    return `${user.staff?.role || 'STAFF'} • ${user.staff?._count?.tripStaffs || 0} chuyến được phân công`;
+    const operatorName = user.staff?.operator?.companyName;
+    const operatorText = operatorName ? `Nhà xe: ${operatorName}` : 'Chưa gắn nhà xe';
+    return `${user.staff?.role || 'STAFF'} • ${operatorText} • ${user.staff?._count?.tripStaffs || 0} chuyến được phân công`;
   }
   if (hasRole(user, 'BUS_OPERATOR')) {
     const status = user.busOperator?.isApproved ? 'Đã duyệt' : 'Chờ duyệt';
@@ -246,11 +248,13 @@ export default function AdminUsersPage() {
                       {ticketLoading && isSelected ? 'Đang tải...' : 'Xem vé'}
                     </button>
                   )}
-                  <button onClick={() => handleToggle(u.id)}
-                    className={`text-sm px-3 py-1 rounded-lg border transition
-                      ${u.isActive ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-green-300 text-green-600 hover:bg-green-50'}`}>
-                    {u.isActive ? 'Khóa' : 'Mở khóa'}
-                  </button>
+                  {!roles.includes('ADMIN') && (
+                    <button onClick={() => handleToggle(u.id)}
+                      className={`text-sm px-3 py-1 rounded-lg border transition
+                        ${u.isActive ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-green-300 text-green-600 hover:bg-green-50'}`}>
+                      {u.isActive ? 'Khóa' : 'Mở khóa'}
+                    </button>
+                  )}
                 </div>
               </div>
               {isSelected && renderTicketPanel()}
