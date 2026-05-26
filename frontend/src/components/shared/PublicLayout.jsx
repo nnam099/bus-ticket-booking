@@ -2,6 +2,7 @@ import { Outlet, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import { authAPI } from '../../services/api';
+import ThemeToggle from './ThemeToggle';
 
 export default function PublicLayout() {
   const { user } = useSelector(s => s.auth);
@@ -44,6 +45,7 @@ export default function PublicLayout() {
             <Link to="/lookup" className="font-medium text-sm text-gray-600 hover:text-brand transition-colors">
               Tra cứu vé
             </Link>
+            <ThemeToggle compact />
             {user ? (
               <>
                 <Link to={getDashboardLink()} className="font-medium text-sm text-gray-700 hover:text-brand transition-colors flex items-center gap-2">

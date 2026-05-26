@@ -7,6 +7,8 @@ import SeatMap from '../../components/customer/SeatMap';
 import BookingTimer from '../../components/customer/BookingTimer';
 import { format } from 'date-fns';
 
+const VIETNAM_PHONE_REGEX = /^0\d{9}$/;
+
 export default function BookingPage() {
   const params = useParams();
   const tripId = params.tripId || params.id;
@@ -47,11 +49,16 @@ export default function BookingPage() {
   };
 
   const handleConfirm = () => {
-    if (passengers.some(p => !p.name)) {
+    const normalizedPassengers = passengers.map((p) => ({ ...p, name: p.name.trim(), phone: p.phone.trim() }));
+    if (normalizedPassengers.some(p => !p.name)) {
       setError('Vui lòng nhập đầy đủ tên hành khách.');
       return;
     }
-    navigate('/payment', { state: { tripId, passengers } });
+    if (normalizedPassengers.some(p => !VIETNAM_PHONE_REGEX.test(p.phone))) {
+      setError('Số điện thoại hành khách phải gồm 10 chữ số và bắt đầu bằng số 0.');
+      return;
+    }
+    navigate('/payment', { state: { tripId, passengers: normalizedPassengers } });
   };
 
   if (loading) return <div className="text-center py-20 text-gray-500 text-lg">Đang tải...</div>;
@@ -119,14 +126,24 @@ export default function BookingPage() {
                         }} />
                     </div>
                     <div>
-                      <label className="label">Số điện thoại</label>
-                      <input className="input" placeholder="0901234567"
+                      <label className="label">Số điện thoại *</label>
+                      <input
+                        className={`input ${p.phone && !VIETNAM_PHONE_REGEX.test(p.phone.trim()) ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
+                        placeholder="0901234567"
+                        inputMode="numeric"
+                        maxLength={10}
+                        pattern="0[0-9]{9}"
                         value={p.phone}
                         onChange={e => {
                           const copy = [...passengers];
-                          copy[i] = { ...copy[i], phone: e.target.value };
+                          copy[i] = { ...copy[i], phone: e.target.value.replace(/\D/g, '').slice(0, 10) };
                           setPassengers(copy);
                         }} />
+                      {p.phone && !VIETNAM_PHONE_REGEX.test(p.phone.trim()) && (
+                        <p className="mt-1 text-xs font-medium text-red-500">
+                          Số điện thoại phải có 10 chữ số và bắt đầu bằng 0.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

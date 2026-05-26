@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../../services/api';
+import ThemeToggle from './ThemeToggle';
 
 export default function AdminLayout() {
   const dispatch = useDispatch();
@@ -42,6 +43,9 @@ export default function AdminLayout() {
             </Link>
           ))}
         </nav>
+        <div className="mx-2 mb-3">
+          <ThemeToggle />
+        </div>
         <button onClick={handleLogout}
           className="mx-2 mb-4 px-3 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition text-left">
           🚪 Đăng xuất

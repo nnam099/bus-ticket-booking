@@ -5,8 +5,11 @@ const isValidSeatRequest = (tripId, seatIds) => (
   && tripId.trim()
   && Array.isArray(seatIds)
   && seatIds.length > 0
+  && new Set(seatIds).size === seatIds.length
   && seatIds.every((id) => typeof id === 'string' && id.trim())
 );
+
+const isValidVietnamPhone = (phone) => /^0\d{9}$/.test(String(phone || '').trim());
 
 const lockSeats = async (req, res, next) => {
   try {
@@ -46,11 +49,16 @@ const confirmBooking = async (req, res, next) => {
     const customerId = req.user.customer?.id;
     const validPaymentMethods = ['CASH', 'E_WALLET', 'BANK_CARD', 'BANK_TRANSFER'];
     const validPassengers = Array.isArray(passengerInfo)
-      && passengerInfo.length > 0
-      && passengerInfo.every((p) => p && typeof p.name === 'string' && p.name.trim());
+      && passengerInfo.length === seatIds?.length
+      && passengerInfo.every((p) => (
+        p
+        && typeof p.name === 'string'
+        && p.name.trim()
+        && isValidVietnamPhone(p.phone)
+      ));
 
     if (!isValidSeatRequest(tripId, seatIds) || !validPassengers || !validPaymentMethods.includes(paymentMethod)) {
-      return res.status(400).json({ success: false, message: 'Thông tin đặt vé không hợp lệ.' });
+      return res.status(400).json({ success: false, message: 'Thông tin đặt vé không hợp lệ. Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.' });
     }
 
     const result = await confirmBookingService({ customerId, tripId, seatIds, passengerInfo, paymentMethod });

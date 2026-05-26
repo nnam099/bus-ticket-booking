@@ -103,7 +103,7 @@ export default function HomePage() {
     <div>
       {/* Hero */}
       <div 
-        className="relative bg-gray-900 text-white py-32 px-4 overflow-hidden flex items-center justify-center min-h-[650px]"
+        className="hero-section relative bg-gray-900 text-white py-32 px-4 overflow-hidden flex items-center justify-center min-h-[650px]"
         style={{
           backgroundImage: "url('/hero-bg.png')",
           backgroundSize: 'cover',
@@ -192,6 +192,9 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 text-gray-300 text-sm font-medium">
                     <span>Từ {r.origin}</span>
                   </div>
+                  <p className="mt-3 inline-flex items-center rounded-full bg-white/95 px-4 py-2 text-sm font-black text-brand shadow-lg">
+                    Từ {r.price.toLocaleString('vi-VN')}đ
+                  </p>
                 </div>
                 {/* Hover CTA */}
                 <div className="mt-4 overflow-hidden h-0 group-hover:h-12 transition-all duration-300 opacity-0 group-hover:opacity-100 flex items-center">

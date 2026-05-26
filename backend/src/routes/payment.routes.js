@@ -76,7 +76,7 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
         order: {
           include: {
             ticketDetails: {
-              include: { tripSeat: true },
+              include: { tripSeat: { include: { trip: true } } },
             },
           },
         },
@@ -128,6 +128,8 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
         && ticket.tripSeat.lockedBy === payment.order.customerId
         && ticket.tripSeat.lockExpiresAt
         && ticket.tripSeat.lockExpiresAt > now
+        && ticket.tripSeat.trip.status === 'SCHEDULED'
+        && ticket.tripSeat.trip.departureTime > now
       ));
 
     if (!canCompleteBooking) {
@@ -197,8 +199,18 @@ router.post('/initiate', authenticate, authorize('CUSTOMER'), async (req, res, n
 
     const order = await prisma.order.findFirst({
       where: { id: orderId, customer: { userId: req.user.id } },
+      include: { payments: { where: { status: { in: ['PENDING', 'SUCCESS'] } }, select: { id: true, status: true } } },
     });
     if (!order) return res.status(404).json({ success: false, message: 'Khong tim thay don hang.' });
+    if (order.status !== 'PENDING') {
+      return res.status(400).json({ success: false, message: 'Đơn hàng không còn ở trạng thái chờ thanh toán.' });
+    }
+    if (order.payments.some((payment) => payment.status === 'SUCCESS')) {
+      return res.status(409).json({ success: false, message: 'Đơn hàng đã được thanh toán.' });
+    }
+    if (order.payments.some((payment) => payment.status === 'PENDING')) {
+      return res.status(409).json({ success: false, message: 'Đơn hàng đang có giao dịch thanh toán chờ xử lý.' });
+    }
 
     const payment = await prisma.payment.create({
       data: { orderId, amount: order.totalAmount, method, gateway, status: 'PENDING' },
