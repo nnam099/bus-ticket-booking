@@ -1,5 +1,5 @@
-// admin/Dashboard.jsx
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { adminAPI } from '../../services/api';
 
 export default function AdminDashboard() {
@@ -32,10 +32,10 @@ export default function AdminDashboard() {
           { to: '/admin/reviews', icon: '⭐', label: 'Đánh giá' },
           { to: '/admin/audit', icon: '🔍', label: 'Audit Log' },
         ].map(item => (
-          <a key={item.to} href={item.to} className="card text-center hover:shadow-md transition-shadow">
+          <Link key={item.to} to={item.to} className="card text-center hover:shadow-md transition-shadow">
             <div className="text-3xl mb-1">{item.icon}</div>
             <div className="text-sm font-medium text-gray-700">{item.label}</div>
-          </a>
+          </Link>
         ))}
       </div>
     </div>

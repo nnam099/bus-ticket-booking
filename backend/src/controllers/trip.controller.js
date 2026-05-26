@@ -3,7 +3,7 @@ const prisma = require('../config/prisma');
 const findManagedTrip = async (req, tripId) => {
   if (req.roles?.includes('BUS_OPERATOR')) {
     return prisma.trip.findFirst({
-      where: { id: tripId, vehicle: { operator: { userId: req.user.id } } },
+      where: { id: tripId, vehicle: { operator: { userId: req.user.id, isApproved: true } } },
     });
   }
 
@@ -36,6 +36,7 @@ const searchTrips = async (req, res, next) => {
         originCity: { contains: origin, mode: 'insensitive' },
         destinationCity: { contains: destination, mode: 'insensitive' },
         isActive: true,
+        operator: { isApproved: true, user: { isActive: true } },
       },
     };
     if (operatorId) where.vehicle = { operatorId };
@@ -61,7 +62,7 @@ const searchTrips = async (req, res, next) => {
 const getTripById = async (req, res, next) => {
   try {
     const trip = await prisma.trip.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id, route: { operator: { isApproved: true, user: { isActive: true } } } },
       include: {
         route: { include: { operator: true } },
         vehicle: { include: { vehicleType: { include: { seatLayouts: true } } } },
@@ -106,16 +107,41 @@ const createTrip = async (req, res, next) => {
   try {
     const { routeId, vehicleId, departureTime, estimatedArrival, basePrice } = req.body;
     const operatorId = req.user.busOperator?.id;
+    const departure = new Date(departureTime);
+    const arrival = new Date(estimatedArrival);
+    const parsedPrice = Number(basePrice);
+
+    if (Number.isNaN(departure.getTime()) || Number.isNaN(arrival.getTime())) {
+      return res.status(400).json({ success: false, message: 'Thời gian chuyến xe không hợp lệ.' });
+    }
+    if (arrival <= departure) {
+      return res.status(400).json({ success: false, message: 'Giờ đến dự kiến phải sau giờ khởi hành.' });
+    }
+    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      return res.status(400).json({ success: false, message: 'Giá vé phải lớn hơn 0.' });
+    }
 
     // Verify ownership
-    const vehicle = await prisma.vehicle.findFirst({ where: { id: vehicleId, operatorId } });
+    const vehicle = await prisma.vehicle.findFirst({ where: { id: vehicleId, operatorId, isActive: true } });
     if (!vehicle) return res.status(403).json({ success: false, message: 'Xe không thuộc nhà xe của bạn.' });
     const route = await prisma.route.findFirst({ where: { id: routeId, operatorId, isActive: true } });
     if (!route) return res.status(403).json({ success: false, message: 'Tuyến không thuộc nhà xe của bạn.' });
+    const overlappingTrip = await prisma.trip.findFirst({
+      where: {
+        vehicleId,
+        status: { not: 'CANCELLED' },
+        departureTime: { lt: arrival },
+        estimatedArrival: { gt: departure },
+      },
+      select: { id: true },
+    });
+    if (overlappingTrip) {
+      return res.status(409).json({ success: false, message: 'Xe đã có chuyến khác trong khung giờ này.' });
+    }
 
     const trip = await prisma.$transaction(async (tx) => {
       const newTrip = await tx.trip.create({
-        data: { routeId, vehicleId, departureTime: new Date(departureTime), estimatedArrival: new Date(estimatedArrival), basePrice },
+        data: { routeId, vehicleId, departureTime: departure, estimatedArrival: arrival, basePrice: parsedPrice },
       });
 
       // Auto-generate trip seats from vehicle seat layout
@@ -165,6 +191,13 @@ const updateTripStatus = async (req, res, next) => {
           data: { orderId: ticket.orderId, amount: -Number(ticket.price), method: 'REFUND', status: 'REFUNDED', refundedAt: new Date(), refundAmount: ticket.price },
         });
       }
+    }
+
+    if (status === 'COMPLETED') {
+      await prisma.ticketDetail.updateMany({
+        where: { tripSeat: { tripId: trip.id }, status: { in: ['PAID', 'CHECKED_IN'] } },
+        data: { status: 'COMPLETED' },
+      });
     }
 
     res.json({ success: true, data: trip });

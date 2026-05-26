@@ -52,4 +52,11 @@ const authorize = (...allowedRoles) => {
   };
 };
 
-module.exports = { authenticate, authorize };
+const requireApprovedOperator = (req, res, next) => {
+  if (!req.user?.busOperator?.isApproved) {
+    return res.status(403).json({ success: false, message: 'Nhà xe chưa được duyệt.' });
+  }
+  next();
+};
+
+module.exports = { authenticate, authorize, requireApprovedOperator };

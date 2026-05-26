@@ -34,6 +34,7 @@ api.interceptors.response.use(
 export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
+  logout: () => api.post('/auth/logout'),
   sendOtp: (data) => api.post('/auth/send-otp', data),
   verifyOtp: (data) => api.post('/auth/verify-otp', data),
   forgotPassword: (data) => api.post('/auth/forgot-password', data),
@@ -77,6 +78,7 @@ export const operatorAPI = {
 // Vehicle API
 export const vehicleAPI = {
   getMyVehicles: () => api.get('/vehicles'),
+  getTypes: () => api.get('/vehicles/types'),
   create: (data) => api.post('/vehicles', data),
   update: (id, data) => api.put(`/vehicles/${id}`, data),
   delete: (id) => api.delete(`/vehicles/${id}`),
@@ -85,6 +87,7 @@ export const vehicleAPI = {
 // Route API
 export const routeAPI = {
   getAll: (params) => api.get('/routes', { params }),
+  getMine: () => api.get('/routes/operator/me'),
   create: (data) => api.post('/routes', data),
   update: (id, data) => api.put(`/routes/${id}`, data),
   delete: (id) => api.delete(`/routes/${id}`),
@@ -112,6 +115,7 @@ export const adminAPI = {
   getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
   getPendingReviews: () => api.get('/admin/reviews/pending'),
   approveReview: (id) => api.patch(`/admin/reviews/${id}/approve`),
+  rejectReview: (id) => api.delete(`/admin/reviews/${id}`),
 };
 
 // Staff API

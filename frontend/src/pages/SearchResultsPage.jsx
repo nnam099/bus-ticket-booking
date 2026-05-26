@@ -23,9 +23,24 @@ export default function SearchResultsPage() {
 
   useEffect(() => {
     if (origin && destination && date) {
-      dispatch(searchTrips({ origin, destination, date }));
+      const cityOptions = [
+        'Hồ Chí Minh', 'Đà Lạt', 'Nha Trang', 'Cần Thơ', 'Hà Nội', 'Hải Phòng',
+        'Đà Nẵng', 'Huế', 'Vũng Tàu', 'Phan Thiết', 'Buôn Ma Thuột', 'Quy Nhơn',
+        'Quảng Ngãi', 'Lào Cai', 'Ninh Bình', 'Thanh Hóa', 'Vinh', 'Cà Mau',
+      ];
+      const normalizeText = (value) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+      
+      const validOrigin = cityOptions.find(c => normalizeText(c) === normalizeText(origin.trim()) || c.toLowerCase() === origin.trim().toLowerCase()) || origin;
+      const validDest = cityOptions.find(c => normalizeText(c) === normalizeText(destination.trim()) || c.toLowerCase() === destination.trim().toLowerCase()) || destination;
+
+      if (validOrigin !== origin || validDest !== destination) {
+        navigate(`/search?origin=${encodeURIComponent(validOrigin)}&destination=${encodeURIComponent(validDest)}&date=${date}`, { replace: true });
+        return;
+      }
+
+      dispatch(searchTrips({ origin: validOrigin, destination: validDest, date }));
     }
-  }, [origin, destination, date]);
+  }, [origin, destination, date, navigate, dispatch]);
 
   const handleSelect = (trip) => {
     dispatch(setSelectedTrip(trip));

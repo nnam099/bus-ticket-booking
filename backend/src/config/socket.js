@@ -6,16 +6,18 @@ const logger = require('../utils/logger');
 
 let io;
 
-const initSocket = (httpServer) => {
+const initSocket = async (httpServer) => {
   const pubClient = redisClient.duplicate();
   const subClient = redisClient.duplicate();
+  await Promise.all([pubClient.connect(), subClient.connect()]);
+
   io = new Server(httpServer, {
-    adapter: createAdapter(pubClient, subClient),
     cors: {
       origin: process.env.CLIENT_URL || 'http://localhost:5173',
       credentials: true,
     },
   });
+  io.adapter(createAdapter(pubClient, subClient));
 
   // Auth middleware for socket
   io.use((socket, next) => {

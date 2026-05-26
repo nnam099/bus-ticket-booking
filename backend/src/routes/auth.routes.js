@@ -35,6 +35,9 @@ router.post(
   authController.login
 );
 
+// POST /api/auth/logout
+router.post('/logout', authController.logout);
+
 // POST /api/auth/send-otp
 router.post('/send-otp', authController.sendOtp);
 

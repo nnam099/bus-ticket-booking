@@ -4,6 +4,67 @@ import { useDispatch } from 'react-redux';
 import { setSearchParams } from '../store/slices/tripSlice';
 import { format } from 'date-fns';
 
+const cityOptions = [
+  'Hồ Chí Minh', 'Đà Lạt', 'Nha Trang', 'Cần Thơ', 'Hà Nội', 'Hải Phòng',
+  'Đà Nẵng', 'Huế', 'Vũng Tàu', 'Phan Thiết', 'Buôn Ma Thuột', 'Quy Nhơn',
+  'Quảng Ngãi', 'Lào Cai', 'Ninh Bình', 'Thanh Hóa', 'Vinh', 'Cà Mau',
+];
+
+const popularRoutes = [
+  { origin: 'Hồ Chí Minh', destination: 'Đà Lạt', image: 'https://picsum.photos/id/11/600/400' },
+  { origin: 'Hồ Chí Minh', destination: 'Nha Trang', image: 'https://picsum.photos/id/16/600/400' },
+  { origin: 'Hà Nội', destination: 'Sapa', image: 'https://picsum.photos/id/28/600/400' },
+  { origin: 'Đà Nẵng', destination: 'Hội An', image: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?q=80&w=600&auto=format&fit=crop' },
+  { origin: 'Hồ Chí Minh', destination: 'Vũng Tàu', image: 'https://picsum.photos/id/38/600/400' },
+  { origin: 'Hồ Chí Minh', destination: 'Cần Thơ', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=600&auto=format&fit=crop' },
+];
+
+const normalizeText = (value) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd');
+
+function CitySuggestInput({ label, icon, placeholder, value, onChange }) {
+  const [focused, setFocused] = useState(false);
+  const query = normalizeText(value.trim());
+  const suggestions = cityOptions.filter((city) => !query || normalizeText(city).includes(query));
+
+  return (
+    <div className="relative group">
+      <label className="label text-left text-white group-hover:text-brand transition-colors font-medium drop-shadow-md">{label}</label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl">{icon}</span>
+        <input
+          className="input pl-10 bg-white/90 focus:bg-white text-gray-800"
+          placeholder={placeholder}
+          value={value}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete="off"
+          required
+        />
+        {focused && suggestions.length > 0 && (
+          <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-xl">
+            {suggestions.map((city) => (
+              <button
+                key={city}
+                type="button"
+                className="w-full px-4 py-3 text-left font-semibold text-gray-700 hover:bg-orange-50 hover:text-brand transition-colors"
+                onMouseDown={() => onChange(city)}
+              >
+                {city}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -14,62 +75,76 @@ export default function HomePage() {
   const handleSearch = (e) => {
     e.preventDefault();
     if (!form.origin || !form.destination || !form.date) return;
-    dispatch(setSearchParams(form));
-    navigate(`/search?origin=${form.origin}&destination=${form.destination}&date=${form.date}`);
-  };
 
-  const popularRoutes = [
-    { origin: 'Hồ Chí Minh', destination: 'Đà Lạt' },
-    { origin: 'Hồ Chí Minh', destination: 'Nha Trang' },
-    { origin: 'Hồ Chí Minh', destination: 'Cần Thơ' },
-    { origin: 'Hà Nội', destination: 'Hải Phòng' },
-    { origin: 'Đà Nẵng', destination: 'Huế' },
-  ];
+    const validOrigin = cityOptions.find(
+      (c) => normalizeText(c) === normalizeText(form.origin.trim()) || c.toLowerCase() === form.origin.trim().toLowerCase()
+    );
+    const validDest = cityOptions.find(
+      (c) => normalizeText(c) === normalizeText(form.destination.trim()) || c.toLowerCase() === form.destination.trim().toLowerCase()
+    );
+
+    if (!validOrigin) {
+      alert('Vui lòng chọn Điểm đi hợp lệ từ danh sách gợi ý.');
+      return;
+    }
+    if (!validDest) {
+      alert('Vui lòng chọn Điểm đến hợp lệ từ danh sách gợi ý.');
+      return;
+    }
+
+    const searchForm = { ...form, origin: validOrigin, destination: validDest };
+    dispatch(setSearchParams(searchForm));
+    navigate(`/search?origin=${encodeURIComponent(validOrigin)}&destination=${encodeURIComponent(validDest)}&date=${form.date}`);
+  };
 
   return (
     <div>
       {/* Hero */}
-      <div className="relative bg-gradient-to-br from-orange-600 via-orange-500 to-amber-500 text-white py-28 px-4 overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute top-32 -left-24 w-72 h-72 bg-amber-300/20 rounded-full blur-2xl"></div>
-        </div>
+      <div 
+        className="relative bg-gray-900 text-white py-32 px-4 overflow-hidden flex items-center justify-center min-h-[650px]"
+        style={{
+          backgroundImage: "url('/hero-bg.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Dark Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-0 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent z-0 pointer-events-none"></div>
 
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight drop-shadow-md">
+        <div className="max-w-5xl mx-auto text-center relative z-10 w-full">
+          <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight drop-shadow-2xl text-white">
             Khám phá hành trình mới
           </h1>
-          <p className="text-orange-50 text-lg md:text-xl mb-12 font-medium max-w-2xl mx-auto opacity-90">
-            Hàng trăm tuyến xe chất lượng cao — Đặt vé siêu tốc, thanh toán an toàn, tận hưởng chuyến đi tuyệt vời.
+          <p className="text-gray-100 text-lg md:text-2xl mb-12 font-medium max-w-3xl mx-auto drop-shadow-md">
+            Trải nghiệm dịch vụ xe khách cao cấp — Đặt vé siêu tốc, thanh toán an toàn.
           </p>
 
-          {/* Search form */}
-          <form onSubmit={handleSearch} className="bg-white/95 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl text-gray-800 transform hover:scale-[1.01] transition-transform duration-300 border border-white/50">
+          {/* Search form with Glassmorphism */}
+          <form onSubmit={handleSearch} className="bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 md:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.2)] text-gray-800 transform transition-all duration-300 hover:bg-white/15">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <CitySuggestInput
+                label="Điểm đi"
+                icon="📍"
+                placeholder="VD: Hồ Chí Minh"
+                value={form.origin}
+                onChange={(origin) => setForm({ ...form, origin })}
+              />
+              <CitySuggestInput
+                label="Điểm đến"
+                icon="🚩"
+                placeholder="VD: Đà Lạt"
+                value={form.destination}
+                onChange={(destination) => setForm({ ...form, destination })}
+              />
               <div className="relative group">
-                <label className="label text-left text-gray-600 group-hover:text-brand transition-colors">Điểm đi</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl">📍</span>
-                  <input className="input pl-10 bg-gray-50/50" placeholder="VD: Hồ Chí Minh"
-                    value={form.origin} onChange={e => setForm({ ...form, origin: e.target.value })} required />
-                </div>
-              </div>
-              <div className="relative group">
-                <label className="label text-left text-gray-600 group-hover:text-brand transition-colors">Điểm đến</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xl">🚩</span>
-                  <input className="input pl-10 bg-gray-50/50" placeholder="VD: Đà Lạt"
-                    value={form.destination} onChange={e => setForm({ ...form, destination: e.target.value })} required />
-                </div>
-              </div>
-              <div className="relative group">
-                <label className="label text-left text-gray-600 group-hover:text-brand transition-colors">Ngày đi</label>
-                <input type="date" className="input bg-gray-50/50" min={today}
+                <label className="label text-left text-white group-hover:text-brand transition-colors font-medium drop-shadow-md">Ngày đi</label>
+                <input type="date" className="input bg-white/90 focus:bg-white text-gray-800" min={today}
                   value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required />
               </div>
             </div>
-            <button type="submit" className="btn-primary w-full mt-6 py-4 text-lg font-bold shadow-brand/40 shadow-xl rounded-2xl flex items-center justify-center gap-2">
+            <button type="submit" className="w-full mt-8 py-4 text-xl font-bold shadow-brand/40 shadow-xl rounded-2xl flex items-center justify-center gap-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white transition-all transform hover:scale-[1.01]">
               <span>🔍</span> Tìm chuyến xe ngay
             </button>
           </form>
@@ -77,30 +152,39 @@ export default function HomePage() {
       </div>
 
       {/* Popular Routes */}
-      <div className="max-w-5xl mx-auto px-4 py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-black text-gray-800 mb-3">Tuyến xe phổ biến</h2>
-          <p className="text-gray-500 font-medium">Khám phá những điểm đến được yêu thích nhất</p>
+      <div className="max-w-6xl mx-auto px-4 py-24">
+        <div className="text-center mb-14">
+          <h2 className="text-3xl md:text-4xl font-black text-gray-800 mb-4">Tuyến xe phổ biến</h2>
+          <p className="text-gray-500 font-medium text-lg">Khám phá những điểm đến tuyệt đẹp được yêu thích nhất</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           {popularRoutes.map((r, i) => (
             <button key={i} onClick={() => {
               dispatch(setSearchParams({ origin: r.origin, destination: r.destination, date: today }));
-              navigate(`/search?origin=${r.origin}&destination=${r.destination}&date=${today}`);
+              navigate(`/search?origin=${encodeURIComponent(r.origin)}&destination=${encodeURIComponent(r.destination)}&date=${today}`);
             }}
-              className="card group cursor-pointer border-transparent bg-white shadow-sm hover:border-brand/30 hover:bg-orange-50/30">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-300">
-                  🗺️
+              className="relative group cursor-pointer overflow-hidden rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.1)] aspect-[4/3] w-full text-left transform transition-transform duration-300 hover:-translate-y-2">
+              {/* Background Image */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                style={{ backgroundImage: `url(${r.image})` }}
+              ></div>
+              {/* Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/30 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-300"></div>
+              
+              {/* Content */}
+              <div className="absolute bottom-0 left-0 w-full p-6 flex flex-col justify-end z-10">
+                <div className="text-white transform transition-transform duration-300 group-hover:-translate-y-2">
+                  <h3 className="font-bold text-3xl mb-1 drop-shadow-md">{r.destination}</h3>
+                  <div className="flex items-center gap-2 text-gray-300 text-sm font-medium">
+                    <span>Từ {r.origin}</span>
+                  </div>
                 </div>
-                <div className="text-left flex-1">
-                  <div className="font-bold text-gray-800 group-hover:text-brand transition-colors text-lg">
-                    {r.origin}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1 text-gray-500 text-sm font-medium">
-                    <span className="text-brand">→</span>
-                    <span>{r.destination}</span>
-                  </div>
+                {/* Hover CTA */}
+                <div className="mt-4 overflow-hidden h-0 group-hover:h-12 transition-all duration-300 opacity-0 group-hover:opacity-100 flex items-center">
+                  <span className="text-brand font-bold bg-white px-5 py-2.5 rounded-xl text-sm shadow-xl flex items-center gap-2"> 
+                    Đặt vé ngay <span className="text-lg">→</span>
+                  </span>
                 </div>
               </div>
             </button>
@@ -109,24 +193,24 @@ export default function HomePage() {
       </div>
 
       {/* Features */}
-      <div className="bg-gradient-to-b from-gray-50 to-white py-20 px-4 border-t border-gray-100">
-        <div className="max-w-5xl mx-auto">
+      <div className="bg-gradient-to-b from-gray-50 to-white py-24 px-4 border-t border-gray-100">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-black text-gray-800 mb-3">Tại sao chọn BusTicket?</h2>
-            <p className="text-gray-500 font-medium">Trải nghiệm đặt vé hoàn hảo từ A đến Z</p>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-800 mb-4">Tại sao chọn BusTicket?</h2>
+            <p className="text-gray-500 font-medium text-lg">Trải nghiệm đặt vé cao cấp từ A đến Z</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {[
               { icon: '⚡', title: 'Đặt vé siêu tốc', desc: 'Giao diện trực quan, chọn ghế và thanh toán online chỉ trong vài thao tác.' },
               { icon: '🛡️', title: 'Thanh toán an toàn', desc: 'Bảo mật tuyệt đối, hỗ trợ đa dạng cổng thanh toán (VNPay, MoMo, Thẻ).' },
               { icon: '📱', title: 'Vé điện tử thông minh', desc: 'Nhận ngay mã vé QR qua Email. Lên xe nhanh chóng không cần vé giấy.' },
             ].map((f, i) => (
-              <div key={i} className="card text-center group bg-white border-transparent hover:border-brand/20">
-                <div className="w-20 h-20 mx-auto rounded-2xl bg-orange-50 flex items-center justify-center text-4xl mb-6 group-hover:bg-brand group-hover:text-white group-hover:-rotate-6 transition-all duration-300 shadow-inner">
+              <div key={i} className="bg-white p-8 rounded-3xl text-center group border border-gray-100 shadow-[0_4px_20px_rgb(0,0,0,0.05)] hover:shadow-[0_8px_30px_rgb(249,115,22,0.15)] transition-all duration-300 transform hover:-translate-y-2">
+                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center text-4xl mb-6 group-hover:bg-gradient-to-br group-hover:from-orange-500 group-hover:to-amber-500 group-hover:text-white group-hover:rotate-3 transition-all duration-500 shadow-inner">
                   {f.icon}
                 </div>
-                <h3 className="font-bold text-xl text-gray-800 mb-3">{f.title}</h3>
-                <p className="text-gray-500 leading-relaxed">{f.desc}</p>
+                <h3 className="font-bold text-2xl text-gray-800 mb-4">{f.title}</h3>
+                <p className="text-gray-500 leading-relaxed text-base">{f.desc}</p>
               </div>
             ))}
           </div>

@@ -66,7 +66,7 @@ router.put('/me', authenticate, authorize('BUS_OPERATOR'), async (req, res, next
 router.get('/:id', async (req, res, next) => {
   try {
     const op = await prisma.busOperator.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id, isApproved: true },
       include: {
         routes: { where: { isActive: true } },
         vehicles: { where: { isActive: true }, include: { vehicleType: true } },

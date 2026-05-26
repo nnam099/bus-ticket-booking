@@ -59,6 +59,15 @@ router.get('/:id', authenticate, async (req, res, next) => {
       include: {
         tripSeat: { include: { trip: { include: { route: true } }, seatLayout: true } },
         order: { include: { customer: true } },
+        review: {
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            isApproved: true,
+            createdAt: true,
+          },
+        },
       },
     });
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found.' });

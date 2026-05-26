@@ -1,6 +1,7 @@
 import { Outlet, Link, useNavigate, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
+import { authAPI } from '../../services/api';
 
 export default function PublicLayout() {
   const { user } = useSelector(s => s.auth);
@@ -14,9 +15,13 @@ export default function PublicLayout() {
     if (user.roles.includes('STAFF')) return <Navigate to="/staff" replace />;
   }
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+    } finally {
+      dispatch(logout());
+      navigate('/');
+    }
   };
 
   const getDashboardLink = () => {

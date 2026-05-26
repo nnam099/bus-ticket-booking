@@ -7,14 +7,16 @@ export default function RoutesPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ originCity: '', destinationCity: '', originAddress: '', destinationAddress: '', durationMinutes: '' });
 
-  useEffect(() => { routeAPI.getAll().then(r => setRoutes(r.data.data)); }, []);
+  const loadRoutes = () => routeAPI.getMine().then(r => setRoutes(r.data.data));
+
+  useEffect(() => { loadRoutes(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
       await routeAPI.create(form);
       setShowForm(false);
-      routeAPI.getAll().then(r => setRoutes(r.data.data));
+      loadRoutes();
     } catch (err) { alert(err.response?.data?.message || 'Lỗi'); }
   };
 
@@ -40,7 +42,7 @@ export default function RoutesPage() {
           <div key={r.id} className="card flex items-center justify-between">
             <div>
               <p className="font-semibold">{r.originCity} → {r.destinationCity}</p>
-              <p className="text-sm text-gray-500">{r.operator?.companyName}</p>
+              <p className="text-sm text-gray-500">{r.originAddress} → {r.destinationAddress}</p>
             </div>
             <span className={`badge ${r.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
               {r.isActive ? 'Hoạt động' : 'Ngừng'}
