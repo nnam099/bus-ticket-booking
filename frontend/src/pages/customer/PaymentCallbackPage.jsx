@@ -17,11 +17,18 @@ export default function PaymentCallbackPage() {
 
     const completePayment = async () => {
       try {
+        let paymentResult = null;
         if (paymentId && mockStatus) {
-          await paymentAPI.completeMock({ paymentId, status: finalStatus });
+          const res = await paymentAPI.completeMock({ paymentId, status: finalStatus });
+          paymentResult = res.data.data;
         }
         setStatus(finalStatus);
-        setTimeout(() => navigate('/my-tickets', { state: { success: finalStatus === 'success' } }), 1500);
+        setTimeout(() => navigate('/my-tickets', {
+          state: {
+            success: finalStatus === 'success',
+            order: paymentResult?.order,
+          },
+        }), 1500);
       } catch {
         setStatus('failed');
         setTimeout(() => navigate('/my-tickets', { state: { success: false } }), 1500);

@@ -41,6 +41,9 @@ export default function PublicLayout() {
           </Link>
 
           <div className="flex items-center gap-4">
+            <Link to="/lookup" className="font-medium text-sm text-gray-600 hover:text-brand transition-colors">
+              Tra cứu vé
+            </Link>
             {user ? (
               <>
                 <Link to={getDashboardLink()} className="font-medium text-sm text-gray-700 hover:text-brand transition-colors flex items-center gap-2">

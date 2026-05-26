@@ -55,7 +55,7 @@ export const popularRoutes = [
 ];
 
 export const normalizeText = (value = '') =>
-  value
+  String(value ?? '')
     .trim()
     .toLowerCase()
     .normalize('NFD')

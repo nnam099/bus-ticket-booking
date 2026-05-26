@@ -13,6 +13,7 @@ import StaffLayout from './components/shared/StaffLayout';
 const HomePage = React.lazy(() => import('./pages/HomePage'));;
 const SearchResultsPage = React.lazy(() => import('./pages/SearchResultsPage'));;
 const TripDetailPage = React.lazy(() => import('./pages/TripDetailPage'));;
+const LookupPage = React.lazy(() => import('./pages/LookupPage'));;
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));;
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));;
 const ForgotPasswordPage = React.lazy(() => import('./pages/auth/ForgotPasswordPage'));;
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/trips/:id" element={<TripDetailPage />} />
+          <Route path="/lookup" element={<LookupPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

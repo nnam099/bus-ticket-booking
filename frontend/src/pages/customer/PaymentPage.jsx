@@ -35,7 +35,7 @@ export default function PaymentPage() {
         paymentMethod: method,
       });
 
-      const { order } = confirmRes.data.data;
+      const { order, tickets } = confirmRes.data.data;
 
       // 2. If online payment, initiate and redirect
       if (method !== 'CASH') {
@@ -47,7 +47,7 @@ export default function PaymentPage() {
         window.location.href = payRes.data.data.paymentUrl;
       } else {
         // Cash payment - go straight to success
-        navigate('/my-tickets', { replace: true, state: { success: true } });
+        navigate('/my-tickets', { replace: true, state: { success: true, order: { ...order, ticketDetails: tickets } } });
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Thanh toán thất bại. Vui lòng thử lại.');

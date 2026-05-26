@@ -14,6 +14,7 @@ export default function CustomerLayout() {
   const links = [
     { to: '/dashboard', label: '🏠 Trang chủ' },
     { to: '/my-tickets', label: '🎫 Vé của tôi' },
+    { to: '/lookup', label: '🔎 Tra cứu' },
     { to: '/profile', label: '👤 Hồ sơ' },
   ];
 
