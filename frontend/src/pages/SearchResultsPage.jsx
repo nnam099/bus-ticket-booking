@@ -5,7 +5,7 @@ import { clearResults, searchTrips } from '../store/slices/tripSlice';
 import { setSelectedTrip } from '../store/slices/bookingSlice';
 import { format, addDays, isValid, parseISO, subDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { findCity } from '../constants/travel';
+import { findCity, normalizeText } from '../constants/travel';
 
 const statusBadge = {
   SCHEDULED: { label: 'Còn chỗ', cls: 'bg-green-100 text-green-700' },
@@ -25,7 +25,8 @@ export default function SearchResultsPage() {
   const validDestination = findCity(destination);
   const parsedDate = date ? parseISO(date) : null;
   const hasValidDate = parsedDate ? isValid(parsedDate) : false;
-  const hasInvalidSearch = !validOrigin || !validDestination || !hasValidDate;
+  const hasSameCity = Boolean(validOrigin && validDestination && normalizeText(validOrigin) === normalizeText(validDestination));
+  const hasInvalidSearch = !validOrigin || !validDestination || !hasValidDate || hasSameCity;
 
   useEffect(() => {
     if (hasInvalidSearch) {
@@ -69,7 +70,9 @@ export default function SearchResultsPage() {
           <div className="text-5xl mb-4">⚠️</div>
           <h1 className="text-2xl font-black text-gray-800">Thông tin tìm kiếm chưa hợp lệ</h1>
           <p className="mt-3 text-gray-600">
-            Vui lòng quay lại trang chủ và chọn điểm đi, điểm đến từ danh sách thành phố gợi ý.
+            {hasSameCity
+              ? 'Điểm đi và điểm đến phải là hai thành phố khác nhau.'
+              : 'Vui lòng quay lại trang chủ và chọn điểm đi, điểm đến từ danh sách thành phố gợi ý.'}
           </p>
           <button onClick={() => navigate('/')} className="btn-primary mt-8 px-8">
             Tìm lại chuyến xe
