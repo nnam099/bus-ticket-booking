@@ -92,7 +92,14 @@ export default function BookingPage() {
       </div>
 
       {/* Timer if locked */}
-      {lockExpiresAt && <BookingTimer expiresAt={lockExpiresAt} />}
+      {lockExpiresAt && (
+        <BookingTimer
+          expiresAt={lockExpiresAt}
+          tripId={tripId}
+          seatIds={selectedSeats.map(seat => seat.id)}
+          redirectTo={`/booking/${tripId}`}
+        />
+      )}
 
       {error && <div className="card border-red-200 bg-red-50 text-red-700 mb-4 text-sm">{error}</div>}
 

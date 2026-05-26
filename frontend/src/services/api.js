@@ -71,7 +71,7 @@ export const userAPI = {
 export const operatorAPI = {
   getAll: () => api.get('/operators'),
   getById: (id) => api.get(`/operators/${id}`),
-  getDashboard: (period) => api.get('/operators/me/dashboard', { params: { period } }),
+  getDashboard: (filters = {}) => api.get('/operators/me/dashboard', { params: typeof filters === 'string' ? { period: filters } : filters }),
   update: (data) => api.put('/operators/me', data),
 };
 
@@ -109,7 +109,7 @@ export const reviewAPI = {
 
 // Admin API
 export const adminAPI = {
-  getStats: () => api.get('/admin/stats'),
+  getStats: (params) => api.get('/admin/stats', { params }),
   getPendingOperators: () => api.get('/admin/operators/pending'),
   approveOperator: (id) => api.patch(`/admin/operators/${id}/approve`),
   toggleUserActive: (id) => api.patch(`/admin/users/${id}/toggle-active`),

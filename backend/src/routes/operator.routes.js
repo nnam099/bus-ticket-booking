@@ -3,6 +3,32 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
 
+const getDateRange = (query) => {
+  const now = new Date();
+  const { period = 'month', dateFrom, dateTo } = query;
+  let startDate;
+  let endDate;
+
+  if (dateFrom) {
+    startDate = new Date(`${dateFrom}T00:00:00`);
+    endDate = dateTo ? new Date(`${dateTo}T23:59:59.999`) : new Date(`${dateFrom}T23:59:59.999`);
+  } else if (period === 'day') {
+    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  } else if (period === 'year') {
+    startDate = new Date(now.getFullYear(), 0, 1);
+    endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+  } else {
+    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  }
+
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    return null;
+  }
+  return { period, startDate, endDate };
+};
+
 // GET /api/operators - approved operators (public)
 router.get('/', async (req, res, next) => {
   try {
@@ -20,28 +46,69 @@ router.get('/', async (req, res, next) => {
 router.get('/me/dashboard', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
   try {
     const operatorId = req.user.busOperator?.id;
-    const { period = 'month' } = req.query;
+    const range = getDateRange(req.query);
+    if (!range) return res.status(400).json({ success: false, message: 'Khoảng thời gian thống kê không hợp lệ.' });
 
-    const now = new Date();
-    let startDate;
-    if (period === 'day') startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    else if (period === 'month') startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    else startDate = new Date(now.getFullYear(), 0, 1);
+    const { period, startDate, endDate } = range;
+    const { routeId } = req.query;
+    const tripScope = {
+      vehicle: { operatorId },
+      ...(routeId ? { routeId } : {}),
+    };
+    const ticketScope = {
+      tripSeat: {
+        trip: tripScope,
+      },
+    };
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setHours(23, 59, 59, 999);
 
-    const [totalTrips, totalTickets, revenue] = await Promise.all([
-      prisma.trip.count({ where: { vehicle: { operatorId }, createdAt: { gte: startDate } } }),
+    const [totalTrips, totalTickets, revenue, todayTrips, todayTickets, todayRevenue, upcomingTrips, routes] = await Promise.all([
+      prisma.trip.count({ where: { ...tripScope, departureTime: { gte: startDate, lte: endDate } } }),
       prisma.ticketDetail.count({
-        where: { status: 'PAID', tripSeat: { trip: { vehicle: { operatorId } } }, createdAt: { gte: startDate } },
+        where: { status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] }, ...ticketScope, createdAt: { gte: startDate, lte: endDate } },
       }),
       prisma.ticketDetail.aggregate({
         _sum: { price: true },
-        where: { status: { in: ['PAID', 'COMPLETED'] }, tripSeat: { trip: { vehicle: { operatorId } } }, createdAt: { gte: startDate } },
+        where: { status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] }, ...ticketScope, createdAt: { gte: startDate, lte: endDate } },
+      }),
+      prisma.trip.count({ where: { ...tripScope, departureTime: { gte: todayStart, lte: todayEnd } } }),
+      prisma.ticketDetail.count({
+        where: { status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] }, ...ticketScope, createdAt: { gte: todayStart, lte: todayEnd } },
+      }),
+      prisma.ticketDetail.aggregate({
+        _sum: { price: true },
+        where: { status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] }, ...ticketScope, createdAt: { gte: todayStart, lte: todayEnd } },
+      }),
+      prisma.trip.count({
+        where: {
+          ...tripScope,
+          status: { in: ['SCHEDULED', 'BOARDING', 'DELAYED'] },
+          departureTime: { gt: new Date() },
+        },
+      }),
+      prisma.route.findMany({
+        where: { operatorId, isActive: true },
+        select: { id: true, originCity: true, destinationCity: true },
+        orderBy: [{ originCity: 'asc' }, { destinationCity: 'asc' }],
       }),
     ]);
 
     res.json({
       success: true,
-      data: { totalTrips, totalTickets, totalRevenue: revenue._sum.price || 0, period, startDate },
+      data: {
+        totalTrips,
+        totalTickets,
+        totalRevenue: revenue._sum.price || 0,
+        todayTrips,
+        todayTickets,
+        todayRevenue: todayRevenue._sum.price || 0,
+        upcomingTrips,
+        routes,
+        filters: { period, startDate, endDate, routeId: routeId || null },
+      },
     });
   } catch (err) {
     next(err);
