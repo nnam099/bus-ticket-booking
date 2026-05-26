@@ -22,6 +22,30 @@ const requestMeta = (req) => ({
   userAgent: req.get('user-agent'),
 });
 
+const getDateRange = (query) => {
+  const now = new Date();
+  const { period = 'month', dateFrom, dateTo } = query;
+  let startDate;
+  let endDate;
+
+  if (dateFrom) {
+    startDate = new Date(`${dateFrom}T00:00:00`);
+    endDate = dateTo ? new Date(`${dateTo}T23:59:59.999`) : new Date(`${dateFrom}T23:59:59.999`);
+  } else if (period === 'day') {
+    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  } else if (period === 'year') {
+    startDate = new Date(now.getFullYear(), 0, 1);
+    endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+  } else {
+    startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  }
+
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return null;
+  return { period, startDate, endDate };
+};
+
 // All admin routes require ADMIN role
 router.use(authenticate, authorize('ADMIN'));
 
@@ -223,13 +247,71 @@ router.get('/users/:id/tickets', async (req, res, next) => {
 // GET /api/admin/stats - Thống kê hệ thống
 router.get('/stats', async (req, res, next) => {
   try {
-    const [totalUsers, totalOperators, totalTrips, totalRevenue] = await Promise.all([
+    const range = getDateRange(req.query);
+    if (!range) return res.status(400).json({ success: false, message: 'Khoảng thời gian thống kê không hợp lệ.' });
+
+    const { period, startDate, endDate } = range;
+    const { operatorId, routeId } = req.query;
+    const tripScope = {
+      ...(operatorId ? { vehicle: { operatorId } } : {}),
+      ...(routeId ? { routeId } : {}),
+    };
+    const ticketScope = { tripSeat: { trip: tripScope } };
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const [
+      totalUsers,
+      totalOperators,
+      totalTrips,
+      totalTickets,
+      totalRevenue,
+      todayTrips,
+      todayTickets,
+      todayRevenue,
+      pendingOperators,
+      activeRoutes,
+    ] = await Promise.all([
       prisma.user.count({ where: { isActive: true } }),
       prisma.busOperator.count({ where: { isApproved: true } }),
-      prisma.trip.count(),
-      prisma.ticketDetail.aggregate({ _sum: { price: true }, where: { status: { in: ['PAID', 'COMPLETED'] } } }),
+      prisma.trip.count({ where: { ...tripScope, departureTime: { gte: startDate, lte: endDate } } }),
+      prisma.ticketDetail.count({
+        where: { status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] }, ...ticketScope, createdAt: { gte: startDate, lte: endDate } },
+      }),
+      prisma.ticketDetail.aggregate({
+        _sum: { price: true },
+        where: { status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] }, ...ticketScope, createdAt: { gte: startDate, lte: endDate } },
+      }),
+      prisma.trip.count({ where: { ...tripScope, departureTime: { gte: todayStart, lte: todayEnd } } }),
+      prisma.ticketDetail.count({
+        where: { status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] }, ...ticketScope, createdAt: { gte: todayStart, lte: todayEnd } },
+      }),
+      prisma.ticketDetail.aggregate({
+        _sum: { price: true },
+        where: { status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] }, ...ticketScope, createdAt: { gte: todayStart, lte: todayEnd } },
+      }),
+      prisma.busOperator.count({ where: { isApproved: false } }),
+      prisma.route.count({ where: { isActive: true, operator: { isApproved: true, user: { isActive: true } } } }),
     ]);
-    res.json({ success: true, data: { totalUsers, totalOperators, totalTrips, totalRevenue: totalRevenue._sum.price || 0 } });
+
+    res.json({
+      success: true,
+      data: {
+        totalUsers,
+        totalOperators,
+        totalTrips,
+        totalTickets,
+        totalRevenue: totalRevenue._sum.price || 0,
+        todayTrips,
+        todayTickets,
+        todayRevenue: todayRevenue._sum.price || 0,
+        pendingOperators,
+        activeRoutes,
+        filters: { period, startDate, endDate, operatorId: operatorId || null, routeId: routeId || null },
+      },
+    });
   } catch (err) { next(err); }
 });
 

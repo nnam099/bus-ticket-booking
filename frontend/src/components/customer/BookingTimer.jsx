@@ -2,14 +2,32 @@ import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { resetBooking } from '../../store/slices/bookingSlice';
 import { useNavigate } from 'react-router-dom';
+import { bookingAPI } from '../../services/api';
 
-export default function BookingTimer({ expiresAt }) {
+export default function BookingTimer({ expiresAt, tripId, seatIds = [], redirectTo, onExpired }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [secondsLeft, setSecondsLeft] = useState(0);
 
   useEffect(() => {
+    let released = false;
     const calc = () => Math.max(0, Math.floor((new Date(expiresAt) - Date.now()) / 1000));
+    const expire = async () => {
+      if (released) return;
+      released = true;
+      if (tripId && seatIds.length) {
+        try {
+          await bookingAPI.releaseSeats({ tripId, seatIds });
+        } catch {
+          // Seat locks also expire in Redis; keep the UI moving even if release fails.
+        }
+      }
+      onExpired?.();
+      dispatch(resetBooking());
+      if (redirectTo) navigate(redirectTo, { replace: true });
+      else navigate(-1);
+    };
+
     setSecondsLeft(calc());
 
     const interval = setInterval(() => {
@@ -17,13 +35,12 @@ export default function BookingTimer({ expiresAt }) {
       setSecondsLeft(remaining);
       if (remaining === 0) {
         clearInterval(interval);
-        dispatch(resetBooking());
-        navigate(-1);
+        expire();
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [expiresAt]);
+  }, [expiresAt, tripId, JSON.stringify(seatIds), redirectTo]);
 
   const mins = Math.floor(secondsLeft / 60);
   const secs = secondsLeft % 60;
