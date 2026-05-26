@@ -11,6 +11,7 @@ const logger = require('../utils/logger');
 
 const LOCK_MINUTES = parseInt(process.env.BOOKING_LOCK_MINUTES || '15', 10);
 const MAX_SEATS = parseInt(process.env.MAX_SEATS_PER_BOOKING || '5', 10);
+const MIN_BOOKING_LEAD_MINUTES = parseInt(process.env.MIN_BOOKING_LEAD_MINUTES || '15', 10);
 
 /**
  * Khóa ghế tạm thời (QD_BOOK_01)
@@ -20,6 +21,21 @@ const lockSeats = async (tripId, seatIds, customerId) => {
   // Kiểm tra giới hạn số ghế (QD_BOOK_03)
   if (seatIds.length > MAX_SEATS) {
     throw new Error(`Chỉ được đặt tối đa ${MAX_SEATS} ghế trên một chuyến.`);
+  }
+
+  const minDepartureTime = new Date(Date.now() + MIN_BOOKING_LEAD_MINUTES * 60 * 1000);
+  const trip = await prisma.trip.findFirst({
+    where: {
+      id: tripId,
+      status: 'SCHEDULED',
+      departureTime: { gt: minDepartureTime },
+      route: { isActive: true, operator: { isApproved: true, user: { isActive: true } } },
+      vehicle: { isActive: true },
+    },
+    select: { id: true },
+  });
+  if (!trip) {
+    throw new Error('Chuyến xe không còn nhận đặt vé.');
   }
 
   const lockExpiry = new Date(Date.now() + LOCK_MINUTES * 60 * 1000);
@@ -145,12 +161,35 @@ const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, paym
   return await prisma.$transaction(async (tx) => {
     // Verify seats are still locked by this customer
     const seats = await tx.tripSeat.findMany({
-      where: { id: { in: seatIds }, tripId, lockedBy: customerId, status: 'PROCESSING' },
+      where: {
+        id: { in: seatIds },
+        tripId,
+        lockedBy: customerId,
+        status: 'PROCESSING',
+        trip: {
+          status: 'SCHEDULED',
+          departureTime: { gt: new Date(Date.now() + MIN_BOOKING_LEAD_MINUTES * 60 * 1000) },
+          route: { isActive: true, operator: { isApproved: true, user: { isActive: true } } },
+          vehicle: { isActive: true },
+        },
+      },
       include: { trip: true },
     });
 
     if (seats.length !== seatIds.length) {
-      throw new Error('Phiên giữ chỗ đã hết hạn. Vui lòng đặt lại.');
+      throw new Error('Phiên giữ chỗ đã hết hạn hoặc chuyến xe không còn nhận đặt vé. Vui lòng đặt lại.');
+    }
+
+    const activeTickets = await tx.ticketDetail.findMany({
+      where: {
+        tripSeatId: { in: seatIds },
+        status: { in: ['PENDING', 'PAID', 'CHECKED_IN'] },
+      },
+      select: { tripSeatId: true },
+    });
+
+    if (activeTickets.length > 0) {
+      throw new Error('Mot so ghe da co ve dang hieu luc. Vui long chon ghe khac.');
     }
 
     const unitPrice = Number(seats[0].trip.basePrice);
@@ -191,8 +230,8 @@ const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, paym
         data: {
           orderId: order.id,
           tripSeatId: seatId,
-          passengerName: passenger.name,
-          passengerPhone: passenger.phone,
+          passengerName: passenger.name.trim(),
+          passengerPhone: passenger.phone.trim(),
           price: unitPrice,
           qrCode,
           status: isCashPayment ? 'PAID' : 'PENDING',
@@ -233,6 +272,7 @@ const cancelTicket = async (ticketId, customerId) => {
   if (!ticket) throw new Error('Vé không tồn tại.');
   if (ticket.order.customerId !== customerId) throw new Error('Bạn không có quyền hủy vé này.');
   if (!['PENDING', 'PAID'].includes(ticket.status)) throw new Error('Vé không thể hủy ở trạng thái hiện tại.');
+  if (ticket.tripSeat.trip.departureTime <= new Date()) throw new Error('Không thể hủy vé sau giờ khởi hành.');
 
   const hoursUntilDeparture = (ticket.tripSeat.trip.departureTime - new Date()) / 1000 / 3600;
 
@@ -257,7 +297,21 @@ const cancelTicket = async (ticketId, customerId) => {
       data: { status: 'AVAILABLE', lockedBy: null, lockExpiresAt: null },
     });
 
-    if (refundAmount > 0) {
+    const remainingActiveTickets = await tx.ticketDetail.count({
+      where: {
+        orderId: ticket.orderId,
+        id: { not: ticketId },
+        status: { in: ['PENDING', 'PAID', 'CHECKED_IN', 'COMPLETED'] },
+      },
+    });
+    if (remainingActiveTickets === 0) {
+      await tx.order.update({
+        where: { id: ticket.orderId },
+        data: { status: refundAmount > 0 ? 'REFUNDED' : 'CANCELLED' },
+      });
+    }
+
+    if (ticket.status === 'PAID' && refundAmount > 0) {
       await tx.payment.create({
         data: {
           orderId: ticket.orderId,

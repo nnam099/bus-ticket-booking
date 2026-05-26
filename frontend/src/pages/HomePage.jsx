@@ -3,30 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setSearchParams } from '../store/slices/tripSlice';
 import { format } from 'date-fns';
+import { cityOptions, findCity, normalizeText, popularRoutes } from '../constants/travel';
 
-const cityOptions = [
-  'Hồ Chí Minh', 'Đà Lạt', 'Nha Trang', 'Cần Thơ', 'Hà Nội', 'Hải Phòng',
-  'Đà Nẵng', 'Huế', 'Vũng Tàu', 'Phan Thiết', 'Buôn Ma Thuột', 'Quy Nhơn',
-  'Quảng Ngãi', 'Lào Cai', 'Ninh Bình', 'Thanh Hóa', 'Vinh', 'Cà Mau',
-];
-
-const popularRoutes = [
-  { origin: 'Hồ Chí Minh', destination: 'Đà Lạt', image: 'https://picsum.photos/id/11/600/400' },
-  { origin: 'Hồ Chí Minh', destination: 'Nha Trang', image: 'https://picsum.photos/id/16/600/400' },
-  { origin: 'Hà Nội', destination: 'Sapa', image: 'https://picsum.photos/id/28/600/400' },
-  { origin: 'Đà Nẵng', destination: 'Hội An', image: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?q=80&w=600&auto=format&fit=crop' },
-  { origin: 'Hồ Chí Minh', destination: 'Vũng Tàu', image: 'https://picsum.photos/id/38/600/400' },
-  { origin: 'Hồ Chí Minh', destination: 'Cần Thơ', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?q=80&w=600&auto=format&fit=crop' },
-];
-
-const normalizeText = (value) =>
-  value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/đ/g, 'd');
-
-function CitySuggestInput({ label, icon, placeholder, value, onChange }) {
+function CitySuggestInput({ label, icon, placeholder, value, onInputChange, onSelect }) {
   const [focused, setFocused] = useState(false);
   const query = normalizeText(value.trim());
   const suggestions = cityOptions.filter((city) => !query || normalizeText(city).includes(query));
@@ -42,7 +21,7 @@ function CitySuggestInput({ label, icon, placeholder, value, onChange }) {
           value={value}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onInputChange(e.target.value)}
           autoComplete="off"
           required
         />
@@ -53,15 +32,37 @@ function CitySuggestInput({ label, icon, placeholder, value, onChange }) {
                 key={city}
                 type="button"
                 className="w-full px-4 py-3 text-left font-semibold text-gray-700 hover:bg-orange-50 hover:text-brand transition-colors"
-                onMouseDown={() => onChange(city)}
+                onMouseDown={() => onSelect(city)}
               >
                 {city}
               </button>
             ))}
           </div>
         )}
+        {focused && query && suggestions.length === 0 && (
+          <div className="absolute z-30 mt-2 w-full rounded-2xl border border-orange-100 bg-white px-4 py-3 text-left text-sm font-semibold text-orange-600 shadow-xl">
+            Không có thành phố phù hợp. Vui lòng chọn từ danh sách gợi ý.
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+function RouteImage({ src, alt }) {
+  return (
+    <>
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-700 via-sky-700 to-orange-500" />
+      <img
+        src={src}
+        alt={alt}
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+        loading="lazy"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none';
+        }}
+      />
+    </>
   );
 }
 
@@ -71,24 +72,25 @@ export default function HomePage() {
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const [form, setForm] = useState({ origin: '', destination: '', date: today });
+  const [selectedCity, setSelectedCity] = useState({ origin: '', destination: '' });
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (!form.origin || !form.destination || !form.date) return;
 
-    const validOrigin = cityOptions.find(
-      (c) => normalizeText(c) === normalizeText(form.origin.trim()) || c.toLowerCase() === form.origin.trim().toLowerCase()
-    );
-    const validDest = cityOptions.find(
-      (c) => normalizeText(c) === normalizeText(form.destination.trim()) || c.toLowerCase() === form.destination.trim().toLowerCase()
-    );
+    const validOrigin = findCity(form.origin);
+    const validDest = findCity(form.destination);
 
-    if (!validOrigin) {
+    if (!validOrigin || selectedCity.origin !== validOrigin) {
       alert('Vui lòng chọn Điểm đi hợp lệ từ danh sách gợi ý.');
       return;
     }
-    if (!validDest) {
+    if (!validDest || selectedCity.destination !== validDest) {
       alert('Vui lòng chọn Điểm đến hợp lệ từ danh sách gợi ý.');
+      return;
+    }
+    if (normalizeText(validOrigin) === normalizeText(validDest)) {
+      alert('Điểm đi và điểm đến phải là hai thành phố khác nhau.');
       return;
     }
 
@@ -101,7 +103,7 @@ export default function HomePage() {
     <div>
       {/* Hero */}
       <div 
-        className="relative bg-gray-900 text-white py-32 px-4 overflow-hidden flex items-center justify-center min-h-[650px]"
+        className="hero-section relative bg-gray-900 text-white py-32 px-4 overflow-hidden flex items-center justify-center min-h-[650px]"
         style={{
           backgroundImage: "url('/hero-bg.png')",
           backgroundSize: 'cover',
@@ -129,14 +131,28 @@ export default function HomePage() {
                 icon="📍"
                 placeholder="VD: Hồ Chí Minh"
                 value={form.origin}
-                onChange={(origin) => setForm({ ...form, origin })}
+                onInputChange={(origin) => {
+                  setForm({ ...form, origin });
+                  setSelectedCity({ ...selectedCity, origin: '' });
+                }}
+                onSelect={(origin) => {
+                  setForm({ ...form, origin });
+                  setSelectedCity({ ...selectedCity, origin });
+                }}
               />
               <CitySuggestInput
                 label="Điểm đến"
                 icon="🚩"
                 placeholder="VD: Đà Lạt"
                 value={form.destination}
-                onChange={(destination) => setForm({ ...form, destination })}
+                onInputChange={(destination) => {
+                  setForm({ ...form, destination });
+                  setSelectedCity({ ...selectedCity, destination: '' });
+                }}
+                onSelect={(destination) => {
+                  setForm({ ...form, destination });
+                  setSelectedCity({ ...selectedCity, destination });
+                }}
               />
               <div className="relative group">
                 <label className="label text-left text-white group-hover:text-brand transition-colors font-medium drop-shadow-md">Ngày đi</label>
@@ -165,10 +181,7 @@ export default function HomePage() {
             }}
               className="relative group cursor-pointer overflow-hidden rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.1)] aspect-[4/3] w-full text-left transform transition-transform duration-300 hover:-translate-y-2">
               {/* Background Image */}
-              <div 
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                style={{ backgroundImage: `url(${r.image})` }}
-              ></div>
+              <RouteImage src={r.image} alt={`${r.origin} đến ${r.destination}`} />
               {/* Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/30 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-300"></div>
               
@@ -179,6 +192,9 @@ export default function HomePage() {
                   <div className="flex items-center gap-2 text-gray-300 text-sm font-medium">
                     <span>Từ {r.origin}</span>
                   </div>
+                  <p className="mt-3 inline-flex items-center rounded-full bg-white/95 px-4 py-2 text-sm font-black text-brand shadow-lg">
+                    Từ {r.price.toLocaleString('vi-VN')}đ
+                  </p>
                 </div>
                 {/* Hover CTA */}
                 <div className="mt-4 overflow-hidden h-0 group-hover:h-12 transition-all duration-300 opacity-0 group-hover:opacity-100 flex items-center">

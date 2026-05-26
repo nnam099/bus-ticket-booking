@@ -96,6 +96,7 @@ export const routeAPI = {
 // Ticket API
 export const ticketAPI = {
   getById: (id) => api.get(`/tickets/${id}`),
+  lookup: (params) => api.get('/tickets/lookup', { params }),
   checkIn: (id) => api.patch(`/tickets/${id}/check-in`),
   getByTrip: (tripId) => api.get(`/tickets/trip/${tripId}`),
 };
@@ -129,6 +130,7 @@ export const paymentAPI = {
   initiate: (data) => api.post('/payments/initiate', data),
   completeMock: (data) => api.post('/payments/mock/complete', data),
   getByOrder: (orderId) => api.get(`/payments/order/${orderId}`),
+  lookupInvoice: (params) => api.get('/payments/invoices/lookup', { params }),
 };
 
 export default api;

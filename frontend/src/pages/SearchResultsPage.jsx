@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { searchTrips } from '../store/slices/tripSlice';
+import { clearResults, searchTrips } from '../store/slices/tripSlice';
 import { setSelectedTrip } from '../store/slices/bookingSlice';
-import { format, addDays, subDays } from 'date-fns';
+import { format, addDays, isValid, parseISO, subDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { findCity, normalizeText } from '../constants/travel';
 
 const statusBadge = {
   SCHEDULED: { label: 'Còn chỗ', cls: 'bg-green-100 text-green-700' },
@@ -20,27 +21,26 @@ export default function SearchResultsPage() {
   const origin = params.get('origin');
   const destination = params.get('destination');
   const date = params.get('date');
+  const validOrigin = findCity(origin);
+  const validDestination = findCity(destination);
+  const parsedDate = date ? parseISO(date) : null;
+  const hasValidDate = parsedDate ? isValid(parsedDate) : false;
+  const hasSameCity = Boolean(validOrigin && validDestination && normalizeText(validOrigin) === normalizeText(validDestination));
+  const hasInvalidSearch = !validOrigin || !validDestination || !hasValidDate || hasSameCity;
 
   useEffect(() => {
-    if (origin && destination && date) {
-      const cityOptions = [
-        'Hồ Chí Minh', 'Đà Lạt', 'Nha Trang', 'Cần Thơ', 'Hà Nội', 'Hải Phòng',
-        'Đà Nẵng', 'Huế', 'Vũng Tàu', 'Phan Thiết', 'Buôn Ma Thuột', 'Quy Nhơn',
-        'Quảng Ngãi', 'Lào Cai', 'Ninh Bình', 'Thanh Hóa', 'Vinh', 'Cà Mau',
-      ];
-      const normalizeText = (value) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
-      
-      const validOrigin = cityOptions.find(c => normalizeText(c) === normalizeText(origin.trim()) || c.toLowerCase() === origin.trim().toLowerCase()) || origin;
-      const validDest = cityOptions.find(c => normalizeText(c) === normalizeText(destination.trim()) || c.toLowerCase() === destination.trim().toLowerCase()) || destination;
-
-      if (validOrigin !== origin || validDest !== destination) {
-        navigate(`/search?origin=${encodeURIComponent(validOrigin)}&destination=${encodeURIComponent(validDest)}&date=${date}`, { replace: true });
-        return;
-      }
-
-      dispatch(searchTrips({ origin: validOrigin, destination: validDest, date }));
+    if (hasInvalidSearch) {
+      dispatch(clearResults());
+      return;
     }
-  }, [origin, destination, date, navigate, dispatch]);
+
+    if (validOrigin !== origin || validDestination !== destination) {
+      navigate(`/search?origin=${encodeURIComponent(validOrigin)}&destination=${encodeURIComponent(validDestination)}&date=${date}`, { replace: true });
+      return;
+    }
+
+    dispatch(searchTrips({ origin: validOrigin, destination: validDestination, date }));
+  }, [origin, destination, date, validOrigin, validDestination, hasInvalidSearch, navigate, dispatch]);
 
   const handleSelect = (trip) => {
     dispatch(setSelectedTrip(trip));
@@ -48,28 +48,47 @@ export default function SearchResultsPage() {
   };
 
   const handleDateChange = (days) => {
-    if (!date) return;
-    const newDate = days > 0 ? addDays(new Date(date), days) : subDays(new Date(date), Math.abs(days));
+    if (hasInvalidSearch) return;
+    const newDate = days > 0 ? addDays(parsedDate, days) : subDays(parsedDate, Math.abs(days));
     const formattedDate = format(newDate, 'yyyy-MM-dd');
-    navigate(`/search?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&date=${formattedDate}`);
+    navigate(`/search?origin=${encodeURIComponent(validOrigin)}&destination=${encodeURIComponent(validDestination)}&date=${formattedDate}`);
   };
 
   const isPrevDisabled = () => {
-    if (!date) return true;
-    const searchDate = new Date(date);
+    if (hasInvalidSearch) return true;
+    const searchDate = new Date(parsedDate);
     searchDate.setHours(0, 0, 0, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return searchDate <= today;
   };
 
+  if (hasInvalidSearch) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16">
+        <div className="card border-orange-100 bg-orange-50 text-center py-12">
+          <div className="text-5xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-black text-gray-800">Thông tin tìm kiếm chưa hợp lệ</h1>
+          <p className="mt-3 text-gray-600">
+            {hasSameCity
+              ? 'Điểm đi và điểm đến phải là hai thành phố khác nhau.'
+              : 'Vui lòng quay lại trang chủ và chọn điểm đi, điểm đến từ danh sách thành phố gợi ý.'}
+          </p>
+          <button onClick={() => navigate('/')} className="btn-primary mt-8 px-8">
+            Tìm lại chuyến xe
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
       <div className="mb-10 text-center">
         <h1 className="text-3xl md:text-4xl font-black text-gray-800 flex items-center justify-center gap-4">
-          <span>{origin}</span>
+          <span>{validOrigin}</span>
           <span className="text-brand">➔</span>
-          <span>{destination}</span>
+          <span>{validDestination}</span>
         </h1>
         
         <div className="mt-5 flex items-center justify-center gap-4">
@@ -82,7 +101,7 @@ export default function SearchResultsPage() {
           </button>
           
           <div className="text-brand font-medium text-lg bg-white px-8 py-2.5 rounded-full shadow-sm border border-gray-100 flex items-center gap-2 min-w-[220px] justify-center">
-            📅 {date && format(new Date(date), 'EEEE, dd/MM/yyyy', { locale: vi })}
+            📅 {format(parsedDate, 'EEEE, dd/MM/yyyy', { locale: vi })}
           </div>
 
           <button 

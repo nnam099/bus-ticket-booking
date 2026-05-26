@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ticketAPI, bookingAPI, reviewAPI } from '../../services/api';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { formatInvoiceCode, formatTicketCode } from '../../utils/codes';
 
 export default function TicketDetailPage() {
   const { id } = useParams();
@@ -79,6 +80,8 @@ export default function TicketDetailPage() {
         {/* Info */}
         <div className="space-y-3 text-sm">
           {[
+            ['Mã vé', formatTicketCode(ticket.id)],
+            ['Mã hóa đơn', formatInvoiceCode(ticket.orderId)],
             ['Nhà xe', route?.operator?.companyName || trip?.vehicle?.vehicleType?.name],
             ['Hành khách', ticket.passengerName],
             ['Số điện thoại', ticket.passengerPhone || '—'],
@@ -88,9 +91,13 @@ export default function TicketDetailPage() {
           ].map(([label, value]) => (
             <div key={label} className="flex justify-between">
               <span className="text-gray-500">{label}</span>
-              <span className="font-medium text-gray-800">{value}</span>
+              <span className="font-medium text-gray-800 text-right">{value}</span>
             </div>
           ))}
+
+          <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-500">
+            Mã đầy đủ: <span className="font-mono text-gray-700">{ticket.id}</span>
+          </div>
 
           <div className="flex justify-between">
             <span className="text-gray-500">Trạng thái</span>

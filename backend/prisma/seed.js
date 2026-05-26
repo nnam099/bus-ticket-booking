@@ -370,6 +370,8 @@ async function main() {
     canThoRachGia: await ensureDriver({ email: 'driver.cantho_rachgia@demo.vn', phone: '0900000031', fullName: 'Mai Van Kien', licenseNo: 'GPLX-DEMO-019', operator: operators.western }),
     daLatNhaTrang: await ensureDriver({ email: 'driver.dalat_nhatrang@demo.vn', phone: '0900000032', fullName: 'Trinh Van Phuc', licenseNo: 'GPLX-DEMO-020', operator: operators.highland }),
     haiPhongQuangNinh: await ensureDriver({ email: 'driver.haiphong_quangninh@demo.vn', phone: '0900000033', fullName: 'Dao Van Thanh', licenseNo: 'GPLX-DEMO-021', operator: operators.eastern }),
+    hcmHanoiA: await ensureDriver({ email: 'driver.hcm_hanoi_a@demo.vn', phone: '0900000034', fullName: 'Nguyen Van Long', licenseNo: 'GPLX-DEMO-022', operator: operators.demo }),
+    hcmHanoiB: await ensureDriver({ email: 'driver.hcm_hanoi_b@demo.vn', phone: '0900000035', fullName: 'Tran Van Nam', licenseNo: 'GPLX-DEMO-023', operator: operators.demo }),
   };
 
   const limousine22 = await prisma.vehicleType.upsert({
@@ -434,6 +436,8 @@ async function main() {
     canThoRachGia: await ensureVehicle({ id: 'veh-demo-limo-cantho-rachgia', vehicleType: limousine22, licensePlate: '68A-77889', manufactureYear: 2023, operator: operators.western }),
     daLatNhaTrang: await ensureVehicle({ id: 'veh-demo-limo-dalat-nhatrang', vehicleType: limousine22, licensePlate: '49B-99001', manufactureYear: 2021, operator: operators.highland }),
     haiPhongQuangNinh: await ensureVehicle({ id: 'veh-demo-limo-haiphong-quangninh', vehicleType: limousine22, licensePlate: '15A-22334', manufactureYear: 2024, operator: operators.eastern }),
+    hcmHanoiA: await ensureVehicle({ id: 'veh-demo-sleeper-hcm-hanoi-a', vehicleType: sleeper40, licensePlate: '51N-33445', manufactureYear: 2024, operator: operators.demo }),
+    hcmHanoiB: await ensureVehicle({ id: 'veh-demo-sleeper-hcm-hanoi-b', vehicleType: sleeper40, licensePlate: '51N-55667', manufactureYear: 2023, operator: operators.demo }),
   };
 
   await Promise.all([
@@ -756,6 +760,29 @@ async function main() {
       cycleTimes: ['09:00', '19:00'],
     },
     {
+      key: 'hcm-hanoi-a',
+      operator: operators.demo,
+      outwardId: 'route-hcm-hanoi',
+      returnId: 'route-hanoi-hcm',
+      outward: { originCity: 'Hồ Chí Minh', destinationCity: 'Hà Nội', originAddress: 'Bến xe Miền Đông Mới', destinationAddress: 'Bến xe Nước Ngầm' },
+      distanceKm: 1650, durationMinutes: 2040, basePrice: 780000,
+      vehicle: vehicles.hcmHanoiA, vehicleType: sleeper40, driver: drivers.hcmHanoiA,
+      cycleTimes: ['07:00', '19:00'],
+      turnaroundMinutes: 120,
+    },
+    {
+      key: 'hcm-hanoi-b',
+      operator: operators.demo,
+      outwardId: 'route-hcm-hanoi',
+      returnId: 'route-hanoi-hcm',
+      outward: { originCity: 'Hồ Chí Minh', destinationCity: 'Hà Nội', originAddress: 'Bến xe Miền Đông Mới', destinationAddress: 'Bến xe Nước Ngầm' },
+      distanceKm: 1650, durationMinutes: 2040, basePrice: 820000,
+      vehicle: vehicles.hcmHanoiB, vehicleType: sleeper40, driver: drivers.hcmHanoiB,
+      cycleTimes: ['09:00', '21:00'],
+      startsAtOrigin: false,
+      turnaroundMinutes: 120,
+    },
+    {
       key: 'danang-nhatrang',
       operator: operators.central,
       outwardId: 'route-danang-nhatrang',
@@ -797,7 +824,7 @@ async function main() {
     },
   ];
 
-  const routeDefinitions = corridorDefinitions.flatMap((corridor) => [
+  const routeDefinitions = Array.from(new Map(corridorDefinitions.flatMap((corridor) => [
     {
       id: corridor.outwardId,
       operatorId: corridor.operator.id,
@@ -818,7 +845,7 @@ async function main() {
       distanceKm: corridor.distanceKm,
       durationMinutes: corridor.durationMinutes,
     },
-  ]);
+  ]).map((route) => [route.id, route])).values());
   const routeIds = routeDefinitions.map((route) => route.id);
 
   await prisma.review.deleteMany({
@@ -866,23 +893,28 @@ async function main() {
   today.setHours(0, 0, 0, 0);
 
   let tripCount = 0;
-  for (let dayOffset = 0; dayOffset < 60; dayOffset += 1) {
-    const serviceDate = new Date(today);
-    serviceDate.setDate(today.getDate() + dayOffset);
+  const planningHorizonDays = 60;
 
-    for (const corridor of corridorDefinitions) {
-      const returnsToOriginDaily = corridor.cycleTimes.length % 2 === 0;
-      const startsOutward = returnsToOriginDaily || dayOffset % 2 === 0;
+  for (const corridor of corridorDefinitions) {
+    let vehicleAtOutwardOrigin = corridor.startsAtOrigin !== false;
+    let vehicleAvailableAt = new Date(today);
+    const turnaroundMinutes = corridor.turnaroundMinutes ?? 60;
 
-      for (const [index, time] of corridor.cycleTimes.entries()) {
-        const isOutward = index % 2 === 0 ? startsOutward : !startsOutward;
-        const routeId = isOutward ? corridor.outwardId : corridor.returnId;
-        const route = routeById[routeId];
+    for (let dayOffset = 0; dayOffset < planningHorizonDays; dayOffset += 1) {
+      const serviceDate = new Date(today);
+      serviceDate.setDate(today.getDate() + dayOffset);
+
+      for (const time of corridor.cycleTimes) {
         const [hour, minute] = time.split(':').map(Number);
         const departureTime = new Date(serviceDate);
         departureTime.setHours(hour, minute, 0, 0);
+
+        if (departureTime < vehicleAvailableAt) continue;
+
+        const routeId = vehicleAtOutwardOrigin ? corridor.outwardId : corridor.returnId;
+        const route = routeById[routeId];
         const estimatedArrival = addMinutes(departureTime, corridor.durationMinutes);
-        const tripId = `trip-${route.id}-${formatDateId(serviceDate)}-${time.replace(':', '')}`;
+        const tripId = `trip-${corridor.key}-${route.id}-${formatDateId(serviceDate)}-${time.replace(':', '')}`;
 
         const trip = await prisma.trip.create({
           data: {
@@ -900,6 +932,9 @@ async function main() {
         await prisma.tripStaff.create({
           data: { tripId: trip.id, staffId: corridor.driver.id, role: 'DRIVER' },
         });
+
+        vehicleAtOutwardOrigin = !vehicleAtOutwardOrigin;
+        vehicleAvailableAt = addMinutes(estimatedArrival, turnaroundMinutes);
         tripCount += 1;
       }
     }

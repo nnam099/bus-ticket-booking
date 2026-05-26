@@ -26,6 +26,44 @@ const verifyPaymentSignature = (payload, signature) => {
 const PAYMENT_METHODS = ['E_WALLET', 'BANK_CARD', 'BANK_TRANSFER', 'CASH'];
 const PAYMENT_STATUSES = ['success', 'failed'];
 
+const normalizeLookupCode = (value, prefixes = []) => {
+  const raw = String(value || '').trim();
+  const upper = raw.toUpperCase();
+  const matchedPrefix = prefixes.find((prefix) => upper.startsWith(`${prefix}-`));
+  return matchedPrefix ? raw.slice(matchedPrefix.length + 1).trim() : raw;
+};
+
+const invoiceInclude = {
+  customer: { include: { user: { select: { phone: true, email: true } } } },
+  payments: { orderBy: { createdAt: 'desc' } },
+  ticketDetails: {
+    include: {
+      tripSeat: {
+        include: {
+          seatLayout: true,
+          trip: {
+            include: {
+              route: { include: { operator: true } },
+              vehicle: { include: { vehicleType: true } },
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: 'asc' },
+  },
+};
+
+const isInvoicePhoneMatched = (order, phone) => {
+  const normalizedPhone = String(phone || '').replace(/\D/g, '');
+  if (!normalizedPhone) return false;
+  const candidatePhones = [
+    order.customer?.user?.phone,
+    ...order.ticketDetails.map((ticket) => ticket.passengerPhone),
+  ].filter(Boolean);
+  return candidatePhones.some((candidate) => String(candidate).replace(/\D/g, '') === normalizedPhone);
+};
+
 const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
   let expiredBooking = false;
   let lockOwnerCustomerId;
@@ -38,7 +76,7 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
         order: {
           include: {
             ticketDetails: {
-              include: { tripSeat: true },
+              include: { tripSeat: { include: { trip: true } } },
             },
           },
         },
@@ -90,6 +128,8 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
         && ticket.tripSeat.lockedBy === payment.order.customerId
         && ticket.tripSeat.lockExpiresAt
         && ticket.tripSeat.lockExpiresAt > now
+        && ticket.tripSeat.trip.status === 'SCHEDULED'
+        && ticket.tripSeat.trip.departureTime > now
       ));
 
     if (!canCompleteBooking) {
@@ -159,8 +199,18 @@ router.post('/initiate', authenticate, authorize('CUSTOMER'), async (req, res, n
 
     const order = await prisma.order.findFirst({
       where: { id: orderId, customer: { userId: req.user.id } },
+      include: { payments: { where: { status: { in: ['PENDING', 'SUCCESS'] } }, select: { id: true, status: true } } },
     });
     if (!order) return res.status(404).json({ success: false, message: 'Khong tim thay don hang.' });
+    if (order.status !== 'PENDING') {
+      return res.status(400).json({ success: false, message: 'Đơn hàng không còn ở trạng thái chờ thanh toán.' });
+    }
+    if (order.payments.some((payment) => payment.status === 'SUCCESS')) {
+      return res.status(409).json({ success: false, message: 'Đơn hàng đã được thanh toán.' });
+    }
+    if (order.payments.some((payment) => payment.status === 'PENDING')) {
+      return res.status(409).json({ success: false, message: 'Đơn hàng đang có giao dịch thanh toán chờ xử lý.' });
+    }
 
     const payment = await prisma.payment.create({
       data: { orderId, amount: order.totalAmount, method, gateway, status: 'PENDING' },
@@ -192,7 +242,12 @@ router.post('/mock/complete', authenticate, authorize('CUSTOMER'), async (req, r
       gatewayTxnId: `mock_${Date.now()}`,
     });
 
-    res.json({ success: true });
+    const completedPayment = await prisma.payment.findUnique({
+      where: { id: paymentId },
+      include: { order: { include: invoiceInclude } },
+    });
+
+    res.json({ success: true, data: completedPayment });
   } catch (err) { next(err); }
 });
 
@@ -210,6 +265,33 @@ router.post('/callback', async (req, res, next) => {
     await applyPaymentResult({ paymentId, status, gatewayTxnId });
 
     res.json({ success: true });
+  } catch (err) { next(err); }
+});
+
+// GET /api/payments/invoices/lookup?code=HD-xxxx&phone=...
+router.get('/invoices/lookup', async (req, res, next) => {
+  try {
+    const code = normalizeLookupCode(req.query.code, ['HD', 'INV', 'INVOICE', 'ORDER']);
+    const phone = req.query.phone;
+    if (!code || !phone) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập mã hóa đơn và số điện thoại.' });
+    }
+
+    const order = await prisma.order.findFirst({
+      where: {
+        OR: [
+          { id: code },
+          { id: { startsWith: code, mode: 'insensitive' } },
+        ],
+      },
+      include: invoiceInclude,
+    });
+
+    if (!order || !isInvoicePhoneMatched(order, phone)) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy hóa đơn phù hợp với thông tin đã nhập.' });
+    }
+
+    res.json({ success: true, data: order });
   } catch (err) { next(err); }
 });
 

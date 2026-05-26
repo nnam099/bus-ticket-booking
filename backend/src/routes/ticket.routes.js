@@ -25,6 +25,70 @@ const canAccessTrip = async (req, tripId) => {
   return false;
 };
 
+const normalizeLookupCode = (value, prefixes = []) => {
+  const raw = String(value || '').trim();
+  const upper = raw.toUpperCase();
+  const matchedPrefix = prefixes.find((prefix) => upper.startsWith(`${prefix}-`));
+  return matchedPrefix ? raw.slice(matchedPrefix.length + 1).trim() : raw;
+};
+
+const ticketInclude = {
+  tripSeat: {
+    include: {
+      trip: {
+        include: {
+          route: { include: { operator: true } },
+          vehicle: { include: { vehicleType: true } },
+        },
+      },
+      seatLayout: true,
+    },
+  },
+  order: {
+    include: {
+      customer: { include: { user: { select: { phone: true, email: true } } } },
+      payments: { orderBy: { createdAt: 'desc' } },
+    },
+  },
+};
+
+const isPhoneMatched = (ticket, phone) => {
+  const normalizedPhone = String(phone || '').replace(/\D/g, '');
+  if (!normalizedPhone) return false;
+  const candidatePhones = [
+    ticket.passengerPhone,
+    ticket.order?.customer?.user?.phone,
+  ].filter(Boolean);
+  return candidatePhones.some((candidate) => String(candidate).replace(/\D/g, '') === normalizedPhone);
+};
+
+// GET /api/tickets/lookup?code=VE-xxxx&phone=...
+router.get('/lookup', async (req, res, next) => {
+  try {
+    const code = normalizeLookupCode(req.query.code, ['VE', 'TICKET']);
+    const phone = req.query.phone;
+    if (!code || !phone) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập mã vé và số điện thoại.' });
+    }
+
+    const ticket = await prisma.ticketDetail.findFirst({
+      where: {
+        OR: [
+          { id: code },
+          { id: { startsWith: code, mode: 'insensitive' } },
+        ],
+      },
+      include: ticketInclude,
+    });
+
+    if (!ticket || !isPhoneMatched(ticket, phone)) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy vé phù hợp với thông tin đã nhập.' });
+    }
+
+    res.json({ success: true, data: ticket });
+  } catch (err) { next(err); }
+});
+
 // GET /api/tickets/trip/:tripId - list tickets for a trip
 router.get('/trip/:tripId', authenticate, authorize('STAFF', 'BUS_OPERATOR'), async (req, res, next) => {
   try {
@@ -57,8 +121,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
     const ticket = await prisma.ticketDetail.findFirst({
       where: { id: req.params.id, ...accessFilter },
       include: {
-        tripSeat: { include: { trip: { include: { route: true } }, seatLayout: true } },
-        order: { include: { customer: true } },
+        ...ticketInclude,
         review: {
           select: {
             id: true,

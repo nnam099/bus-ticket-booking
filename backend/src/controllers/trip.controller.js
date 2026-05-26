@@ -16,6 +16,8 @@ const findManagedTrip = async (req, tripId) => {
   return null;
 };
 
+const TURNAROUND_MINUTES = 60;
+
 const searchTrips = async (req, res, next) => {
   try {
     const { origin, destination, date, minPrice, maxPrice, operatorId } = req.query;
@@ -114,6 +116,9 @@ const createTrip = async (req, res, next) => {
     if (Number.isNaN(departure.getTime()) || Number.isNaN(arrival.getTime())) {
       return res.status(400).json({ success: false, message: 'Thời gian chuyến xe không hợp lệ.' });
     }
+    if (departure <= new Date()) {
+      return res.status(400).json({ success: false, message: 'Giờ khởi hành phải ở tương lai.' });
+    }
     if (arrival <= departure) {
       return res.status(400).json({ success: false, message: 'Giờ đến dự kiến phải sau giờ khởi hành.' });
     }
@@ -130,13 +135,13 @@ const createTrip = async (req, res, next) => {
       where: {
         vehicleId,
         status: { not: 'CANCELLED' },
-        departureTime: { lt: arrival },
-        estimatedArrival: { gt: departure },
+        departureTime: { lt: new Date(arrival.getTime() + TURNAROUND_MINUTES * 60 * 1000) },
+        estimatedArrival: { gt: new Date(departure.getTime() - TURNAROUND_MINUTES * 60 * 1000) },
       },
       select: { id: true },
     });
     if (overlappingTrip) {
-      return res.status(409).json({ success: false, message: 'Xe đã có chuyến khác trong khung giờ này.' });
+      return res.status(409).json({ success: false, message: `Xe đã có chuyến khác trong khung giờ này hoặc chưa đủ ${TURNAROUND_MINUTES} phút quay đầu.` });
     }
 
     const trip = await prisma.$transaction(async (tx) => {
@@ -162,7 +167,7 @@ const createTrip = async (req, res, next) => {
 const updateTripStatus = async (req, res, next) => {
   try {
     const { status, cancelReason } = req.body;
-    const validStatuses = ['BOARDING', 'DEPARTED', 'COMPLETED', 'DELAYED', 'CANCELLED'];
+    const validStatuses = ['SCHEDULED', 'BOARDING', 'DEPARTED', 'COMPLETED', 'DELAYED', 'CANCELLED'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Trạng thái không hợp lệ.' });
     }
@@ -173,6 +178,18 @@ const updateTripStatus = async (req, res, next) => {
     const managedTrip = await findManagedTrip(req, req.params.id);
     if (!managedTrip) {
       return res.status(403).json({ success: false, message: 'Khong co quyen cap nhat chuyen nay.' });
+    }
+
+    const allowedTransitions = {
+      SCHEDULED: ['BOARDING', 'DELAYED', 'CANCELLED'],
+      DELAYED: ['BOARDING', 'CANCELLED'],
+      BOARDING: ['DEPARTED', 'CANCELLED'],
+      DEPARTED: ['COMPLETED'],
+      COMPLETED: [],
+      CANCELLED: [],
+    };
+    if (managedTrip.status && !allowedTransitions[managedTrip.status]?.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Không thể chuyển trạng thái chuyến xe theo thứ tự này.' });
     }
 
     const trip = await prisma.trip.update({

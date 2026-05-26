@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { userAPI } from '../../services/api';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { formatInvoiceCode, formatTicketCode } from '../../utils/codes';
 
 const STATUS_MAP = {
   PENDING:   { label: 'Chờ thanh toán', cls: 'bg-yellow-100 text-yellow-700' },
@@ -18,6 +19,7 @@ export default function MyTicketsPage() {
   const [loading, setLoading] = useState(true);
   const location = useLocation();
   const success = location.state?.success;
+  const paidOrder = location.state?.order;
 
   useEffect(() => {
     userAPI.getMyTickets()
@@ -33,7 +35,21 @@ export default function MyTicketsPage() {
 
       {success && (
         <div className="card border-green-200 bg-green-50 text-green-700 mb-6">
-          🎉 Đặt vé thành công! Vé của bạn đã được xác nhận.
+          <p className="font-bold">🎉 Đặt vé thành công! Vé của bạn đã được xác nhận.</p>
+          {paidOrder && (
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg bg-white/70 px-4 py-3">
+                <span className="text-green-700/70">Mã hóa đơn</span>
+                <p className="font-black text-gray-800">{formatInvoiceCode(paidOrder.id)}</p>
+              </div>
+              <div className="rounded-lg bg-white/70 px-4 py-3">
+                <span className="text-green-700/70">Mã vé</span>
+                <p className="font-black text-gray-800">
+                  {(paidOrder.ticketDetails || []).map((ticket) => formatTicketCode(ticket.id)).join(', ') || 'Đang cập nhật'}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -62,6 +78,9 @@ export default function MyTicketsPage() {
                     </div>
                     <p className="text-sm text-gray-500">
                       {trip && format(new Date(trip.departureTime), 'HH:mm — dd/MM/yyyy', { locale: vi })}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Mã vé: <strong>{formatTicketCode(ticket.id)}</strong> • Mã hóa đơn: <strong>{formatInvoiceCode(ticket.orderId)}</strong>
                     </p>
                     <p className="text-sm text-gray-500 mt-0.5">
                       Ghế: <strong>{ticket.tripSeat?.seatLayout?.seatCode}</strong> •{' '}
