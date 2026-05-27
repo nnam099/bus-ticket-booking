@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { bookingAPI, paymentAPI } from '../../services/api';
 import { resetBooking, setCurrentOrder } from '../../store/slices/bookingSlice';
 import BookingTimer from '../../components/customer/BookingTimer';
+import { formatInvoiceCode } from '../../utils/codes';
 
 const PAYMENT_METHODS = [
   { value: 'E_WALLET', label: 'Ví điện tử (MoMo, ZaloPay)', gateway: 'MOMO' },
@@ -117,7 +118,7 @@ export default function PaymentPage() {
           {currentOrder && (
             <div className="flex justify-between gap-4">
               <span className="text-gray-500">Mã đơn</span>
-              <span className="text-right font-semibold">HD-{currentOrder.id.slice(0, 8).toUpperCase()}</span>
+              <span className="text-right font-semibold">{formatInvoiceCode(currentOrder)}</span>
             </div>
           )}
           <div className="border-t border-gray-100 pt-2 flex justify-between font-bold text-base">

@@ -31,7 +31,7 @@ function TicketResult({ ticket }) {
     <div className="card mt-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b border-dashed border-gray-200 pb-5">
         <div>
-          <p className="text-sm font-semibold text-brand">Mã vé {formatTicketCode(ticket.id)}</p>
+          <p className="text-sm font-semibold text-brand">Mã vé {formatTicketCode(ticket)}</p>
           <h2 className="text-2xl font-black text-gray-800 mt-1">
             {route?.originCity} → {route?.destinationCity}
           </h2>
@@ -44,7 +44,7 @@ function TicketResult({ ticket }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mt-5">
         {[
-          ['Mã hóa đơn', formatInvoiceCode(ticket.orderId)],
+          ['Mã hóa đơn', formatInvoiceCode(ticket.order || ticket.orderId)],
           ['Nhà xe', route?.operator?.companyName],
           ['Hành khách', ticket.passengerName],
           ['Số điện thoại', ticket.passengerPhone || '—'],
@@ -76,7 +76,7 @@ function InvoiceResult({ invoice }) {
     <div className="card mt-6">
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b border-dashed border-gray-200 pb-5">
         <div>
-          <p className="text-sm font-semibold text-brand">Mã hóa đơn {formatInvoiceCode(invoice.id)}</p>
+          <p className="text-sm font-semibold text-brand">Mã hóa đơn {formatInvoiceCode(invoice)}</p>
           <h2 className="text-2xl font-black text-gray-800 mt-1">Hóa đơn đặt vé</h2>
           <p className="text-gray-500 mt-1">
             Ngày tạo {format(new Date(invoice.createdAt), 'HH:mm — dd/MM/yyyy', { locale: vi })}
@@ -114,7 +114,7 @@ function InvoiceResult({ invoice }) {
               <div key={ticket.id} className="rounded-xl border border-gray-100 bg-white p-4">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                   <div>
-                    <p className="font-bold text-gray-800">{formatTicketCode(ticket.id)}</p>
+                    <p className="font-bold text-gray-800">{formatTicketCode(ticket)}</p>
                     <p className="text-sm text-gray-500">
                       {route?.originCity} → {route?.destinationCity} • Ghế {ticket.tripSeat?.seatLayout?.seatCode}
                     </p>

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
+const { decryptTickets } = require('../utils/privacy');
 
 const canAccessTrip = async (req, tripId) => {
   if (req.roles?.includes('BUS_OPERATOR')) {
@@ -47,7 +48,7 @@ router.get('/trips/:tripId/passengers', authenticate, authorize('STAFF', 'BUS_OP
       where: { tripSeat: { tripId: req.params.tripId }, status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] } },
       include: { tripSeat: { include: { seatLayout: true } } },
     });
-    res.json({ success: true, data: passengers });
+    res.json({ success: true, data: decryptTickets(passengers) });
   } catch (err) { next(err); }
 });
 

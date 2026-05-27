@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
+const { parsePublicCode } = require('../utils/security');
+const { decryptTicket, decryptTickets } = require('../utils/privacy');
 
 const canAccessTrip = async (req, tripId) => {
   if (req.roles?.includes('ADMIN')) return true;
@@ -25,13 +27,6 @@ const canAccessTrip = async (req, tripId) => {
   return false;
 };
 
-const normalizeLookupCode = (value, prefixes = []) => {
-  const raw = String(value || '').trim();
-  const upper = raw.toUpperCase();
-  const matchedPrefix = prefixes.find((prefix) => upper.startsWith(`${prefix}-`));
-  return matchedPrefix ? raw.slice(matchedPrefix.length + 1).trim() : raw;
-};
-
 const ticketInclude = {
   tripSeat: {
     include: {
@@ -52,6 +47,21 @@ const ticketInclude = {
   },
 };
 
+const publicTicketInclude = {
+  tripSeat: {
+    include: {
+      trip: {
+        include: {
+          route: { include: { operator: { select: { id: true, companyName: true, hotline: true } } } },
+          vehicle: { include: { vehicleType: true } },
+        },
+      },
+      seatLayout: true,
+    },
+  },
+  order: { select: { id: true, publicCode: true, status: true } },
+};
+
 const isPhoneMatched = (ticket, phone) => {
   const normalizedPhone = String(phone || '').replace(/\D/g, '');
   if (!normalizedPhone) return false;
@@ -62,34 +72,31 @@ const isPhoneMatched = (ticket, phone) => {
   return candidatePhones.some((candidate) => String(candidate).replace(/\D/g, '') === normalizedPhone);
 };
 
-// GET /api/tickets/lookup?code=VE-xxxx&phone=...
 router.get('/lookup', async (req, res, next) => {
   try {
-    const code = normalizeLookupCode(req.query.code, ['VE', 'TICKET']);
+    const code = String(req.query.code || '').trim().toUpperCase();
     const phone = req.query.phone;
     if (!code || !phone) {
-      return res.status(400).json({ success: false, message: 'Vui lòng nhập mã vé và số điện thoại.' });
+      return res.status(400).json({ success: false, message: 'Vui long nhap ma ve va so dien thoai.' });
+    }
+    if (!parsePublicCode(code, 'VE')) {
+      return res.status(400).json({ success: false, message: 'Ma ve khong hop le.' });
     }
 
     const ticket = await prisma.ticketDetail.findFirst({
-      where: {
-        OR: [
-          { id: code },
-          { id: { startsWith: code, mode: 'insensitive' } },
-        ],
-      },
-      include: ticketInclude,
+      where: { publicCode: code },
+      include: publicTicketInclude,
     });
 
-    if (!ticket || !isPhoneMatched(ticket, phone)) {
-      return res.status(404).json({ success: false, message: 'Không tìm thấy vé phù hợp với thông tin đã nhập.' });
+    const data = decryptTicket(ticket);
+    if (!data || !isPhoneMatched(data, phone)) {
+      return res.status(404).json({ success: false, message: 'Khong tim thay ve phu hop voi thong tin da nhap.' });
     }
 
-    res.json({ success: true, data: ticket });
+    res.json({ success: true, data });
   } catch (err) { next(err); }
 });
 
-// GET /api/tickets/trip/:tripId - list tickets for a trip
 router.get('/trip/:tripId', authenticate, authorize('STAFF', 'BUS_OPERATOR'), async (req, res, next) => {
   try {
     if (!(await canAccessTrip(req, req.params.tripId))) {
@@ -101,11 +108,10 @@ router.get('/trip/:tripId', authenticate, authorize('STAFF', 'BUS_OPERATOR'), as
       include: { tripSeat: { include: { seatLayout: true } }, order: { include: { customer: true } } },
       orderBy: { tripSeat: { seatLayout: { seatCode: 'asc' } } },
     });
-    res.json({ success: true, data: tickets });
+    res.json({ success: true, data: decryptTickets(tickets) });
   } catch (err) { next(err); }
 });
 
-// GET /api/tickets/:id
 router.get('/:id', authenticate, async (req, res, next) => {
   try {
     const accessFilter = req.roles?.includes('ADMIN')
@@ -134,11 +140,10 @@ router.get('/:id', authenticate, async (req, res, next) => {
       },
     });
     if (!ticket) return res.status(404).json({ success: false, message: 'Ticket not found.' });
-    res.json({ success: true, data: ticket });
+    res.json({ success: true, data: decryptTicket(ticket) });
   } catch (err) { next(err); }
 });
 
-// PATCH /api/tickets/:id/check-in
 router.patch('/:id/check-in', authenticate, authorize('STAFF', 'BUS_OPERATOR'), async (req, res, next) => {
   try {
     const ticket = await prisma.ticketDetail.findUnique({
@@ -157,7 +162,7 @@ router.patch('/:id/check-in', authenticate, authorize('STAFF', 'BUS_OPERATOR'), 
       where: { id: req.params.id },
       data: { checkedInAt: new Date(), status: 'CHECKED_IN' },
     });
-    res.json({ success: true, message: 'Ticket check-in completed.', data: updated });
+    res.json({ success: true, message: 'Ticket check-in completed.', data: decryptTicket(updated) });
   } catch (err) { next(err); }
 });
 

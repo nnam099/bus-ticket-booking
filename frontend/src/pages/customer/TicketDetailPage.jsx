@@ -80,8 +80,8 @@ export default function TicketDetailPage() {
         {/* Info */}
         <div className="space-y-3 text-sm">
           {[
-            ['Mã vé', formatTicketCode(ticket.id)],
-            ['Mã hóa đơn', formatInvoiceCode(ticket.orderId)],
+            ['Mã vé', formatTicketCode(ticket)],
+            ['Mã hóa đơn', formatInvoiceCode(ticket.order || ticket.orderId)],
             ['Nhà xe', route?.operator?.companyName || trip?.vehicle?.vehicleType?.name],
             ['Hành khách', ticket.passengerName],
             ['Số điện thoại', ticket.passengerPhone || '—'],
@@ -96,7 +96,7 @@ export default function TicketDetailPage() {
           ))}
 
           <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-500">
-            Mã đầy đủ: <span className="font-mono text-gray-700">{ticket.id}</span>
+            Mã tra cứu: <span className="font-mono text-gray-700 break-all">{formatTicketCode(ticket)}</span>
           </div>
 
           <div className="flex justify-between">

@@ -282,6 +282,7 @@ model TripSeat {
 
 model Order {
   id           String   @id @default(uuid())
+  publicCode   String?  @unique @map("public_code")
   customerId   String   @map("customer_id")
   totalAmount  Decimal  @map("total_amount") @db.Decimal(12, 0)
   status       String   @default("PENDING")
@@ -319,6 +320,7 @@ model Payment {
 
 model TicketDetail {
   id           String   @id @default(uuid())
+  publicCode   String?  @unique @map("public_code")
   orderId      String   @map("order_id")
   tripSeatId   String   @map("trip_seat_id")
   passengerName String  @map("passenger_name")
