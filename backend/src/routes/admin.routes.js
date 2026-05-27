@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
+const { decryptTickets } = require('../utils/privacy');
 
 const parsePagination = (query, defaultLimit = 50, maxLimit = 100) => {
   const page = Number.parseInt(query.page, 10) || 1;
@@ -240,7 +241,7 @@ router.get('/users/:id/tickets', async (req, res, next) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ success: true, data: { user, tickets } });
+    res.json({ success: true, data: { user, tickets: decryptTickets(tickets) } });
   } catch (err) { next(err); }
 });
 

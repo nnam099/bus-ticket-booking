@@ -40,12 +40,12 @@ export default function MyTicketsPage() {
             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               <div className="rounded-lg bg-white/70 px-4 py-3">
                 <span className="text-green-700/70">Mã hóa đơn</span>
-                <p className="font-black text-gray-800">{formatInvoiceCode(paidOrder.id)}</p>
+                <p className="font-black text-gray-800">{formatInvoiceCode(paidOrder)}</p>
               </div>
               <div className="rounded-lg bg-white/70 px-4 py-3">
                 <span className="text-green-700/70">Mã vé</span>
                 <p className="font-black text-gray-800">
-                  {(paidOrder.ticketDetails || []).map((ticket) => formatTicketCode(ticket.id)).join(', ') || 'Đang cập nhật'}
+                  {(paidOrder.ticketDetails || []).map((ticket) => formatTicketCode(ticket)).join(', ') || 'Đang cập nhật'}
                 </p>
               </div>
             </div>
@@ -80,7 +80,7 @@ export default function MyTicketsPage() {
                       {trip && format(new Date(trip.departureTime), 'HH:mm — dd/MM/yyyy', { locale: vi })}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
-                      Mã vé: <strong>{formatTicketCode(ticket.id)}</strong> • Mã hóa đơn: <strong>{formatInvoiceCode(ticket.orderId)}</strong>
+                      Mã vé: <strong>{formatTicketCode(ticket)}</strong> • Mã hóa đơn: <strong>{formatInvoiceCode(ticket.order || ticket.orderId)}</strong>
                     </p>
                     <p className="text-sm text-gray-500 mt-0.5">
                       Ghế: <strong>{ticket.tripSeat?.seatLayout?.seatCode}</strong> •{' '}

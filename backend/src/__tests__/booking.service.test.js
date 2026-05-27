@@ -126,14 +126,22 @@ describe('booking business rules', () => {
 
     expect(result.order).toMatchObject({ id: 'order-1', status: 'PAID' });
     expect(tx.order.create).toHaveBeenCalledWith({
-      data: { customerId: 'customer-1', totalAmount: 320000, status: 'PAID' },
+      data: expect.objectContaining({
+        customerId: 'customer-1',
+        totalAmount: 320000,
+        status: 'PAID',
+        id: expect.any(String),
+        publicCode: expect.stringMatching(/^HD-/),
+      }),
     });
     expect(tx.ticketDetail.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
+        id: expect.any(String),
+        publicCode: expect.stringMatching(/^VE-/),
         orderId: 'order-1',
         tripSeatId: 'seat-1',
-        passengerName: 'Nguyen Van A',
-        passengerPhone: '0901234567',
+        passengerName: expect.stringMatching(/^enc:v1:/),
+        passengerPhone: expect.stringMatching(/^enc:v1:/),
         price: 320000,
         status: 'PAID',
       }),

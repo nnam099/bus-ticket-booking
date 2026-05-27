@@ -12,9 +12,11 @@ jest.mock('../utils/logger', () => ({
 const request = require('supertest');
 const prisma = require('../config/prisma');
 const app = require('../app');
+const { createPublicCode } = require('../utils/security');
 
 const makeTicket = () => ({
   id: 'ticket-123',
+  publicCode: createPublicCode('VE', 'ticket-123'),
   passengerPhone: '0901234567',
   order: {
     customer: {
@@ -40,31 +42,28 @@ describe('ticket lookup', () => {
   });
 
   it('returns a ticket when code and phone match', async () => {
-    prisma.ticketDetail.findFirst.mockResolvedValue(makeTicket());
+    const ticket = makeTicket();
+    prisma.ticketDetail.findFirst.mockResolvedValue(ticket);
 
     const res = await request(app)
       .get('/api/tickets/lookup')
-      .query({ code: 'VE-ticket-123', phone: '0901234567' });
+      .query({ code: ticket.publicCode, phone: '0901234567' });
 
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toMatchObject({ id: 'ticket-123' });
     expect(prisma.ticketDetail.findFirst).toHaveBeenCalledWith(expect.objectContaining({
-      where: {
-        OR: [
-          { id: 'ticket-123' },
-          { id: { startsWith: 'ticket-123', mode: 'insensitive' } },
-        ],
-      },
+      where: { publicCode: ticket.publicCode },
     }));
   });
 
   it('does not return a ticket when the phone is wrong', async () => {
-    prisma.ticketDetail.findFirst.mockResolvedValue(makeTicket());
+    const ticket = makeTicket();
+    prisma.ticketDetail.findFirst.mockResolvedValue(ticket);
 
     const res = await request(app)
       .get('/api/tickets/lookup')
-      .query({ code: 'VE-ticket-123', phone: '0911111111' });
+      .query({ code: ticket.publicCode, phone: '0911111111' });
 
     expect(res.status).toBe(404);
     expect(res.body.success).toBe(false);

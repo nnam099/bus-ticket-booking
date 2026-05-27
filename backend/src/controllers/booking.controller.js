@@ -1,4 +1,5 @@
 const { lockSeats: lockSeatsService, releaseSeats: releaseSeatsService, confirmBooking: confirmBookingService, cancelTicket: cancelTicketService } = require('../services/booking.service');
+const { decryptTickets } = require('../utils/privacy');
 
 const isValidSeatRequest = (tripId, seatIds) => (
   typeof tripId === 'string'
@@ -62,6 +63,7 @@ const confirmBooking = async (req, res, next) => {
     }
 
     const result = await confirmBookingService({ customerId, tripId, seatIds, passengerInfo, paymentMethod });
+    result.tickets = decryptTickets(result.tickets);
     res.status(201).json({ success: true, message: 'Đặt vé thành công!', data: result });
   } catch (err) {
     if (err.message.includes('hết hạn')) return res.status(410).json({ success: false, message: err.message });

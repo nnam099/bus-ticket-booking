@@ -4,15 +4,17 @@ services:
     container_name: bus_ticket_db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${DB_NAME:-bus_ticket}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres123}
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: postgres
+      POSTGRES_USER: ${DB_ADMIN_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_ADMIN_PASSWORD:?Set DB_ADMIN_PASSWORD in .env}
+      DB_NAME: ${DB_NAME:-bus_ticket}
+      DB_APP_USER: ${DB_APP_USER:?Set DB_APP_USER in .env}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:?Set DB_APP_PASSWORD in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_ADMIN_USER:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,12 +23,13 @@ services:
     image: redis:7-alpine
     container_name: bus_ticket_redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}"]
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -41,10 +44,16 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: ${NODE_ENV:-development}
-      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres123}@postgres:5432/${DB_NAME:-bus_ticket}
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_change_in_production}
+      DATABASE_URL: postgresql://${DB_APP_USER:?Set DB_APP_USER in .env}:${DB_APP_PASSWORD:?Set DB_APP_PASSWORD in .env}@postgres:5432/${DB_NAME:-bus_ticket}
+      MIGRATION_DATABASE_URL: postgresql://${DB_ADMIN_USER:-postgres}:${DB_ADMIN_PASSWORD:?Set DB_ADMIN_PASSWORD in .env}@postgres:5432/${DB_NAME:-bus_ticket}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}@redis:6379
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?Set PAYMENT_WEBHOOK_SECRET in .env}
+      OTP_HMAC_SECRET: ${OTP_HMAC_SECRET:?Set OTP_HMAC_SECRET in .env}
+      LOOKUP_CODE_SECRET: ${LOOKUP_CODE_SECRET:?Set LOOKUP_CODE_SECRET in .env}
+      QR_SIGNING_SECRET: ${QR_SIGNING_SECRET:?Set QR_SIGNING_SECRET in .env}
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:?Set PII_ENCRYPTION_KEY in .env}
       PORT: 3000
     volumes:
       - ./backend:/app

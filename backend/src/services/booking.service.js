@@ -8,6 +8,9 @@ const { redisClient } = require('../config/redis');
 const { getIo } = require('../config/socket');
 const QRCode = require('qrcode');
 const logger = require('../utils/logger');
+const crypto = require('crypto');
+const { createPublicCode, createQrPayload, activeTicketStatuses } = require('../utils/security');
+const { encryptSensitiveValue } = require('../utils/privacy');
 
 const LOCK_MINUTES = parseInt(process.env.BOOKING_LOCK_MINUTES || '15', 10);
 const MAX_SEATS = parseInt(process.env.MAX_SEATS_PER_BOOKING || '5', 10);
@@ -183,7 +186,7 @@ const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, paym
     const activeTickets = await tx.ticketDetail.findMany({
       where: {
         tripSeatId: { in: seatIds },
-        status: { in: ['PENDING', 'PAID', 'CHECKED_IN'] },
+        status: { in: activeTicketStatuses },
       },
       select: { tripSeatId: true },
     });
@@ -197,8 +200,11 @@ const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, paym
     const isCashPayment = paymentMethod === 'CASH';
 
     // Create Order
+    const orderId = crypto.randomUUID();
     const order = await tx.order.create({
       data: {
+        id: orderId,
+        publicCode: createPublicCode('HD', orderId),
         customerId,
         totalAmount,
         status: isCashPayment ? 'PAID' : 'PENDING',
@@ -223,15 +229,19 @@ const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, paym
       const seatId = seatIds[i];
       const passenger = passengerInfo[i] || passengerInfo[0];
 
-      const qrData = JSON.stringify({ orderId: order.id, seatId, tripId, ts: Date.now() });
+      const ticketId = crypto.randomUUID();
+      const publicCode = createPublicCode('VE', ticketId);
+      const qrData = createQrPayload({ ticketId, ticketCode: publicCode, tripId, seatId });
       const qrCode = await QRCode.toDataURL(qrData);
 
       const ticket = await tx.ticketDetail.create({
         data: {
+          id: ticketId,
+          publicCode,
           orderId: order.id,
           tripSeatId: seatId,
-          passengerName: passenger.name.trim(),
-          passengerPhone: passenger.phone.trim(),
+          passengerName: encryptSensitiveValue(passenger.name.trim()),
+          passengerPhone: encryptSensitiveValue(passenger.phone.trim()),
           price: unitPrice,
           qrCode,
           status: isCashPayment ? 'PAID' : 'PENDING',
@@ -301,7 +311,7 @@ const cancelTicket = async (ticketId, customerId) => {
       where: {
         orderId: ticket.orderId,
         id: { not: ticketId },
-        status: { in: ['PENDING', 'PAID', 'CHECKED_IN', 'COMPLETED'] },
+        status: { in: [...activeTicketStatuses, 'COMPLETED'] },
       },
     });
     if (remainingActiveTickets === 0) {
