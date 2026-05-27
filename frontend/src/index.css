@@ -161,6 +161,109 @@ html.theme-dark body {
 .theme-dark ::-webkit-scrollbar-thumb { background: #475569; }
 
 /* Seat map */
+.bus-floor {
+  @apply max-w-md mx-auto;
+}
+
+.bus-floor-title {
+  @apply mb-3 flex items-center justify-between text-sm font-semibold text-gray-600;
+}
+
+.bus-floor-title span:first-child {
+  @apply text-gray-800;
+}
+
+.bus-floor-title span:last-child {
+  @apply rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-500;
+}
+
+.bus-shell {
+  @apply relative mx-auto overflow-hidden rounded-[2rem] border-2 border-gray-200 bg-slate-50 px-4 pb-5 pt-3 shadow-inner;
+}
+
+.bus-shell::before,
+.bus-shell::after {
+  @apply absolute top-24 h-16 w-2 rounded-full bg-gray-300 content-[''];
+}
+
+.bus-shell::before {
+  @apply left-0;
+}
+
+.bus-shell::after {
+  @apply right-0;
+}
+
+.bus-window-strip {
+  @apply absolute inset-x-7 top-2 h-2 rounded-full bg-sky-100;
+}
+
+.bus-front {
+  @apply relative mb-4 mt-3 rounded-t-[1.5rem] border border-gray-200 bg-white p-3;
+}
+
+.bus-windshield {
+  @apply mx-auto mb-3 h-9 w-3/4 rounded-t-2xl rounded-b-lg border border-sky-200 bg-gradient-to-b from-sky-100 to-white;
+}
+
+.bus-driver {
+  @apply flex items-center justify-end gap-2 text-xs font-semibold text-gray-500;
+}
+
+.bus-steering {
+  @apply inline-block h-5 w-5 rounded-full border-2 border-gray-400;
+}
+
+.bus-steering::after {
+  @apply mx-auto mt-1 block h-1.5 w-1.5 rounded-full bg-gray-400 content-[''];
+}
+
+.bus-door {
+  @apply absolute bottom-3 left-3 rounded-md border border-dashed border-orange-300 bg-orange-50 px-2 py-1 text-[10px] font-semibold uppercase text-brand;
+}
+
+.bus-seat-grid {
+  @apply relative mx-auto grid justify-center gap-x-2 gap-y-2 rounded-xl border border-gray-200 bg-white/80 p-3;
+}
+
+.bus-seat-grid::before {
+  @apply absolute bottom-3 top-9 w-5 rounded-full border border-dashed border-gray-200 bg-gray-50 content-[''];
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.bus-lane-label,
+.bus-aisle-label,
+.bus-row-number {
+  @apply relative z-10 flex h-5 items-center justify-center text-[10px] font-semibold uppercase text-gray-400;
+}
+
+.bus-aisle-label {
+  @apply text-[9px] tracking-wide;
+  writing-mode: vertical-rl;
+}
+
+.bus-row-number {
+  @apply text-xs font-medium text-gray-400;
+}
+
+.bus-seat-cell,
+.bus-aisle {
+  @apply relative z-10 flex items-center justify-center;
+}
+
+.bus-seat-placeholder {
+  @apply h-11 w-11;
+}
+
+.bus-seat {
+  @apply h-11 w-11 rounded-xl shadow-sm;
+}
+
+.bus-rear {
+  @apply mt-4 rounded-b-[1.25rem] border border-gray-200 bg-white px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-gray-400;
+}
+
 .seat {
   @apply w-10 h-10 rounded-md flex items-center justify-center text-xs font-bold cursor-pointer
          transition-all duration-100 border-2 select-none;
@@ -170,6 +273,10 @@ html.theme-dark body {
 .seat-booked      { @apply bg-gray-200 border-gray-400 text-gray-400 cursor-not-allowed; }
 .seat-selected    { @apply bg-brand border-brand text-white; }
 .seat-unavailable { @apply bg-gray-100 border-gray-200 text-gray-300 cursor-not-allowed; }
+
+.seat.bus-seat {
+  @apply h-11 w-11 rounded-xl shadow-sm;
+}
 
 .theme-dark .seat-available {
   background-color: #1e293b !important;
@@ -181,6 +288,34 @@ html.theme-dark body {
   background-color: #334155 !important;
   border-color: #475569 !important;
   color: #94a3b8 !important;
+}
+
+.theme-dark .bus-floor-title span:first-child {
+  color: #f8fafc !important;
+}
+
+.theme-dark .bus-floor-title span:last-child,
+.theme-dark .bus-shell,
+.theme-dark .bus-front,
+.theme-dark .bus-seat-grid,
+.theme-dark .bus-rear {
+  background-color: rgba(15, 23, 42, 0.82) !important;
+  border-color: rgba(71, 85, 105, 0.75) !important;
+}
+
+.theme-dark .bus-window-strip,
+.theme-dark .bus-windshield {
+  background: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.theme-dark .bus-seat-grid::before {
+  background: rgba(30, 41, 59, 0.9) !important;
+  border-color: rgba(71, 85, 105, 0.9) !important;
+}
+
+.theme-dark .bus-door {
+  background-color: rgba(154, 52, 18, 0.25) !important;
 }
 
 /* Scrollbar */

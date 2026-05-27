@@ -8,7 +8,6 @@ export default function SeatMap({ tripSeats, tripId }) {
   const { selectedSeats } = useSelector(s => s.booking);
   const [seats, setSeats] = useState(tripSeats || []);
 
-  // Real-time seat updates via Socket.IO
   useEffect(() => {
     connectSocket();
     joinTripRoom(tripId);
@@ -25,18 +24,17 @@ export default function SeatMap({ tripSeats, tripId }) {
     };
   }, [tripId]);
 
-  // Sync with props
   useEffect(() => { setSeats(tripSeats || []); }, [tripSeats]);
 
   const getSeatClass = useCallback((seat) => {
     const isSelected = selectedSeats.some(s => s.id === seat.id);
     if (isSelected) return 'seat seat-selected';
     switch (seat.status) {
-      case 'AVAILABLE':   return 'seat seat-available';
-      case 'PROCESSING':  return 'seat seat-processing';
-      case 'BOOKED':      return 'seat seat-booked';
+      case 'AVAILABLE': return 'seat seat-available';
+      case 'PROCESSING': return 'seat seat-processing';
+      case 'BOOKED': return 'seat seat-booked';
       case 'UNAVAILABLE': return 'seat seat-unavailable';
-      default:            return 'seat seat-unavailable';
+      default: return 'seat seat-unavailable';
     }
   }, [selectedSeats]);
 
@@ -45,8 +43,23 @@ export default function SeatMap({ tripSeats, tripId }) {
     dispatch(toggleSeat({ id: seat.id, seatCode: seat.seatLayout.seatCode, price: seat.price }));
   }, [dispatch, selectedSeats]);
 
-  // Group seats by floor and row
-  const floors = [...new Set(seats.map(s => s.seatLayout.floor))].sort();
+  const floors = [...new Set(seats.map(s => s.seatLayout.floor))].sort((a, b) => a - b);
+
+  const renderSeat = (seat) => {
+    if (!seat) return <div className="bus-seat-placeholder" />;
+
+    return (
+      <button
+        key={seat.id}
+        onClick={() => handleClick(seat)}
+        className={`${getSeatClass(seat)} bus-seat`}
+        title={`Ghế ${seat.seatLayout.seatCode}`}
+        disabled={seat.status === 'BOOKED' || seat.status === 'UNAVAILABLE' || seat.status === 'PROCESSING'}
+      >
+        {seat.seatLayout.seatCode}
+      </button>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -54,48 +67,72 @@ export default function SeatMap({ tripSeats, tripId }) {
         const floorSeats = seats.filter(s => s.seatLayout.floor === floor);
         const rows = [...new Set(floorSeats.map(s => s.seatLayout.row))].sort((a, b) => a - b);
         const maxCol = Math.max(...floorSeats.map(s => s.seatLayout.col));
+        const aisleAfter = Math.ceil(maxCol / 2);
+        const leftCols = Array.from({ length: aisleAfter }, (_, index) => index + 1);
+        const rightCols = Array.from({ length: maxCol - aisleAfter }, (_, index) => aisleAfter + index + 1);
+        const gridTemplateColumns = `1.25rem repeat(${leftCols.length}, 2.75rem) minmax(1.5rem, 2rem) repeat(${rightCols.length}, 2.75rem)`;
 
         return (
-          <div key={floor}>
-            {floors.length > 1 && (
-              <p className="text-sm font-semibold text-gray-600 mb-2">Tầng {floor}</p>
-            )}
-            {/* Driver cabin */}
-            <div className="flex justify-end mb-3">
-              <div className="w-12 h-8 bg-gray-200 rounded-lg flex items-center justify-center text-xs text-gray-500">
-                🚗
+          <section key={floor} className="bus-floor">
+            <div className="bus-floor-title">
+              <span>{floors.length > 1 ? `Tầng ${floor}` : 'Sơ đồ xe'}</span>
+              <span>{floorSeats.length} ghế</span>
+            </div>
+
+            <div className="bus-shell">
+              <div className="bus-window-strip" />
+              <div className="bus-front">
+                <div className="bus-windshield" />
+                <div className="bus-driver">
+                  <span className="bus-steering" aria-hidden="true" />
+                  <span>Tài xế</span>
+                </div>
+                <div className="bus-door">Cửa lên</div>
+              </div>
+
+              <div className="bus-seat-grid" style={{ gridTemplateColumns }}>
+                <div />
+                {leftCols.map(col => (
+                  <div key={`left-head-${col}`} className="bus-lane-label">
+                    {floorSeats.find(seat => seat.seatLayout.col === col)?.seatLayout.seatCode?.replace(/\d+$/, '')}
+                  </div>
+                ))}
+                <div className="bus-aisle-label">Lối đi</div>
+                {rightCols.map(col => (
+                  <div key={`right-head-${col}`} className="bus-lane-label">
+                    {floorSeats.find(seat => seat.seatLayout.col === col)?.seatLayout.seatCode?.replace(/\d+$/, '')}
+                  </div>
+                ))}
+
+                {rows.map(row => {
+                  const rowSeats = floorSeats.filter(s => s.seatLayout.row === row);
+                  return (
+                    <div key={row} className="contents">
+                      <span className="bus-row-number">{row}</span>
+                      {leftCols.map(col => (
+                        <div key={`${row}-${col}`} className="bus-seat-cell">
+                          {renderSeat(rowSeats.find(s => s.seatLayout.col === col))}
+                        </div>
+                      ))}
+                      <div className="bus-aisle" />
+                      {rightCols.map(col => (
+                        <div key={`${row}-${col}`} className="bus-seat-cell">
+                          {renderSeat(rowSeats.find(s => s.seatLayout.col === col))}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="bus-rear">
+                <span>Khoang sau</span>
               </div>
             </div>
-            <div className="space-y-2">
-              {rows.map(row => {
-                const rowSeats = floorSeats.filter(s => s.seatLayout.row === row);
-                return (
-                  <div key={row} className="flex gap-2 items-center">
-                    <span className="text-xs text-gray-400 w-4">{row}</span>
-                    {Array.from({ length: maxCol }, (_, colIdx) => {
-                      const seat = rowSeats.find(s => s.seatLayout.col === colIdx + 1);
-                      if (!seat) return <div key={colIdx} className="w-10 h-10" />;
-                      return (
-                        <button
-                          key={seat.id}
-                          onClick={() => handleClick(seat)}
-                          className={getSeatClass(seat)}
-                          title={`Ghế ${seat.seatLayout.seatCode}`}
-                          disabled={seat.status === 'BOOKED' || seat.status === 'UNAVAILABLE' || seat.status === 'PROCESSING'}
-                        >
-                          {seat.seatLayout.seatCode}
-                        </button>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          </section>
         );
       })}
 
-      {/* Legend */}
       <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100 text-xs">
         {[
           { cls: 'seat-available', label: 'Còn trống' },
