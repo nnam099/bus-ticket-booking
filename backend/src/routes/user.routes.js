@@ -72,6 +72,7 @@ router.get('/me/tickets', authenticate, authorize('CUSTOMER'), async (req, res, 
       include: {
         tripSeat: { include: { trip: { include: { route: true } }, seatLayout: true } },
         order: true,
+        review: { select: { id: true, rating: true, isApproved: true } },
       },
       orderBy: { createdAt: 'desc' },
     });

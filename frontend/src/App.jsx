@@ -86,6 +86,7 @@ export default function App() {
           <Route path="/operator/vehicles" element={<VehiclesPage />} />
           <Route path="/operator/routes" element={<RoutesPage />} />
           <Route path="/operator/trips" element={<TripsPage />} />
+          <Route path="/operator/trips/:tripId/check-in" element={<TripCheckInPage />} />
           <Route path="/operator/reports" element={<OperatorReportsPage />} />
         </Route>
 

@@ -1,5 +1,9 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
+const path = require('path');
+const QRCode = require('qrcode');
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+const { createPublicCode, createQrPayload } = require('../src/utils/security');
 
 const prisma = new PrismaClient();
 
@@ -238,10 +242,10 @@ async function main() {
     },
   });
   await attachRole(customerUser.id, customerRole.id);
-  await prisma.customer.upsert({
+  const customer = await prisma.customer.upsert({
     where: { userId: customerUser.id },
-    update: { fullName: 'Nguyen Van Demo' },
-    create: { userId: customerUser.id, fullName: 'Nguyen Van Demo' },
+    update: { fullName: 'Nguyen Minh An' },
+    create: { userId: customerUser.id, fullName: 'Nguyen Minh An' },
   });
 
   async function ensureDriver({ email, phone, fullName, licenseNo, operator: driverOperator = operator }) {
@@ -938,6 +942,156 @@ async function main() {
         tripCount += 1;
       }
     }
+  }
+
+  const createDemoTicket = async ({
+    orderId,
+    ticketId,
+    tripId,
+    seatCode,
+    passengerName,
+    passengerPhone,
+    price,
+    status,
+    checkedInAt = null,
+    review = null,
+  }) => {
+    const tripSeat = await prisma.tripSeat.findFirst({
+      where: { tripId, seatLayout: { seatCode } },
+      include: { seatLayout: true },
+    });
+    if (!tripSeat) return null;
+
+    const order = await prisma.order.create({
+      data: {
+        id: orderId,
+        customerId: customer.id,
+        publicCode: createPublicCode('HD', orderId),
+        totalAmount: price,
+        status: 'PAID',
+      },
+    });
+
+    await prisma.payment.create({
+      data: {
+        orderId: order.id,
+        amount: price,
+        method: 'BANK_CARD',
+        gateway: 'DEMO',
+        gatewayTxnId: `DEMO-${orderId}`,
+        status: 'SUCCESS',
+        paidAt: new Date(),
+      },
+    });
+
+    const publicCode = createPublicCode('VE', ticketId);
+    const qrData = createQrPayload({ ticketId, ticketCode: publicCode, tripId, seatId: tripSeat.id });
+    const qrCode = await QRCode.toDataURL(qrData);
+
+    const ticket = await prisma.ticketDetail.create({
+      data: {
+        id: ticketId,
+        orderId: order.id,
+        tripSeatId: tripSeat.id,
+        publicCode,
+        passengerName,
+        passengerPhone,
+        price,
+        qrCode,
+        status,
+        checkedInAt,
+      },
+    });
+
+    await prisma.tripSeat.update({
+      where: { id: tripSeat.id },
+      data: { status: 'BOOKED', lockedAt: null, lockedBy: null, lockExpiresAt: null },
+    });
+
+    if (review) {
+      await prisma.review.create({
+        data: {
+          ticketDetailId: ticket.id,
+          customerId: customer.id,
+          rating: review.rating,
+          comment: review.comment,
+          isApproved: review.isApproved,
+          approvedBy: review.isApproved ? adminUser.id : null,
+        },
+      });
+    }
+
+    return ticket;
+  };
+
+  const completedDeparture = new Date(today);
+  completedDeparture.setDate(today.getDate() - 1);
+  completedDeparture.setHours(8, 0, 0, 0);
+  const completedArrival = addMinutes(completedDeparture, 510);
+  const completedTrip = await prisma.trip.create({
+    data: {
+      id: 'trip-demo-completed-review-flow',
+      routeId: 'route-hcm-nhatrang',
+      vehicleId: vehicles.hcmNhaTrang.id,
+      departureTime: completedDeparture,
+      estimatedArrival: completedArrival,
+      basePrice: 320000,
+      status: 'COMPLETED',
+    },
+  });
+  await ensureTripSeats(completedTrip.id, sleeper40.id);
+  await prisma.tripStaff.create({
+    data: { tripId: completedTrip.id, staffId: drivers.hcmNhaTrang.id, role: 'DRIVER' },
+  });
+
+  await createDemoTicket({
+    orderId: 'order-demo-completed-needs-review',
+    ticketId: 'ticket-demo-completed-needs-review',
+    tripId: completedTrip.id,
+    seatCode: 'A1',
+    passengerName: 'Nguyen Minh An',
+    passengerPhone: '0901234567',
+    price: 320000,
+    status: 'COMPLETED',
+    checkedInAt: completedDeparture,
+  });
+
+  await createDemoTicket({
+    orderId: 'order-demo-review-pending',
+    ticketId: 'ticket-demo-review-pending',
+    tripId: completedTrip.id,
+    seatCode: 'B1',
+    passengerName: 'Tran Hoai Nam',
+    passengerPhone: '0902345678',
+    price: 320000,
+    status: 'COMPLETED',
+    checkedInAt: completedDeparture,
+    review: {
+      rating: 5,
+      comment: 'Xe sạch, tài xế chạy êm, hỗ trợ khách rất tốt.',
+      isApproved: false,
+    },
+  });
+
+  const upcomingDemoTrip = await prisma.trip.findFirst({
+    where: {
+      routeId: 'route-hcm-dalat',
+      status: 'SCHEDULED',
+      departureTime: { gt: new Date() },
+    },
+    orderBy: { departureTime: 'asc' },
+  });
+  if (upcomingDemoTrip) {
+    await createDemoTicket({
+      orderId: 'order-demo-paid-upcoming',
+      ticketId: 'ticket-demo-paid-upcoming',
+      tripId: upcomingDemoTrip.id,
+      seatCode: 'A1',
+      passengerName: 'Le Gia Bao',
+      passengerPhone: '0903456789',
+      price: 280000,
+      status: 'PAID',
+    });
   }
 
   const configs = [
