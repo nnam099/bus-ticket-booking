@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
-const { decryptTickets } = require('../utils/privacy');
+const { decryptSensitiveValue, decryptTickets } = require('../utils/privacy');
 
 const parsePagination = (query, defaultLimit = 50, maxLimit = 100) => {
   const page = Number.parseInt(query.page, 10) || 1;
@@ -344,11 +344,63 @@ router.get('/reviews/pending', async (req, res, next) => {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { customer: { select: { fullName: true } } },
+        include: {
+          customer: { select: { fullName: true } },
+          ticketDetail: {
+            select: {
+              id: true,
+              publicCode: true,
+              passengerName: true,
+              passengerPhone: true,
+              price: true,
+              order: { select: { id: true, publicCode: true } },
+              tripSeat: {
+                select: {
+                  seatLayout: { select: { seatCode: true, floor: true } },
+                  trip: {
+                    select: {
+                      id: true,
+                      departureTime: true,
+                      estimatedArrival: true,
+                      status: true,
+                      route: {
+                        select: {
+                          originCity: true,
+                          destinationCity: true,
+                          operator: { select: { companyName: true, hotline: true } },
+                        },
+                      },
+                      vehicle: {
+                        select: {
+                          licensePlate: true,
+                          vehicleType: { select: { name: true } },
+                        },
+                      },
+                      tripStaffs: {
+                        select: {
+                          role: true,
+                          staff: { select: { fullName: true, phone: true, role: true } },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       }),
       prisma.review.count({ where }),
     ]);
-    res.json({ success: true, data: reviews, meta: { page, limit, total } });
+    const data = reviews.map((review) => ({
+      ...review,
+      ticketDetail: review.ticketDetail ? {
+        ...review.ticketDetail,
+        passengerName: decryptSensitiveValue(review.ticketDetail.passengerName),
+        passengerPhone: decryptSensitiveValue(review.ticketDetail.passengerPhone),
+      } : null,
+    }));
+    res.json({ success: true, data, meta: { page, limit, total } });
   } catch (err) { next(err); }
 });
 
