@@ -25,8 +25,8 @@ const timingSafeEqualString = (a, b) => {
 };
 
 const createPublicCode = (prefix, id) => {
-  const payload = Buffer.from(String(id), 'utf8').toString('base64url').toUpperCase();
-  const signature = hmac(`${prefix}:${payload}`, 'LOOKUP_CODE_SECRET', 'JWT_SECRET').slice(0, 20).toUpperCase();
+  const payload = crypto.createHash('sha256').update(String(id)).digest('base64url').slice(0, 10).toUpperCase();
+  const signature = hmac(`${prefix}:${payload}`, 'LOOKUP_CODE_SECRET', 'JWT_SECRET').slice(0, 6).toUpperCase();
   return `${prefix}-${payload}.${signature}`;
 };
 
@@ -36,7 +36,8 @@ const parsePublicCode = (value, prefix) => {
   const body = normalized.slice(prefix.length + 1);
   const [payload, signature] = body.split('.');
   if (!payload || !signature) return null;
-  const expected = hmac(`${prefix}:${payload}`, 'LOOKUP_CODE_SECRET', 'JWT_SECRET').slice(0, 20).toUpperCase();
+  if (signature.length < 6 || signature.length > 20) return null;
+  const expected = hmac(`${prefix}:${payload}`, 'LOOKUP_CODE_SECRET', 'JWT_SECRET').slice(0, signature.length).toUpperCase();
   if (!timingSafeEqualString(signature, expected)) return null;
   return payload;
 };

@@ -1,4 +1,3 @@
-// AdminUsersPage.jsx
 import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api';
 
@@ -17,13 +16,6 @@ const roleLabels = {
   BUS_OPERATOR: 'Nhà xe',
 };
 
-const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-}).format(Number(value || 0));
-
-const formatDateTime = (value) => (value ? new Date(value).toLocaleString('vi-VN') : 'Chưa có');
-
 const ticketStatusClass = {
   PENDING: 'bg-yellow-100 text-yellow-700',
   PAID: 'bg-green-100 text-green-700',
@@ -32,6 +24,22 @@ const ticketStatusClass = {
   CANCELLED: 'bg-red-100 text-red-600',
   REFUNDED: 'bg-purple-100 text-purple-700',
 };
+
+const tripStatusClass = {
+  SCHEDULED: 'bg-blue-100 text-blue-700',
+  BOARDING: 'bg-yellow-100 text-yellow-700',
+  DEPARTED: 'bg-green-100 text-green-700',
+  COMPLETED: 'bg-gray-100 text-gray-700',
+  DELAYED: 'bg-orange-100 text-orange-700',
+  CANCELLED: 'bg-red-100 text-red-600',
+};
+
+const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', {
+  style: 'currency',
+  currency: 'VND',
+}).format(Number(value || 0));
+
+const formatDateTime = (value) => (value ? new Date(value).toLocaleString('vi-VN') : 'Chưa có');
 
 const getRoles = (user) => user.userRoles?.map(ur => ur.role?.name).filter(Boolean) || [];
 const hasRole = (user, role) => getRoles(user).includes(role);
@@ -46,16 +54,16 @@ const getDisplayName = (user) =>
 
 const getRoleDescription = (user) => {
   if (hasRole(user, 'CUSTOMER')) {
-    return `${user.customer?._count?.orders || 0} đơn đặt vé • ${user.customer?._count?.reviews || 0} đánh giá`;
+    return `${user.customer?._count?.orders || 0} đơn đặt vé · ${user.customer?._count?.reviews || 0} đánh giá`;
   }
   if (hasRole(user, 'STAFF')) {
     const operatorName = user.staff?.operator?.companyName;
     const operatorText = operatorName ? `Nhà xe: ${operatorName}` : 'Chưa gắn nhà xe';
-    return `${user.staff?.role || 'STAFF'} • ${operatorText} • ${user.staff?._count?.tripStaffs || 0} chuyến được phân công`;
+    return `${user.staff?.role || 'STAFF'} · ${operatorText} · ${user.staff?._count?.tripStaffs || 0} chuyến được phân công`;
   }
   if (hasRole(user, 'BUS_OPERATOR')) {
     const status = user.busOperator?.isApproved ? 'Đã duyệt' : 'Chờ duyệt';
-    return `${status} • ${user.busOperator?._count?.routes || 0} tuyến • ${user.busOperator?._count?.vehicles || 0} xe`;
+    return `${status} · ${user.busOperator?._count?.routes || 0} tuyến · ${user.busOperator?._count?.vehicles || 0} xe`;
   }
   if (hasRole(user, 'ADMIN')) return 'Quản trị hệ thống';
   return 'Tài khoản hệ thống';
@@ -67,6 +75,8 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [ticketPanel, setTicketPanel] = useState(null);
   const [ticketLoading, setTicketLoading] = useState(false);
+  const [routePanel, setRoutePanel] = useState(null);
+  const [routeLoading, setRouteLoading] = useState(false);
 
   useEffect(() => {
     api.get('/admin/users').then(r => setUsers(r.data.data)).catch(() => setUsers([]))
@@ -86,10 +96,13 @@ export default function AdminUsersPage() {
     try {
       const res = await api.patch(`/admin/users/${id}/toggle-active`);
       setUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: res.data.data.isActive } : u));
-    } catch { alert('Thao tác thất bại.'); }
+    } catch {
+      alert('Thao tác thất bại.');
+    }
   };
 
   const handleViewTickets = async (user) => {
+    setRoutePanel(null);
     setTicketPanel({ user, tickets: [] });
     setTicketLoading(true);
     try {
@@ -100,6 +113,25 @@ export default function AdminUsersPage() {
       setTicketPanel(null);
     } finally {
       setTicketLoading(false);
+    }
+  };
+
+  const handleViewRoutes = async (user) => {
+    setTicketPanel(null);
+    if (routePanel?.user?.id === user.id) {
+      setRoutePanel(null);
+      return;
+    }
+    setRoutePanel({ user, routes: [], assignments: [], type: hasRole(user, 'BUS_OPERATOR') ? 'BUS_OPERATOR' : 'STAFF' });
+    setRouteLoading(true);
+    try {
+      const res = await api.get(`/admin/users/${user.id}/routes`);
+      setRoutePanel(res.data.data);
+    } catch {
+      alert('Không tải được danh sách tuyến/chuyến.');
+      setRoutePanel(null);
+    } finally {
+      setRouteLoading(false);
     }
   };
 
@@ -114,7 +146,7 @@ export default function AdminUsersPage() {
         </div>
         <button
           onClick={() => setTicketPanel(null)}
-          className="self-start text-sm px-3 py-1 rounded-lg border border-gray-300 text-gray-600 transition hover:bg-gray-50"
+          className="self-start rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-50"
         >
           Đóng
         </button>
@@ -149,7 +181,7 @@ export default function AdminUsersPage() {
                     <td className="py-3 pr-4">
                       <p className="font-medium text-gray-800">{routeName}</p>
                       <p className="text-xs text-gray-500">
-                        {route?.operator?.companyName || 'Chưa có nhà xe'} • {trip?.vehicle?.licensePlate || 'Chưa gán xe'}
+                        {route?.operator?.companyName || 'Chưa có nhà xe'} · {trip?.vehicle?.licensePlate || 'Chưa gán xe'}
                       </p>
                     </td>
                     <td className="py-3 pr-4 text-gray-700">
@@ -185,6 +217,86 @@ export default function AdminUsersPage() {
     </div>
   );
 
+  const renderRoutePanel = () => {
+    const owner = routePanel.user;
+    const title = routePanel.type === 'BUS_OPERATOR'
+      ? `Tuyến của ${owner?.busOperator?.companyName || owner?.email}`
+      : `Tuyến/chuyến của ${owner?.staff?.fullName || owner?.email}`;
+
+    return (
+      <div className="card border border-orange-100 bg-orange-50/20">
+        <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
+            <p className="text-sm text-gray-500">
+              {routePanel.type === 'BUS_OPERATOR'
+                ? `${routePanel.routes?.length || 0} tuyến đang quản lý, bao gồm cả chiều đi và chiều về nếu đã tạo.`
+                : `${routePanel.assignments?.length || 0} chuyến được phân công trên ${routePanel.routes?.length || 0} tuyến.`}
+            </p>
+          </div>
+          <button
+            onClick={() => setRoutePanel(null)}
+            className="self-start rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-50"
+          >
+            Đóng
+          </button>
+        </div>
+
+        {routeLoading ? (
+          <div className="py-8 text-center text-gray-500">Đang tải tuyến và chuyến...</div>
+        ) : routePanel.routes.length === 0 ? (
+          <div className="py-8 text-center text-gray-500">Chưa có tuyến hoặc chuyến nào.</div>
+        ) : (
+          <div className="mt-4 grid gap-3">
+            {routePanel.routes.map((route) => {
+              const trips = routePanel.type === 'BUS_OPERATOR'
+                ? route.trips || []
+                : (route.assignments || []).map(item => ({ ...item.trip, assignmentRole: item.role }));
+              return (
+                <article key={route.id} className="rounded-2xl border border-gray-100 bg-white p-4">
+                  <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0">
+                      <p className="break-words font-bold text-gray-900">{route.originCity} → {route.destinationCity}</p>
+                      <p className="mt-1 break-words text-sm text-gray-500">
+                        {route.originAddress || 'Chưa có điểm đón'} → {route.destinationAddress || 'Chưa có điểm trả'}
+                      </p>
+                      <p className="mt-1 text-xs text-gray-400">
+                        Nhà xe: {route.operator?.companyName || routePanel.user?.busOperator?.companyName || routePanel.user?.staff?.operator?.companyName || '-'}
+                      </p>
+                    </div>
+                    <span className="badge bg-gray-100 text-gray-700">
+                      {route._count?.trips ?? trips.length} chuyến
+                    </span>
+                  </div>
+
+                  <div className="mt-3 grid gap-2">
+                    {trips.length === 0 ? (
+                      <p className="rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-500">Chưa có chuyến gần đây.</p>
+                    ) : trips.map((trip) => (
+                      <div key={trip.id} className="grid gap-2 rounded-xl bg-gray-50 px-3 py-2 text-sm lg:grid-cols-[1.5fr_1fr_1fr_auto] lg:items-center">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-800">{formatDateTime(trip.departureTime)}</p>
+                          <p className="text-xs text-gray-500">Đến: {formatDateTime(trip.estimatedArrival)}</p>
+                        </div>
+                        <p className="text-gray-600">
+                          {trip.vehicle?.licensePlate || '-'}{trip.vehicle?.vehicleType?.name ? ` · ${trip.vehicle.vehicleType.name}` : ''}
+                        </p>
+                        <p className="text-gray-600">
+                          {routePanel.type === 'STAFF' ? `Vai trò: ${trip.assignmentRole || '-'}` : `Còn ${trip._count?.tripSeats ?? '-'} ghế`}
+                        </p>
+                        <span className={`badge ${tripStatusClass[trip.status] || 'bg-gray-100 text-gray-700'}`}>{trip.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading) return <div className="text-center py-16 text-gray-500">Đang tải...</div>;
 
   return (
@@ -192,7 +304,7 @@ export default function AdminUsersPage() {
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Quản lý người dùng</h1>
-          <p className="mt-1 text-sm text-gray-500">Phân loại tài khoản theo khách hàng, nhân viên, nhà xe và admin.</p>
+          <p className="mt-1 text-sm text-gray-500">Click nhân viên hoặc nhà xe để xem tuyến/chuyến đang phụ trách.</p>
         </div>
       </div>
 
@@ -203,6 +315,7 @@ export default function AdminUsersPage() {
             onClick={() => {
               setActiveTab(tab.key);
               setTicketPanel(null);
+              setRoutePanel(null);
             }}
             className={`rounded-lg border px-3 py-2 text-sm font-medium transition
               ${activeTab === tab.key ? 'border-brand bg-brand text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
@@ -215,12 +328,25 @@ export default function AdminUsersPage() {
       <div className="space-y-3">
         {filteredUsers.map(u => {
           const roles = getRoles(u);
-          const isSelected = ticketPanel?.user?.id === u.id;
+          const isTicketSelected = ticketPanel?.user?.id === u.id;
+          const isRouteSelected = routePanel?.user?.id === u.id;
           const canViewTickets = hasRole(u, 'CUSTOMER') && u.customer;
+          const canViewRoutes = hasRole(u, 'STAFF') || hasRole(u, 'BUS_OPERATOR');
 
           return (
             <div key={u.id} className="space-y-3">
-              <div className="card flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div
+                role={canViewRoutes ? 'button' : undefined}
+                tabIndex={canViewRoutes ? 0 : undefined}
+                onClick={() => canViewRoutes && handleViewRoutes(u)}
+                onKeyDown={(event) => {
+                  if (canViewRoutes && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                    handleViewRoutes(u);
+                  }
+                }}
+                className={`card flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between ${canViewRoutes ? 'cursor-pointer hover:border-brand/40' : ''} ${isRouteSelected ? 'border-brand/60' : ''}`}
+              >
                 <div className="min-w-0">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
                     <p className="font-semibold text-gray-800">{getDisplayName(u)}</p>
@@ -230,34 +356,50 @@ export default function AdminUsersPage() {
                   </div>
                   <p className="text-sm text-gray-600">{u.email || u.phone}</p>
                   <p className="text-sm text-gray-500">
-                    {getRoleDescription(u)} • Tạo: {new Date(u.createdAt).toLocaleDateString('vi-VN')}
+                    {getRoleDescription(u)} · Tạo: {new Date(u.createdAt).toLocaleDateString('vi-VN')}
                   </p>
+                  {canViewRoutes && (
+                    <p className="mt-2 text-xs font-semibold text-brand">
+                      {isRouteSelected ? 'Đang xem tuyến/chuyến' : 'Click để xem tuyến/chuyến đi và về'}
+                    </p>
+                  )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3" onClick={(event) => event.stopPropagation()}>
                   <span className={`badge ${u.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
                     {u.isActive ? 'Hoạt động' : 'Bị khóa'}
                   </span>
                   {canViewTickets && (
                     <button
                       onClick={() => handleViewTickets(u)}
-                      disabled={ticketLoading && isSelected}
-                      className={`text-sm px-3 py-1 rounded-lg border transition disabled:cursor-not-allowed disabled:opacity-70
-                        ${isSelected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-blue-300 text-blue-600 hover:bg-blue-50'}`}
+                      disabled={ticketLoading && isTicketSelected}
+                      className={`rounded-lg border px-3 py-1 text-sm transition disabled:cursor-not-allowed disabled:opacity-70
+                        ${isTicketSelected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-blue-300 text-blue-600 hover:bg-blue-50'}`}
                     >
-                      {ticketLoading && isSelected ? 'Đang tải...' : 'Xem vé'}
+                      {ticketLoading && isTicketSelected ? 'Đang tải...' : 'Xem vé'}
+                    </button>
+                  )}
+                  {canViewRoutes && (
+                    <button
+                      onClick={() => handleViewRoutes(u)}
+                      disabled={routeLoading && isRouteSelected}
+                      className={`rounded-lg border px-3 py-1 text-sm transition disabled:cursor-not-allowed disabled:opacity-70
+                        ${isRouteSelected ? 'border-brand bg-orange-50 text-brand' : 'border-orange-300 text-brand hover:bg-orange-50'}`}
+                    >
+                      {routeLoading && isRouteSelected ? 'Đang tải...' : 'Xem tuyến'}
                     </button>
                   )}
                   {!roles.includes('ADMIN') && (
                     <button onClick={() => handleToggle(u.id)}
-                      className={`text-sm px-3 py-1 rounded-lg border transition
+                      className={`rounded-lg border px-3 py-1 text-sm transition
                         ${u.isActive ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-green-300 text-green-600 hover:bg-green-50'}`}>
                       {u.isActive ? 'Khóa' : 'Mở khóa'}
                     </button>
                   )}
                 </div>
               </div>
-              {isSelected && renderTicketPanel()}
+              {isTicketSelected && renderTicketPanel()}
+              {isRouteSelected && renderRoutePanel()}
             </div>
           );
         })}

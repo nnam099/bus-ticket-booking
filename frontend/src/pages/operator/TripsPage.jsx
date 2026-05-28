@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { tripAPI, routeAPI, vehicleAPI } from '../../services/api';
 import { format } from 'date-fns';
 
@@ -11,6 +12,13 @@ const STATUS_LABELS = {
   COMPLETED: { label: 'Hoàn thành', cls: 'bg-gray-100 text-gray-500' },
   CANCELLED: { label: 'Đã hủy', cls: 'bg-red-100 text-red-600' },
   DELAYED: { label: 'Trễ giờ', cls: 'bg-orange-100 text-orange-700' },
+};
+
+const STATUS_ACTIONS = {
+  SCHEDULED: [{ status: 'BOARDING', label: 'Mở lên xe' }, { status: 'DELAYED', label: 'Báo trễ' }, { status: 'CANCELLED', label: 'Hủy' }],
+  DELAYED: [{ status: 'BOARDING', label: 'Mở lên xe' }, { status: 'CANCELLED', label: 'Hủy' }],
+  BOARDING: [{ status: 'DEPARTED', label: 'Khởi hành' }, { status: 'CANCELLED', label: 'Hủy' }],
+  DEPARTED: [{ status: 'COMPLETED', label: 'Hoàn thành' }],
 };
 
 const ACTIVE_TRIP_STATUSES = ['SCHEDULED', 'BOARDING', 'DELAYED', 'DEPARTED'];
@@ -61,12 +69,27 @@ export default function TripsPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ routeId: '', vehicleId: '', departureTime: '', estimatedArrival: '', basePrice: '' });
   const [filters, setFilters] = useState({ date: '', routeId: '', vehicleId: '', status: '' });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [updatingTripId, setUpdatingTripId] = useState(null);
+  const [error, setError] = useState('');
 
-  const loadTrips = () => {
-    routeAPI.getMine().then(r => setRoutes(r.data.data));
-    vehicleAPI.getMyVehicles().then(r => setVehicles(r.data.data));
-    tripAPI.getMine().then(r => setTrips(r.data.data));
+  const loadTrips = async () => {
+    setError('');
+    try {
+      const [routeRes, vehicleRes, tripRes] = await Promise.all([
+        routeAPI.getMine(),
+        vehicleAPI.getMyVehicles(),
+        tripAPI.getMine(),
+      ]);
+      setRoutes(routeRes.data.data);
+      setVehicles(vehicleRes.data.data);
+      setTrips(tripRes.data.data);
+    } catch {
+      setError('Không thể tải dữ liệu chuyến xe.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { loadTrips(); }, []);
@@ -87,7 +110,7 @@ export default function TripsPage() {
       alert(formConflict.message);
       return;
     }
-    setLoading(true);
+    setSubmitting(true);
     try {
       await tripAPI.create(form);
       setShowForm(false);
@@ -95,23 +118,47 @@ export default function TripsPage() {
       loadTrips();
     } catch (err) {
       alert(err.response?.data?.message || 'Tạo chuyến xe thất bại.');
-    } finally { setLoading(false); }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleStatusChange = async (trip, status) => {
+    const reason = status === 'CANCELLED' || status === 'DELAYED'
+      ? window.prompt('Nhập lý do:')
+      : null;
+    if ((status === 'CANCELLED' || status === 'DELAYED') && !reason) return;
+    if (status === 'COMPLETED' && !window.confirm('Hoàn thành chuyến này? Các vé đã thanh toán/check-in sẽ được mở đánh giá.')) return;
+
+    setUpdatingTripId(trip.id);
+    try {
+      await tripAPI.updateStatus(trip.id, { status, cancelReason: reason });
+      setTrips(prev => prev.map(item => item.id === trip.id ? { ...item, status, cancelReason: reason || null } : item));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Cập nhật trạng thái thất bại.');
+    } finally {
+      setUpdatingTripId(null);
+    }
   };
 
   return (
     <div>
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Quản lý chuyến xe</h1>
-          <p className="text-sm text-gray-500 mt-1">Lọc lịch chạy và kiểm tra trùng lịch xe trước khi tạo chuyến.</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Tạo chuyến, kiểm tra lịch xe và chuyển trạng thái để khách có thể đánh giá sau chuyến.
+          </p>
         </div>
         <button onClick={() => setShowForm(!showForm)} className="btn-primary py-2">
           {showForm ? 'Đóng' : '+ Thêm chuyến'}
         </button>
       </div>
 
+      {error && <div className="card mb-4 border-red-200 bg-red-50 text-sm font-medium text-red-700">{error}</div>}
+
       <div className="card mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
           <input
             type="date"
             className="input"
@@ -141,16 +188,16 @@ export default function TripsPage() {
 
       {showForm && (
         <div className="card mb-6">
-          <h2 className="font-semibold text-gray-800 mb-4">Tạo chuyến xe mới</h2>
-          <form onSubmit={handleCreate} className="grid grid-cols-2 gap-3">
-            <div className="col-span-2 md:col-span-1">
+          <h2 className="mb-4 font-semibold text-gray-800">Tạo chuyến xe mới</h2>
+          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div>
               <label className="label">Tuyến xe</label>
               <select className="input" value={form.routeId} onChange={e => setForm({ ...form, routeId: e.target.value })} required>
                 <option value="">Chọn tuyến xe</option>
                 {routes.map(r => <option key={r.id} value={r.id}>{r.originCity} → {r.destinationCity}</option>)}
               </select>
             </div>
-            <div className="col-span-2 md:col-span-1">
+            <div>
               <label className="label">Xe</label>
               <select className="input" value={form.vehicleId} onChange={e => setForm({ ...form, vehicleId: e.target.value })} required>
                 <option value="">Chọn xe</option>
@@ -170,12 +217,12 @@ export default function TripsPage() {
               <input type="number" className="input" placeholder="150000" min="1000" value={form.basePrice} onChange={e => setForm({ ...form, basePrice: e.target.value })} required />
             </div>
             <div className="flex items-end">
-              <button type="submit" disabled={loading || Boolean(formConflict)} className="btn-primary py-2 w-full">
-                {loading ? 'Đang tạo...' : 'Tạo chuyến xe'}
+              <button type="submit" disabled={submitting || Boolean(formConflict)} className="btn-primary w-full py-2">
+                {submitting ? 'Đang tạo...' : 'Tạo chuyến xe'}
               </button>
             </div>
             {formConflict && (
-              <div className="col-span-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 md:col-span-2">
                 {formConflict.message}
               </div>
             )}
@@ -183,49 +230,87 @@ export default function TripsPage() {
         </div>
       )}
 
-      {trips.length === 0 ? (
-        <div className="card text-center py-12 text-gray-500">
-          <div className="text-4xl mb-3">📅</div>
-          <p>Chưa có chuyến xe nào. Hãy thêm chuyến đầu tiên!</p>
+      {loading ? (
+        <div className="grid gap-3">
+          {[1, 2, 3].map(item => (
+            <div key={item} className="card animate-pulse">
+              <div className="h-5 w-2/3 rounded bg-gray-100" />
+              <div className="mt-3 h-4 w-1/2 rounded bg-gray-100" />
+            </div>
+          ))}
+        </div>
+      ) : trips.length === 0 ? (
+        <div className="card text-center py-12">
+          <p className="font-semibold text-gray-800">Chưa có chuyến xe nào</p>
+          <p className="mt-1 text-sm text-gray-500">Hãy thêm chuyến đầu tiên để mở bán vé.</p>
         </div>
       ) : filteredTrips.length === 0 ? (
-        <div className="card text-center py-12 text-gray-500">
-          <p>Không có chuyến xe phù hợp với bộ lọc.</p>
+        <div className="card text-center py-12">
+          <p className="font-semibold text-gray-800">Không có chuyến phù hợp</p>
+          <p className="mt-1 text-sm text-gray-500">Thử đổi bộ lọc hoặc xóa điều kiện tìm kiếm.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3">
           {filteredTrips.map(trip => {
             const badge = STATUS_LABELS[trip.status] || { label: trip.status, cls: 'bg-gray-100 text-gray-500' };
             const conflict = tripHasConflict(trip, trips);
-            const previousSameVehicle = trips
+            const nextSameVehicle = trips
               .filter(item => item.id !== trip.id && item.vehicleId === trip.vehicleId)
               .sort((a, b) => new Date(a.departureTime) - new Date(b.departureTime))
               .find(item => new Date(item.departureTime) > new Date(trip.departureTime));
-            const nextGap = previousSameVehicle ? Math.round(getGapMinutes(trip, previousSameVehicle)) : null;
+            const nextGap = nextSameVehicle ? Math.round(getGapMinutes(trip, nextSameVehicle)) : null;
+            const actions = STATUS_ACTIONS[trip.status] || [];
             return (
-              <div key={trip.id} className={`card flex flex-col md:flex-row md:items-center gap-4 ${conflict ? 'border-red-200' : ''}`}>
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-800">
-                    {trip.route?.originCity} → {trip.route?.destinationCity}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')} •{' '}
-                    {trip.vehicle?.licensePlate} • Còn {trip._count?.tripSeats ?? 0} ghế
-                  </p>
-                  {nextGap !== null && nextGap >= 0 && nextGap < TURNAROUND_MINUTES && (
-                    <p className="mt-1 text-xs font-semibold text-orange-600">
-                      Xe chỉ nghỉ {nextGap} phút trước chuyến kế tiếp.
+              <article key={trip.id} className={`card ${conflict ? 'border-red-200' : ''}`}>
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="break-words font-semibold text-gray-800">
+                        {trip.route?.originCity} → {trip.route?.destinationCity}
+                      </p>
+                      <span className={`badge ${badge.cls}`}>{badge.label}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')} · {trip.vehicle?.licensePlate} · Còn {trip._count?.tripSeats ?? 0} ghế
                     </p>
-                  )}
-                  {conflict && (
-                    <p className="mt-1 text-xs font-semibold text-red-600">
-                      Cảnh báo: lịch xe này đang chồng thời gian hoặc thiếu thời gian quay đầu.
-                    </p>
-                  )}
+                    {nextGap !== null && nextGap >= 0 && nextGap < TURNAROUND_MINUTES && (
+                      <p className="mt-1 text-xs font-semibold text-orange-600">
+                        Xe chỉ nghỉ {nextGap} phút trước chuyến kế tiếp.
+                      </p>
+                    )}
+                    {conflict && (
+                      <p className="mt-1 text-xs font-semibold text-red-600">
+                        Cảnh báo: lịch xe đang chồng thời gian hoặc thiếu thời gian quay đầu.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2 lg:items-end">
+                    <span className="font-semibold text-brand">{Number(trip.basePrice).toLocaleString('vi-VN')}đ</span>
+                    <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
+                      <Link to={`/operator/trips/${trip.id}/check-in`} className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                        Soát vé
+                      </Link>
+                      {actions.map(action => (
+                        <button
+                          key={action.status}
+                          onClick={() => handleStatusChange(trip, action.status)}
+                          disabled={updatingTripId === trip.id}
+                          className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                            action.status === 'COMPLETED'
+                              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                              : action.status === 'CANCELLED'
+                                ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {updatingTripId === trip.id ? 'Đang cập nhật...' : action.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <span className={`badge ${badge.cls}`}>{badge.label}</span>
-                <span className="font-semibold text-brand">{Number(trip.basePrice).toLocaleString('vi-VN')}đ</span>
-              </div>
+              </article>
             );
           })}
         </div>

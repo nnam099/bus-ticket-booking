@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
-const { decryptTickets } = require('../utils/privacy');
+const { decryptSensitiveValue, decryptTickets } = require('../utils/privacy');
 
 const parsePagination = (query, defaultLimit = 50, maxLimit = 100) => {
   const page = Number.parseInt(query.page, 10) || 1;
@@ -246,6 +246,87 @@ router.get('/users/:id/tickets', async (req, res, next) => {
 });
 
 // GET /api/admin/stats - Thống kê hệ thống
+// GET /api/admin/users/:id/routes - Xem tuyến/chuyến của nhân viên hoặc nhà xe
+router.get('/users/:id/routes', async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        busOperator: { select: { id: true, companyName: true, hotline: true, isApproved: true } },
+        staff: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+            phone: true,
+            operator: { select: { id: true, companyName: true, hotline: true } },
+          },
+        },
+        userRoles: { include: { role: true } },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
+    }
+
+    if (user.busOperator) {
+      const routes = await prisma.route.findMany({
+        where: { operatorId: user.busOperator.id },
+        orderBy: [{ originCity: 'asc' }, { destinationCity: 'asc' }],
+        include: {
+          _count: { select: { trips: true } },
+          trips: {
+            orderBy: { departureTime: 'desc' },
+            take: 8,
+            include: {
+              vehicle: { select: { licensePlate: true, vehicleType: { select: { name: true } } } },
+              _count: { select: { tripSeats: { where: { status: 'AVAILABLE' } } } },
+            },
+          },
+        },
+      });
+
+      return res.json({ success: true, data: { type: 'BUS_OPERATOR', user, routes } });
+    }
+
+    if (user.staff) {
+      const assignments = await prisma.tripStaff.findMany({
+        where: { staffId: user.staff.id },
+        orderBy: { trip: { departureTime: 'desc' } },
+        include: {
+          trip: {
+            include: {
+              route: { include: { operator: { select: { id: true, companyName: true, hotline: true } } } },
+              vehicle: { select: { licensePlate: true, vehicleType: { select: { name: true } } } },
+              _count: { select: { tripSeats: { where: { status: 'AVAILABLE' } } } },
+            },
+          },
+        },
+      });
+
+      const routeMap = new Map();
+      for (const assignment of assignments) {
+        const route = assignment.trip.route;
+        if (!routeMap.has(route.id)) {
+          routeMap.set(route.id, { ...route, assignments: [] });
+        }
+        routeMap.get(route.id).assignments.push({ role: assignment.role, trip: assignment.trip });
+      }
+
+      return res.json({
+        success: true,
+        data: { type: 'STAFF', user, routes: Array.from(routeMap.values()), assignments },
+      });
+    }
+
+    res.json({ success: true, data: { type: 'OTHER', user, routes: [], assignments: [] } });
+  } catch (err) { next(err); }
+});
+
 router.get('/stats', async (req, res, next) => {
   try {
     const range = getDateRange(req.query);
@@ -344,11 +425,63 @@ router.get('/reviews/pending', async (req, res, next) => {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
-        include: { customer: { select: { fullName: true } } },
+        include: {
+          customer: { select: { fullName: true } },
+          ticketDetail: {
+            select: {
+              id: true,
+              publicCode: true,
+              passengerName: true,
+              passengerPhone: true,
+              price: true,
+              order: { select: { id: true, publicCode: true } },
+              tripSeat: {
+                select: {
+                  seatLayout: { select: { seatCode: true, floor: true } },
+                  trip: {
+                    select: {
+                      id: true,
+                      departureTime: true,
+                      estimatedArrival: true,
+                      status: true,
+                      route: {
+                        select: {
+                          originCity: true,
+                          destinationCity: true,
+                          operator: { select: { companyName: true, hotline: true } },
+                        },
+                      },
+                      vehicle: {
+                        select: {
+                          licensePlate: true,
+                          vehicleType: { select: { name: true } },
+                        },
+                      },
+                      tripStaffs: {
+                        select: {
+                          role: true,
+                          staff: { select: { fullName: true, phone: true, role: true } },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       }),
       prisma.review.count({ where }),
     ]);
-    res.json({ success: true, data: reviews, meta: { page, limit, total } });
+    const data = reviews.map((review) => ({
+      ...review,
+      ticketDetail: review.ticketDetail ? {
+        ...review.ticketDetail,
+        passengerName: decryptSensitiveValue(review.ticketDetail.passengerName),
+        passengerPhone: decryptSensitiveValue(review.ticketDetail.passengerPhone),
+      } : null,
+    }));
+    res.json({ success: true, data, meta: { page, limit, total } });
   } catch (err) { next(err); }
 });
 

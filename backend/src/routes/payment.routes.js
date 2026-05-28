@@ -7,7 +7,7 @@ const prisma = require('../config/prisma');
 const { parsePublicCode, timingSafeEqualString } = require('../utils/security');
 const { decryptOrderTickets } = require('../utils/privacy');
 
-const PAYMENT_METHODS = ['E_WALLET', 'BANK_CARD', 'BANK_TRANSFER', 'CASH'];
+const PAYMENT_METHODS = ['E_WALLET', 'BANK_CARD', 'BANK_TRANSFER'];
 const PAYMENT_STATUSES = ['success', 'failed'];
 
 const verifyPaymentSignature = (payload, signature) => {
@@ -255,32 +255,34 @@ router.post('/initiate', authenticate, authorize('CUSTOMER'), async (req, res, n
   } catch (err) { next(err); }
 });
 
-router.post('/mock/complete', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
-  try {
-    const { paymentId, status = 'success' } = req.body;
-    if (!paymentId || !PAYMENT_STATUSES.includes(status)) {
-      return res.status(400).json({ success: false, message: 'Thong tin giao dich khong hop le.' });
-    }
-    const payment = await prisma.payment.findFirst({
-      where: { id: paymentId, order: { customer: { userId: req.user.id } } },
-      select: { id: true },
-    });
-    if (!payment) return res.status(404).json({ success: false, message: 'Khong tim thay giao dich thanh toan.' });
+if (process.env.NODE_ENV !== 'production') {
+  router.post('/mock/complete', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
+    try {
+      const { paymentId, status = 'success' } = req.body;
+      if (!paymentId || !PAYMENT_STATUSES.includes(status)) {
+        return res.status(400).json({ success: false, message: 'Thong tin giao dich khong hop le.' });
+      }
+      const payment = await prisma.payment.findFirst({
+        where: { id: paymentId, order: { customer: { userId: req.user.id } } },
+        select: { id: true },
+      });
+      if (!payment) return res.status(404).json({ success: false, message: 'Khong tim thay giao dich thanh toan.' });
 
-    await applyPaymentResult({
-      paymentId,
-      status: status === 'success' ? 'success' : 'failed',
-      gatewayTxnId: `mock_${Date.now()}`,
-    });
+      await applyPaymentResult({
+        paymentId,
+        status: status === 'success' ? 'success' : 'failed',
+        gatewayTxnId: `mock_${Date.now()}`,
+      });
 
-    const completedPayment = await prisma.payment.findUnique({
-      where: { id: paymentId },
-      include: { order: { include: fullInvoiceInclude } },
-    });
+      const completedPayment = await prisma.payment.findUnique({
+        where: { id: paymentId },
+        include: { order: { include: fullInvoiceInclude } },
+      });
 
-    res.json({ success: true, data: { ...completedPayment, order: decryptOrderTickets(completedPayment.order) } });
-  } catch (err) { next(err); }
-});
+      res.json({ success: true, data: { ...completedPayment, order: decryptOrderTickets(completedPayment.order) } });
+    } catch (err) { next(err); }
+  });
+}
 
 router.post('/callback', async (req, res, next) => {
   try {
