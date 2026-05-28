@@ -96,6 +96,16 @@ describe('payment routes business rules', () => {
     redisClient.get.mockResolvedValue('customer-1');
   });
 
+  it('rejects cash payment initiation from customer flow', async () => {
+    const res = await request(app)
+      .post('/api/payments/initiate')
+      .send({ orderId: 'order-1', method: 'CASH' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(prisma.payment.create).not.toHaveBeenCalled();
+  });
+
   it('completes a successful payment and books seats', async () => {
     tx.payment.findUnique.mockResolvedValue(makePayment());
     tx.tripSeat.updateMany.mockResolvedValue({ count: 1 });

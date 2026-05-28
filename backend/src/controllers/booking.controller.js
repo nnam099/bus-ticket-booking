@@ -48,7 +48,7 @@ const confirmBooking = async (req, res, next) => {
   try {
     const { tripId, seatIds, passengerInfo, paymentMethod } = req.body;
     const customerId = req.user.customer?.id;
-    const validPaymentMethods = ['CASH', 'E_WALLET', 'BANK_CARD', 'BANK_TRANSFER'];
+    const validPaymentMethods = ['E_WALLET', 'BANK_CARD', 'BANK_TRANSFER'];
     const validPassengers = Array.isArray(passengerInfo)
       && passengerInfo.length === seatIds?.length
       && passengerInfo.every((p) => (
