@@ -17,4 +17,4 @@ RUN mkdir -p logs
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "DATABASE_URL=\"$MIGRATION_DATABASE_URL\" npx prisma migrate deploy && node src/server.js"]
+CMD ["sh", "-c", "npx prisma generate && DATABASE_URL=\"$MIGRATION_DATABASE_URL\" npx prisma migrate deploy && node src/server.js"]

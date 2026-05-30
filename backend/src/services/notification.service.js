@@ -1,18 +1,24 @@
 const prisma = require('../config/prisma');
+const logger = require('../utils/logger');
 
 const createNotification = async ({ userId, title, message, type = 'INFO', link = null, metadata = null }) => {
   if (!userId || !title || !message) return null;
 
-  return prisma.notification.create({
-    data: {
-      userId,
-      title,
-      message,
-      type,
-      link,
-      metadata,
-    },
-  });
+  try {
+    return await prisma.notification.create({
+      data: {
+        userId,
+        title,
+        message,
+        type,
+        link,
+        metadata,
+      },
+    });
+  } catch (err) {
+    logger.error('Failed to create notification:', err);
+    return null;
+  }
 };
 
 const createNotifications = async (items = []) => {
@@ -28,7 +34,12 @@ const createNotifications = async (items = []) => {
     }));
 
   if (!data.length) return { count: 0 };
-  return prisma.notification.createMany({ data });
+  try {
+    return await prisma.notification.createMany({ data });
+  } catch (err) {
+    logger.error('Failed to create notifications:', err);
+    return { count: 0 };
+  }
 };
 
 module.exports = { createNotification, createNotifications };
