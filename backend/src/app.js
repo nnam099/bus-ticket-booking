@@ -44,8 +44,9 @@ app.use('/api/', limiter);
 // Stricter limit for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { success: false, message: 'Too many auth attempts, please try again later.' },
+  max: 50,                         // tăng từ 10 → 50
+  skipSuccessfulRequests: true,    // chỉ đếm request thất bại
+  message: { success: false, message: 'Quá nhiều lần thử đăng nhập, vui lòng thử lại sau 15 phút.' },
 });
 app.use('/api/auth', authLimiter);
 
