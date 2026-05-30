@@ -50,6 +50,27 @@ const getDateRange = (query) => {
 // All admin routes require ADMIN role
 router.use(authenticate, authorize('ADMIN'));
 
+// GET /api/admin/operators - Tất cả nhà xe (pending + approved)
+router.get('/operators', async (req, res, next) => {
+  try {
+    const operators = await prisma.busOperator.findMany({
+      orderBy: [{ isApproved: 'asc' }, { createdAt: 'desc' }],
+      include: {
+        user: {
+          select: { id: true, email: true, phone: true, isActive: true, createdAt: true },
+        },
+        _count: {
+          select: {
+            routes: true,
+            vehicles: true,
+          },
+        },
+      },
+    });
+    res.json({ success: true, data: operators });
+  } catch (err) { next(err); }
+});
+
 // GET /api/admin/operators/pending - Nhà xe chờ duyệt
 router.get('/operators/pending', async (req, res, next) => {
   try {

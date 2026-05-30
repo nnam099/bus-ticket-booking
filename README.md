@@ -147,24 +147,52 @@ Các chuyến được tạo cho 14 ngày tiếp theo tính từ lúc chạy see
 
 ```text
 bus-ticket-booking/
+├── .github/                        # CI/CD workflows (GitHub Actions)
 ├── backend/
 │   ├── prisma/
-│   │   ├── schema.prisma
-│   │   └── seed.js
-│   └── src/
-│       ├── config/
-│       ├── controllers/
-│       ├── middlewares/
-│       ├── routes/
-│       ├── services/
-│       └── utils/
+│   │   ├── migrations/             # Lịch sử migration Prisma
+│   │   ├── schema.prisma           # Schema database
+│   │   └── seed.js                 # Script seed dữ liệu demo
+│   ├── src/
+│   │   ├── __tests__/              # Unit/integration tests
+│   │   ├── config/                 # Cấu hình app (DB, Redis, JWT…)
+│   │   ├── controllers/            # Request handlers
+│   │   ├── middlewares/            # Auth, error handler, rate limit…
+│   │   ├── routes/                 # Định nghĩa API routes
+│   │   ├── services/               # Business logic
+│   │   ├── utils/                  # Hàm tiện ích dùng chung
+│   │   ├── app.js                  # Khởi tạo Express app
+│   │   └── server.js               # Entry point, khởi động server
+│   ├── logs/                       # Log file runtime
+│   └── Dockerfile
 ├── frontend/
-│   └── src/
-│       ├── components/
-│       ├── pages/
-│       ├── services/
-│       └── store/
+│   ├── public/                     # Static assets
+│   ├── src/
+│   │   ├── components/             # UI components dùng chung
+│   │   ├── constants/              # Hằng số toàn cục
+│   │   ├── contexts/               # React Context providers
+│   │   ├── pages/                  # Các trang theo route
+│   │   ├── services/               # Gọi API (axios)
+│   │   ├── store/                  # Redux Toolkit slices & store
+│   │   ├── utils/                  # Hàm tiện ích frontend
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── nginx.conf                  # Nginx config cho production build
+│   └── Dockerfile
+├── nginx/
+│   └── nginx.conf                  # Reverse proxy cho Docker Compose
+├── postgres/
+│   └── init/                       # Init scripts chạy khi khởi tạo DB
+│       └── 001-create-app-user.sh  # Tạo PostgreSQL app user
 ├── docs/
+│   ├── api.md                      # API reference
+│   ├── database.md                 # Thiết kế database
+│   ├── diagram.md                  # Sơ đồ và luồng hệ thống
+│   └── requirements.md            # Yêu cầu hệ thống
+├── source/                         # Tài liệu gốc đề bài
+├── .env.example                    # Mẫu biến môi trường
+├── .gitignore
 ├── docker-compose.yml
 └── README.md
 ```
