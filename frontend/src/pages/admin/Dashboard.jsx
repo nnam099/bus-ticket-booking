@@ -38,10 +38,8 @@ export default function AdminDashboard() {
     { label: 'Nha xe', value: stats.totalOperators, icon: '🏢' },
     { label: 'Chuyen trong ky', value: stats.totalTrips, icon: '🚌' },
     { label: 'Ve da ban', value: stats.totalTickets, icon: '🎫' },
-    { label: 'Doanh thu', value: `${Number(stats.totalRevenue).toLocaleString('vi-VN')}đ`, icon: '💰' },
     { label: 'Chuyen hom nay', value: stats.todayTrips, icon: '📅' },
     { label: 'Ve hom nay', value: stats.todayTickets, icon: '✅' },
-    { label: 'Doanh thu hom nay', value: `${Number(stats.todayRevenue).toLocaleString('vi-VN')}đ`, icon: '⚡' },
   ] : [];
 
   return (
@@ -49,7 +47,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Tong quan he thong</h1>
-          <p className="text-sm text-gray-500 mt-1">Loc doanh thu, ve va chuyen theo ngay, tuyen hoac nha xe.</p>
+          <p className="text-sm text-gray-500 mt-1">Loc ve va chuyen theo ngay, tuyen hoac nha xe.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <select
