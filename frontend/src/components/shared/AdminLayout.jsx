@@ -27,7 +27,7 @@ export default function AdminLayout() {
     { to: '/admin/operators', label: 'Nhà xe' },
     { to: '/admin/users', label: 'Người dùng' },
     { to: '/admin/reviews', label: 'Đánh giá' },
-    { to: '/admin/audit', label: 'Audit Log' },
+    { to: '/admin/audit', label: 'Nhật ký kiểm toán' },
   ];
 
   return (
@@ -38,7 +38,7 @@ export default function AdminLayout() {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-600 text-xs font-black text-white">BT</span>
             BusTicket
           </Link>
-          <p className="mt-1 text-xs text-red-600">Admin Panel</p>
+          <p className="mt-1 text-xs text-red-600">Bảng quản trị</p>
         </div>
         <nav className="flex-1 px-2 py-4 space-y-1">
           {links.map(l => (

@@ -6,11 +6,11 @@ const userTabs = [
   { key: 'CUSTOMER', label: 'Khách hàng' },
   { key: 'STAFF', label: 'Nhân viên' },
   { key: 'BUS_OPERATOR', label: 'Nhà xe' },
-  { key: 'ADMIN', label: 'Admin' },
+  { key: 'ADMIN', label: 'Quản trị viên' },
 ];
 
 const roleLabels = {
-  ADMIN: 'Admin',
+  ADMIN: 'Quản trị viên',
   CUSTOMER: 'Khách hàng',
   STAFF: 'Nhân viên',
   BUS_OPERATOR: 'Nhà xe',
@@ -25,6 +25,15 @@ const ticketStatusClass = {
   REFUNDED: 'bg-purple-100 text-purple-700',
 };
 
+const ticketStatusLabels = {
+  PENDING: 'Chờ thanh toán',
+  PAID: 'Đã thanh toán',
+  CHECKED_IN: 'Đã lên xe',
+  COMPLETED: 'Hoàn thành',
+  CANCELLED: 'Đã hủy',
+  REFUNDED: 'Đã hoàn tiền',
+};
+
 const tripStatusClass = {
   SCHEDULED: 'bg-blue-100 text-blue-700',
   BOARDING: 'bg-yellow-100 text-yellow-700',
@@ -32,6 +41,15 @@ const tripStatusClass = {
   COMPLETED: 'bg-gray-100 text-gray-700',
   DELAYED: 'bg-orange-100 text-orange-700',
   CANCELLED: 'bg-red-100 text-red-600',
+};
+
+const tripStatusLabels = {
+  SCHEDULED: 'Theo lịch',
+  BOARDING: 'Đang lên xe',
+  DEPARTED: 'Đang chạy',
+  COMPLETED: 'Hoàn thành',
+  DELAYED: 'Trễ giờ',
+  CANCELLED: 'Đã hủy',
 };
 
 const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', {
@@ -59,7 +77,7 @@ const getRoleDescription = (user) => {
   if (hasRole(user, 'STAFF')) {
     const operatorName = user.staff?.operator?.companyName;
     const operatorText = operatorName ? `Nhà xe: ${operatorName}` : 'Chưa gắn nhà xe';
-    return `${user.staff?.role || 'STAFF'} · ${operatorText} · ${user.staff?._count?.tripStaffs || 0} chuyến được phân công`;
+    return `${user.staff?.role || 'Nhân viên'} · ${operatorText} · ${user.staff?._count?.tripStaffs || 0} chuyến được phân công`;
   }
   if (hasRole(user, 'BUS_OPERATOR')) {
     const status = user.busOperator?.isApproved ? 'Đã duyệt' : 'Chờ duyệt';
@@ -199,12 +217,12 @@ export default function AdminUsersPage() {
                     <td className="py-3 pr-4 text-gray-700">
                       <p>{formatCurrency(ticket.price)}</p>
                       <p className="text-xs text-gray-500">
-                        {payment ? `${payment.method}${payment.gateway ? ` / ${payment.gateway}` : ''} - ${payment.status}` : ticket.order?.status}
+                        {payment ? `${payment.method}${payment.gateway ? ` / ${payment.gateway}` : ''} - ${ticketStatusLabels[payment.status] || payment.status}` : ticketStatusLabels[ticket.order?.status] || ticket.order?.status}
                       </p>
                     </td>
                     <td className="py-3 pr-4">
                       <span className={`badge ${ticketStatusClass[ticket.status] || 'bg-gray-100 text-gray-700'}`}>
-                        {ticket.status}
+                        {ticketStatusLabels[ticket.status] || ticket.status}
                       </span>
                     </td>
                   </tr>
@@ -284,7 +302,7 @@ export default function AdminUsersPage() {
                         <p className="text-gray-600">
                           {routePanel.type === 'STAFF' ? `Vai trò: ${trip.assignmentRole || '-'}` : `Còn ${trip._count?.tripSeats ?? '-'} ghế`}
                         </p>
-                        <span className={`badge ${tripStatusClass[trip.status] || 'bg-gray-100 text-gray-700'}`}>{trip.status}</span>
+                        <span className={`badge ${tripStatusClass[trip.status] || 'bg-gray-100 text-gray-700'}`}>{tripStatusLabels[trip.status] || trip.status}</span>
                       </div>
                     ))}
                   </div>

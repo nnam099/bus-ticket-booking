@@ -24,7 +24,7 @@ export default function OperatorDashboard() {
     <div>
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard Nhà Xe</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Tổng quan nhà xe</h1>
           <p className="text-sm text-gray-500 mt-1">Theo dõi doanh thu, vé bán và lịch chạy trong ngày.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">

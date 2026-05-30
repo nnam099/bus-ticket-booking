@@ -17,7 +17,7 @@ export default function AdminAuditPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Audit Log</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">Nhật ký kiểm toán</h1>
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>

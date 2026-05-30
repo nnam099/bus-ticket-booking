@@ -66,7 +66,7 @@ export default function AdminDashboard() {
     { to: '/admin/operators', icon: 'operator', label: 'Quản lý nhà xe' },
     { to: '/admin/users', icon: 'users', label: 'Người dùng' },
     { to: '/admin/reviews', icon: 'review', label: 'Đánh giá' },
-    { to: '/admin/audit', icon: 'audit', label: 'Audit Log' },
+    { to: '/admin/audit', icon: 'audit', label: 'Nhật ký kiểm toán' },
   ];
 
   return (

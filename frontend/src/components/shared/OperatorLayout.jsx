@@ -23,7 +23,7 @@ export default function OperatorLayout() {
   };
 
   const links = [
-    { to: '/operator',          label: '📊 Dashboard' },
+    { to: '/operator',          label: '📊 Tổng quan' },
     { to: '/operator/vehicles', label: '🚌 Xe' },
     { to: '/operator/routes',   label: '🗺️ Tuyến xe' },
     { to: '/operator/trips',    label: '📅 Chuyến xe' },

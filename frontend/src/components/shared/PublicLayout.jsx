@@ -78,7 +78,7 @@ export default function PublicLayout() {
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="font-semibold text-white mb-1">🚌 BusTicket</p>
           <p>Hệ thống đặt vé xe khách trực tuyến — Nhanh chóng, tiện lợi, an toàn</p>
-          <p className="mt-2 text-xs">© 2026 BusTicket. All rights reserved.</p>
+          <p className="mt-2 text-xs">© 2026 BusTicket. Đã đăng ký bản quyền.</p>
         </div>
       </footer>
     </div>
