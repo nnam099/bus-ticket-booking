@@ -30,17 +30,18 @@ export default function AdminLayout() {
     { to: '/admin/audit',     label: '🔍 Audit Log' },
   ];
 
-  const sidebarBg    = isDark ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200';
-  const sidebarText  = isDark ? 'text-gray-300' : 'text-gray-700';
+  const shellBg      = isDark ? 'bg-slate-900' : 'bg-gray-50';
+  const sidebarBg    = isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-gray-200';
+  const sidebarText  = isDark ? 'text-slate-300' : 'text-gray-700';
   const titleColor   = isDark ? 'text-white' : 'text-gray-900';
-  const linkHover    = isDark ? 'hover:bg-gray-800 hover:text-white' : 'hover:bg-gray-100 hover:text-gray-900';
-  const logoutColor  = isDark ? 'text-gray-400 hover:text-white hover:bg-gray-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100';
-  const mainBg       = isDark ? 'bg-gray-950' : 'bg-gray-50';
+  const linkHover    = isDark ? 'hover:bg-slate-800 hover:text-white' : 'hover:bg-gray-100 hover:text-gray-900';
+  const logoutColor  = isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100';
+  const mainBg       = isDark ? 'bg-slate-900' : 'bg-gray-50';
 
   return (
-    <div className="min-h-screen flex">
-      <aside className={`w-56 border-r flex flex-col ${sidebarBg} ${sidebarText}`}>
-        <div className={`px-4 py-5 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+    <div className={`min-h-screen w-full flex ${shellBg}`}>
+      <aside className={`w-56 shrink-0 border-r flex flex-col ${sidebarBg} ${sidebarText}`}>
+        <div className={`px-4 py-5 border-b ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
           <Link to="/" className={`font-bold text-lg ${titleColor}`}>🚌 BusTicket</Link>
           <p className="text-xs text-red-400 mt-0.5">Admin Panel</p>
         </div>
@@ -61,7 +62,7 @@ export default function AdminLayout() {
           🚪 Đăng xuất
         </button>
       </aside>
-      <main className={`flex-1 ${mainBg} p-6 overflow-auto page-enter`}>
+      <main className={`min-w-0 flex-1 ${mainBg} p-6 overflow-auto page-enter`}>
         <Outlet />
       </main>
     </div>

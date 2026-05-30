@@ -56,12 +56,16 @@ html.theme-dark body {
 }
 
 .theme-dark .hero-section {
-  background-image: linear-gradient(rgba(15, 23, 42, 0.86), rgba(15, 23, 42, 0.86)), url('/hero-bg.png') !important;
+  background-image: url('/hero-bg.png') !important;
   background-color: #0f172a !important;
 }
 
 .theme-dark .hero-section .bg-black\/40 {
-  background-color: rgba(0, 0, 0, 0.62) !important;
+  background-color: rgba(0, 0, 0, 0.42) !important;
+}
+
+.theme-dark .hero-section .bg-gradient-to-t {
+  background-image: linear-gradient(to top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.24), transparent) !important;
 }
 
 .theme-dark .bg-gray-50,
