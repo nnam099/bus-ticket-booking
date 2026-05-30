@@ -14,6 +14,19 @@ const statusConfig = {
   REFUNDED: { label: 'Đã hoàn tiền', className: 'bg-purple-100 text-purple-700' },
 };
 
+const CANCELLATION_DEADLINE_DAYS = 3;
+const REFUND_PERCENT = 90;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const getCancellationDeadline = (departureTime) => (
+  departureTime ? new Date(new Date(departureTime).getTime() - CANCELLATION_DEADLINE_DAYS * MS_PER_DAY) : null
+);
+
+const isRefundCancellationAllowed = (departureTime) => {
+  const deadline = getCancellationDeadline(departureTime);
+  return Boolean(deadline && new Date() <= deadline);
+};
+
 const InfoItem = ({ label, value, strong = false }) => (
   <div className="min-w-0 rounded-xl bg-gray-50 px-3 py-2.5">
     <p className="text-xs font-medium text-gray-500">{label}</p>
@@ -51,7 +64,12 @@ export default function TicketDetailPage() {
   }, [id]);
 
   const handleCancel = async () => {
-    if (!window.confirm('Bạn có chắc muốn hủy vé này không?')) return;
+    const deadline = getCancellationDeadline(ticket?.tripSeat?.trip?.departureTime);
+    const deadlineText = deadline ? format(deadline, 'HH:mm - dd/MM/yyyy', { locale: vi }) : '';
+    const message = ticket?.status === 'PAID'
+      ? `Bạn có chắc muốn hủy vé này không? Vé sẽ được hoàn ${REFUND_PERCENT}% nếu hủy trước ${deadlineText}.`
+      : 'Bạn có chắc muốn hủy vé chưa thanh toán này không?';
+    if (!window.confirm(message)) return;
     setCancelling(true);
     try {
       const res = await bookingAPI.cancelTicket(id);
@@ -84,11 +102,17 @@ export default function TicketDetailPage() {
   const ticketCode = formatTicketCode(ticket);
   const invoiceCode = formatInvoiceCode(ticket.order || ticket.orderId);
   const status = statusConfig[ticket.status] || statusConfig.PENDING;
-  const canCancel = ['PENDING', 'PAID'].includes(ticket.status);
+  const canRefundCancel = ticket.status === 'PAID' && isRefundCancellationAllowed(trip?.departureTime);
+  const canCancelPending = ticket.status === 'PENDING';
+  const showCancelButton = canCancelPending || canRefundCancel;
   const canReview = ticket.status === 'COMPLETED' && !reviewed;
+  const cancellationDeadline = getCancellationDeadline(trip?.departureTime);
   const departureText = trip
     ? format(new Date(trip.departureTime), 'HH:mm - EEEE, dd/MM/yyyy', { locale: vi })
     : '-';
+  const cancellationDeadlineText = cancellationDeadline
+    ? format(cancellationDeadline, 'HH:mm - dd/MM/yyyy', { locale: vi })
+    : '';
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -140,7 +164,14 @@ export default function TicketDetailPage() {
           )}
 
           <div className="space-y-2">
-            {canCancel && (
+            {ticket.status === 'PAID' && (
+              <div className={`rounded-xl border px-3 py-3 text-sm ${canRefundCancel ? 'border-orange-200 bg-orange-50 text-orange-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
+                {canRefundCancel
+                  ? `Chính sách hủy vé: hoàn ${REFUND_PERCENT}% nếu hủy trước ${cancellationDeadlineText}.`
+                  : `Đã quá hạn hủy/hoàn tiền. Vé chỉ được hủy trước giờ khởi hành ít nhất ${CANCELLATION_DEADLINE_DAYS} ngày.`}
+              </div>
+            )}
+            {showCancelButton && (
               <button
                 onClick={handleCancel}
                 disabled={cancelling}

@@ -214,20 +214,25 @@ describe('booking business rules', () => {
       status: 'PAID',
       price: 320000,
       order: { customerId: 'customer-1', customer: {} },
-      tripSeat: { trip: { departureTime: futureDate(48) } },
+      tripSeat: { tripId: 'trip-1', trip: { departureTime: futureDate(96) } },
     });
     tx.ticketDetail.count.mockResolvedValue(0);
 
     const result = await cancelTicket('ticket-1', 'customer-1');
 
-    expect(result).toEqual({ refundAmount: 320000, refundRate: 1 });
+    expect(result).toEqual(expect.objectContaining({
+      refundAmount: 288000,
+      refundRate: 0.9,
+      cancellationDeadline: expect.any(Date),
+      policy: { deadlineDays: 3, refundPercent: 90 },
+    }));
     expect(tx.ticketDetail.update).toHaveBeenCalledWith({
       where: { id: 'ticket-1' },
       data: expect.objectContaining({ status: 'REFUNDED', cancelledAt: expect.any(Date) }),
     });
     expect(tx.tripSeat.update).toHaveBeenCalledWith({
       where: { id: 'seat-1' },
-      data: { status: 'AVAILABLE', lockedBy: null, lockExpiresAt: null },
+      data: { status: 'AVAILABLE', lockedBy: null, lockedAt: null, lockExpiresAt: null },
     });
     expect(tx.order.update).toHaveBeenCalledWith({
       where: { id: 'order-1' },
@@ -236,15 +241,20 @@ describe('booking business rules', () => {
     expect(tx.payment.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         orderId: 'order-1',
-        amount: -320000,
+        amount: -288000,
         method: 'REFUND',
         status: 'REFUNDED',
-        refundAmount: 320000,
+        refundAmount: 288000,
       }),
+    });
+    expect(redisClient.del).toHaveBeenCalledWith('seat_lock:trip-1:seat-1');
+    expect(emit).toHaveBeenCalledWith('seats:updated', {
+      seatIds: ['seat-1'],
+      status: 'AVAILABLE',
     });
   });
 
-  it('does not allow cancellation after departure', async () => {
+  it('does not allow cancellation within three days before departure', async () => {
     prisma.ticketDetail.findFirst.mockResolvedValue({
       id: 'ticket-1',
       orderId: 'order-1',
@@ -252,10 +262,10 @@ describe('booking business rules', () => {
       status: 'PAID',
       price: 320000,
       order: { customerId: 'customer-1', customer: {} },
-      tripSeat: { trip: { departureTime: pastDate() } },
+      tripSeat: { tripId: 'trip-1', trip: { departureTime: futureDate(48) } },
     });
 
-    await expect(cancelTicket('ticket-1', 'customer-1')).rejects.toThrow();
+    await expect(cancelTicket('ticket-1', 'customer-1')).rejects.toThrow(/3 ngày/);
 
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });

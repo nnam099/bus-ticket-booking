@@ -17,6 +17,15 @@ const STATUS_MAP = {
 
 const REVIEWABLE_STATUSES = new Set(['COMPLETED']);
 const PENDING_PAYMENT_STATUSES = new Set(['PENDING']);
+const CANCELLATION_DEADLINE_DAYS = 3;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+const canRefundCancelTicket = (ticket) => {
+  const departureTime = ticket.tripSeat?.trip?.departureTime;
+  if (!departureTime) return false;
+  const deadline = new Date(new Date(departureTime).getTime() - CANCELLATION_DEADLINE_DAYS * MS_PER_DAY);
+  return new Date() <= deadline;
+};
 
 export default function MyTicketsPage() {
   const [tickets, setTickets] = useState([]);
@@ -153,7 +162,7 @@ export default function MyTicketsPage() {
             const route = trip?.route;
             const canReview = REVIEWABLE_STATUSES.has(ticket.status) && !ticket.review;
             const isPending = ticket.status === 'PENDING';
-            const canCancel = ticket.status === 'PAID';
+            const canCancel = ticket.status === 'PAID' && canRefundCancelTicket(ticket);
             return (
               <article key={ticket.id} className={`card border ${badge.tone}`}>
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center">

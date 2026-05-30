@@ -15,6 +15,9 @@ const { encryptSensitiveValue } = require('../utils/privacy');
 const LOCK_MINUTES = parseInt(process.env.BOOKING_LOCK_MINUTES || '15', 10);
 const MAX_SEATS = parseInt(process.env.MAX_SEATS_PER_BOOKING || '5', 10);
 const MIN_BOOKING_LEAD_MINUTES = parseInt(process.env.MIN_BOOKING_LEAD_MINUTES || '15', 10);
+const CANCELLATION_DEADLINE_DAYS = 3;
+const CUSTOMER_REFUND_RATE = 0.9;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
  * Khóa ghế tạm thời (QD_BOOK_01)
@@ -268,7 +271,9 @@ const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, paym
 };
 
 /**
- * Hủy vé và hoàn tiền theo chính sách nhà xe
+ * Hủy vé và hoàn tiền theo chính sách nhà xe.
+ * Vé đã thanh toán chỉ được hủy trước giờ khởi hành tối thiểu 3 ngày.
+ * Vé đã thanh toán được hoàn 90%.
  */
 const cancelTicket = async (ticketId, customerId) => {
   const ticket = await prisma.ticketDetail.findFirst({
@@ -282,21 +287,25 @@ const cancelTicket = async (ticketId, customerId) => {
   if (!ticket) throw new Error('Vé không tồn tại.');
   if (ticket.order.customerId !== customerId) throw new Error('Bạn không có quyền hủy vé này.');
   if (!['PENDING', 'PAID'].includes(ticket.status)) throw new Error('Vé không thể hủy ở trạng thái hiện tại.');
-  if (ticket.tripSeat.trip.departureTime <= new Date()) throw new Error('Không thể hủy vé sau giờ khởi hành.');
 
-  const hoursUntilDeparture = (ticket.tripSeat.trip.departureTime - new Date()) / 1000 / 3600;
+  const now = new Date();
+  const cancellationDeadline = new Date(ticket.tripSeat.trip.departureTime.getTime() - CANCELLATION_DEADLINE_DAYS * MS_PER_DAY);
+  if (ticket.status === 'PAID' && now > cancellationDeadline) {
+    throw new Error(`Vé chỉ được hủy trước giờ khởi hành ít nhất ${CANCELLATION_DEADLINE_DAYS} ngày.`);
+  }
+  if (ticket.status === 'PENDING' && ticket.tripSeat.trip.departureTime <= now) {
+    throw new Error('Không thể hủy vé sau giờ khởi hành.');
+  }
 
-  let refundRate = 0;
-  if (hoursUntilDeparture > 24) refundRate = 1.0;
-  else if (hoursUntilDeparture >= 12) refundRate = 0.7;
-
+  const refundRate = ticket.status === 'PAID' ? CUSTOMER_REFUND_RATE : 0;
   const refundAmount = Math.floor(Number(ticket.price) * refundRate);
+  const finalTicketStatus = ticket.status === 'PAID' ? 'REFUNDED' : 'CANCELLED';
 
   await prisma.$transaction(async (tx) => {
     await tx.ticketDetail.update({
       where: { id: ticketId },
       data: {
-        status: refundAmount > 0 ? 'REFUNDED' : 'CANCELLED',
+        status: finalTicketStatus,
         cancelledAt: new Date(),
         cancelReason: 'Khách hàng hủy vé',
       },
@@ -304,7 +313,7 @@ const cancelTicket = async (ticketId, customerId) => {
 
     await tx.tripSeat.update({
       where: { id: ticket.tripSeatId },
-      data: { status: 'AVAILABLE', lockedBy: null, lockExpiresAt: null },
+      data: { status: 'AVAILABLE', lockedBy: null, lockedAt: null, lockExpiresAt: null },
     });
 
     const remainingActiveTickets = await tx.ticketDetail.count({
@@ -317,7 +326,7 @@ const cancelTicket = async (ticketId, customerId) => {
     if (remainingActiveTickets === 0) {
       await tx.order.update({
         where: { id: ticket.orderId },
-        data: { status: refundAmount > 0 ? 'REFUNDED' : 'CANCELLED' },
+        data: { status: finalTicketStatus },
       });
     }
 
@@ -335,7 +344,21 @@ const cancelTicket = async (ticketId, customerId) => {
     }
   });
 
-  return { refundAmount, refundRate };
+  await redisClient.del(`seat_lock:${ticket.tripSeat.tripId}:${ticket.tripSeatId}`);
+  getIo()?.to(`trip:${ticket.tripSeat.tripId}`).emit('seats:updated', {
+    seatIds: [ticket.tripSeatId],
+    status: 'AVAILABLE',
+  });
+
+  return {
+    refundAmount,
+    refundRate,
+    cancellationDeadline,
+    policy: {
+      deadlineDays: CANCELLATION_DEADLINE_DAYS,
+      refundPercent: CUSTOMER_REFUND_RATE * 100,
+    },
+  };
 };
 
 module.exports = { lockSeats, releaseSeats, releaseExpiredSeatLocks, confirmBooking, cancelTicket };

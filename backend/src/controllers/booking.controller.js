@@ -78,12 +78,16 @@ const cancelTicket = async (req, res, next) => {
     res.json({
       success: true,
       message: result.refundAmount > 0
-        ? `Hủy vé thành công. Hoàn tiền: ${result.refundAmount.toLocaleString('vi-VN')}đ (${result.refundRate * 100}%)`
-        : 'Hủy vé thành công. Không được hoàn tiền do hủy gần giờ khởi hành.',
+        ? `Hủy vé thành công. Hoàn tiền: ${result.refundAmount.toLocaleString('vi-VN')}đ (${result.policy.refundPercent}%).`
+        : 'Hủy vé thành công. Vé chưa thanh toán nên không phát sinh hoàn tiền.',
       data: result,
     });
   } catch (err) {
-    if (err.message.includes('không có quyền') || err.message.includes('không thể hủy')) {
+    if (
+      err.message.includes('không có quyền')
+      || err.message.includes('không thể hủy')
+      || err.message.includes('chỉ được hủy')
+    ) {
       return res.status(403).json({ success: false, message: err.message });
     }
     next(err);
