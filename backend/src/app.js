@@ -22,6 +22,7 @@ const ticketRoutes = require('./routes/ticket.routes');
 const reviewRoutes = require('./routes/review.routes');
 const adminRoutes = require('./routes/admin.routes');
 const staffRoutes = require('./routes/staff.routes');
+const notificationRoutes = require('./routes/notification.routes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -79,6 +80,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // 404
 app.use((req, res) => {

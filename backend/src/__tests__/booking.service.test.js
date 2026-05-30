@@ -33,6 +33,11 @@ jest.mock('../utils/logger', () => ({
   error: jest.fn(),
 }));
 
+jest.mock('../services/notification.service', () => ({
+  createNotification: jest.fn(),
+  createNotifications: jest.fn(),
+}));
+
 const prisma = require('../config/prisma');
 const { redisClient } = require('../config/redis');
 const { getIo } = require('../config/socket');

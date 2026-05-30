@@ -5,6 +5,7 @@ import { logout } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 import ThemeToggle from './ThemeToggle';
+import NotificationBell from './NotificationBell';
 
 export default function CustomerLayout() {
   const { user } = useSelector(s => s.auth);
@@ -51,6 +52,7 @@ export default function CustomerLayout() {
                 <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-brand transform origin-left transition-transform duration-300 ${isActive(l.to) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
               </Link>
             ))}
+            <NotificationBell />
             <ThemeToggle compact />
             <button onClick={handleLogout}
               className="ml-2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-gray-50 hover:bg-red-50 text-gray-600 hover:text-red-600 border border-gray-200 hover:border-red-200 transition-all duration-300 shadow-sm hover:shadow-md">

@@ -1,4 +1,5 @@
 const prisma = require('../config/prisma');
+const { createNotifications } = require('../services/notification.service');
 
 const findManagedTrip = async (req, tripId) => {
   if (req.roles?.includes('BUS_OPERATOR')) {
@@ -17,6 +18,14 @@ const findManagedTrip = async (req, tripId) => {
 };
 
 const TURNAROUND_MINUTES = 60;
+
+const tripStatusLabels = {
+  BOARDING: 'đang mở lên xe',
+  DEPARTED: 'đã khởi hành',
+  COMPLETED: 'đã hoàn thành',
+  DELAYED: 'bị báo trễ',
+  CANCELLED: 'đã bị hủy',
+};
 
 const searchTrips = async (req, res, next) => {
   try {
@@ -195,6 +204,7 @@ const updateTripStatus = async (req, res, next) => {
     const trip = await prisma.trip.update({
       where: { id: req.params.id },
       data: { status, cancelReason: cancelReason || null },
+      include: { route: true },
     });
 
     // If operator cancels trip, auto-refund all paid tickets (QD_OP_03)
@@ -215,6 +225,28 @@ const updateTripStatus = async (req, res, next) => {
         where: { tripSeat: { tripId: trip.id }, status: { in: ['PAID', 'CHECKED_IN'] } },
         data: { status: 'COMPLETED' },
       });
+    }
+
+    if (['BOARDING', 'DEPARTED', 'COMPLETED', 'DELAYED', 'CANCELLED'].includes(status)) {
+      const tickets = await prisma.ticketDetail.findMany({
+        where: {
+          tripSeat: { tripId: trip.id },
+          status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED', 'REFUNDED'] },
+        },
+        select: {
+          id: true,
+          order: { select: { customer: { select: { userId: true } } } },
+        },
+      });
+      const uniqueUserIds = [...new Set(tickets.map(ticket => ticket.order.customer.userId).filter(Boolean))];
+      await createNotifications(uniqueUserIds.map(userId => ({
+        userId,
+        title: 'Cập nhật chuyến xe',
+        message: `Chuyến ${trip.route.originCity} → ${trip.route.destinationCity} ${tripStatusLabels[status] || 'đã cập nhật trạng thái'}.`,
+        type: status === 'CANCELLED' ? 'TRIP_CANCELLED' : 'TRIP_STATUS',
+        link: '/my-tickets',
+        metadata: { tripId: trip.id, status, cancelReason: cancelReason || null },
+      })));
     }
 
     res.json({ success: true, data: trip });

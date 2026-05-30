@@ -31,6 +31,7 @@ model User {
   staff        Staff?
   auditLogs    AuditLog[]
   otpCodes     OtpCode[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -382,6 +383,23 @@ model AuditLog {
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("audit_logs")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String
+  message   String   @db.Text
+  type      String   @default("INFO")
+  link      String?
+  metadata  Json?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
 }
 
 model SystemConfig {

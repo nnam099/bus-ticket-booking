@@ -11,6 +11,7 @@ const logger = require('../utils/logger');
 const crypto = require('crypto');
 const { createPublicCode, createQrPayload, activeTicketStatuses } = require('../utils/security');
 const { encryptSensitiveValue } = require('../utils/privacy');
+const { createNotification } = require('./notification.service');
 
 const LOCK_MINUTES = parseInt(process.env.BOOKING_LOCK_MINUTES || '15', 10);
 const MAX_SEATS = parseInt(process.env.MAX_SEATS_PER_BOOKING || '5', 10);
@@ -348,6 +349,17 @@ const cancelTicket = async (ticketId, customerId) => {
   getIo()?.to(`trip:${ticket.tripSeat.tripId}`).emit('seats:updated', {
     seatIds: [ticket.tripSeatId],
     status: 'AVAILABLE',
+  });
+
+  await createNotification({
+    userId: ticket.order.customer.userId,
+    title: ticket.status === 'PAID' ? 'Hủy vé thành công' : 'Đã hủy vé chờ thanh toán',
+    message: refundAmount > 0
+      ? `Vé của bạn đã được hủy. Số tiền hoàn lại là ${refundAmount.toLocaleString('vi-VN')}đ (${CUSTOMER_REFUND_RATE * 100}%).`
+      : 'Vé chờ thanh toán đã được hủy và ghế đã được giải phóng.',
+    type: ticket.status === 'PAID' ? 'REFUND' : 'BOOKING',
+    link: '/my-tickets',
+    metadata: { ticketId, orderId: ticket.orderId, refundAmount },
   });
 
   return {

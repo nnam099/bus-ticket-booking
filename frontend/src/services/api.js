@@ -107,6 +107,13 @@ export const reviewAPI = {
   getByOperator: (operatorId) => api.get(`/reviews/operator/${operatorId}`),
 };
 
+// Notification API
+export const notificationAPI = {
+  getAll: (params) => api.get('/notifications', { params }),
+  markRead: (id) => api.patch(`/notifications/${id}/read`),
+  markAllRead: () => api.patch('/notifications/read-all'),
+};
+
 // Admin API
 export const adminAPI = {
   getStats: (params) => api.get('/admin/stats', { params }),

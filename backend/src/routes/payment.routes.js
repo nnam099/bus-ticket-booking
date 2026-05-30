@@ -6,6 +6,7 @@ const { redisClient } = require('../config/redis');
 const prisma = require('../config/prisma');
 const { parsePublicCode, timingSafeEqualString } = require('../utils/security');
 const { decryptOrderTickets } = require('../utils/privacy');
+const { createNotification } = require('../services/notification.service');
 
 const PAYMENT_METHODS = ['E_WALLET', 'BANK_CARD', 'BANK_TRANSFER'];
 const PAYMENT_STATUSES = ['success', 'failed'];
@@ -87,6 +88,7 @@ const isInvoicePhoneMatched = (order, phone) => {
 const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
   let expiredBooking = false;
   let lockOwnerCustomerId;
+  let paidNotification = null;
   const lockKeysToClear = [];
 
   await prisma.$transaction(async (tx) => {
@@ -95,8 +97,17 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
       include: {
         order: {
           include: {
+            customer: { include: { user: { select: { id: true } } } },
             ticketDetails: {
-              include: { tripSeat: { include: { trip: true } } },
+              include: {
+                tripSeat: {
+                  include: {
+                    trip: {
+                      include: { route: true },
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -199,6 +210,19 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
     await tx.order.update({ where: { id: payment.orderId }, data: { status: 'PAID' } });
     await tx.ticketDetail.updateMany({ where: { orderId: payment.orderId }, data: { status: 'PAID' } });
 
+    const firstTicket = payment.order.ticketDetails[0];
+    const route = firstTicket?.tripSeat?.trip?.route;
+    paidNotification = {
+      userId: payment.order.customer?.user?.id,
+      title: 'Thanh toán thành công',
+      message: route
+        ? `Vé tuyến ${route.originCity} → ${route.destinationCity} đã được thanh toán thành công.`
+        : 'Vé của bạn đã được thanh toán thành công.',
+      type: 'PAYMENT',
+      link: '/my-tickets',
+      metadata: { orderId: payment.orderId, paymentId },
+    };
+
     for (const ticket of payment.order.ticketDetails) {
       lockKeysToClear.push(`seat_lock:${ticket.tripSeat.tripId}:${ticket.tripSeatId}`);
     }
@@ -216,6 +240,10 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
     error.statusCode = 409;
     error.isOperational = true;
     throw error;
+  }
+
+  if (paidNotification) {
+    await createNotification(paidNotification);
   }
 };
 
