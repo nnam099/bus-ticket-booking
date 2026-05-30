@@ -110,6 +110,7 @@ export const reviewAPI = {
 // Admin API
 export const adminAPI = {
   getStats: (params) => api.get('/admin/stats', { params }),
+  getAllOperators: () => api.get('/admin/operators'),
   getPendingOperators: () => api.get('/admin/operators/pending'),
   approveOperator: (id) => api.patch(`/admin/operators/${id}/approve`),
   toggleUserActive: (id) => api.patch(`/admin/users/${id}/toggle-active`),

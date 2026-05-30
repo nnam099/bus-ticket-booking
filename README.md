@@ -11,13 +11,13 @@ Hệ thống phục vụ 4 nhóm người dùng:
 | Khách hàng | Tìm chuyến, chọn ghế, đặt vé, thanh toán, xem/hủy vé, đánh giá chuyến đi |
 | Nhà xe | Quản lý tuyến, xe, chuyến đi, giá vé và doanh thu |
 | Nhân viên/Tài xế | Xem chuyến được phân công, danh sách hành khách, check-in vé |
-| Admin | Duyệt nhà xe, khóa/mở tài khoản, xem thống kê, audit log, duyệt đánh giá |
+| Admin | Quản lý tài khoản người dùng/tài xế/nhà xe, duyệt nhà xe, khóa/mở tài khoản, audit log, duyệt đánh giá |
 
 ## Đánh giá so với đề bài/source
 
 Source yêu cầu chính nằm trong thư mục `source/`, tập trung vào website đặt vé xe khách, không mở rộng thành hệ thống điều phối vận tải chuyên sâu.
 
-Kết luận hiện tại: project bám đúng phạm vi chính của đề bài. Các chức năng cốt lõi đã có gồm đăng ký/đăng nhập, phân quyền theo vai trò, tìm chuyến, xem ghế realtime, giữ ghế 15 phút, đặt vé, thanh toán mock/callback, quản lý vé, hủy vé và hoàn tiền, đánh giá sau chuyến, nhà xe quản lý tuyến/xe/chuyến/doanh thu, nhân viên/tài xế xem chuyến được phân công và check-in vé, admin duyệt nhà xe/quản lý tài khoản/audit/duyệt đánh giá.
+Kết luận hiện tại: project bám đúng phạm vi chính của đề bài. Các chức năng cốt lõi đã có gồm đăng ký/đăng nhập, phân quyền theo vai trò, tìm chuyến, xem ghế realtime, giữ ghế 15 phút, đặt vé, thanh toán mock/callback, quản lý vé, hủy vé và hoàn tiền, đánh giá sau chuyến, nhà xe quản lý tuyến/xe/chuyến/doanh thu, nhân viên/tài xế xem chuyến được phân công và check-in vé, admin quản lý tài khoản người dùng/tài xế/nhà xe, duyệt nhà xe, audit log và duyệt đánh giá.
 
 Các phần đã được giữ trong phạm vi:
 
