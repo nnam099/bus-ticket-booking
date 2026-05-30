@@ -1,27 +1,36 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { paymentAPI, ticketAPI } from '../services/api';
+import { paymentAPI, ticketAPI, userAPI } from '../services/api';
 import { formatInvoiceCode, formatTicketCode } from '../utils/codes';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
 const STATUS_MAP = {
-  PENDING: { label: 'Chờ thanh toán', cls: 'bg-yellow-100 text-yellow-700' },
-  PAID: { label: 'Đã thanh toán', cls: 'bg-green-100 text-green-700' },
-  CHECKED_IN: { label: 'Đã lên xe', cls: 'bg-emerald-100 text-emerald-700' },
-  COMPLETED: { label: 'Hoàn thành', cls: 'bg-blue-100 text-blue-700' },
-  CANCELLED: { label: 'Đã hủy', cls: 'bg-gray-100 text-gray-500' },
-  REFUNDED: { label: 'Đã hoàn tiền', cls: 'bg-purple-100 text-purple-700' },
-  FAILED: { label: 'Thất bại', cls: 'bg-red-100 text-red-700' },
-  SUCCESS: { label: 'Thành công', cls: 'bg-green-100 text-green-700' },
+  PENDING:    { label: 'Chờ thanh toán', cls: 'bg-yellow-100 text-yellow-700', tone: 'border-yellow-200 bg-yellow-50/60' },
+  PAID:       { label: 'Đã thanh toán',  cls: 'bg-green-100 text-green-700',   tone: 'border-green-200 bg-green-50/60' },
+  CHECKED_IN: { label: 'Đã lên xe',      cls: 'bg-emerald-100 text-emerald-700', tone: 'border-emerald-200 bg-emerald-50/60' },
+  COMPLETED:  { label: 'Hoàn thành',     cls: 'bg-blue-100 text-blue-700',     tone: 'border-blue-200 bg-blue-50/60' },
+  CANCELLED:  { label: 'Đã hủy',         cls: 'bg-gray-100 text-gray-500',     tone: 'border-gray-200 bg-gray-50/60' },
+  REFUNDED:   { label: 'Đã hoàn tiền',   cls: 'bg-purple-100 text-purple-700', tone: 'border-purple-200 bg-purple-50/60' },
+  FAILED:     { label: 'Thất bại',        cls: 'bg-red-100 text-red-700',       tone: 'border-red-200 bg-red-50/60' },
+  SUCCESS:    { label: 'Thành công',      cls: 'bg-green-100 text-green-700',   tone: '' },
 };
 
-const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+const formatMoney = (v) => `${Number(v || 0).toLocaleString('vi-VN')}đ`;
 
 function StatusBadge({ status }) {
   const badge = STATUS_MAP[status] || { label: status || '—', cls: 'bg-gray-100 text-gray-500' };
   return <span className={`badge ${badge.cls}`}>{badge.label}</span>;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Public lookup result components
+// ─────────────────────────────────────────────────────────────────────────────
 
 function TicketResult({ ticket }) {
   const trip = ticket.tripSeat?.trip;
@@ -134,12 +143,209 @@ function InvoiceResult({ invoice }) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// My Tickets panel (logged-in customer)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FILTER_TABS = [
+  { key: 'all',       label: 'Tất cả' },
+  { key: 'active',    label: 'Đang diễn ra' },
+  { key: 'pending',   label: 'Chờ thanh toán' },
+  { key: 'completed', label: 'Hoàn thành' },
+  { key: 'cancelled', label: 'Đã hủy' },
+];
+
+function matchFilter(ticket, filter) {
+  const s = ticket.status;
+  if (filter === 'all') return true;
+  if (filter === 'active') return ['PAID', 'CHECKED_IN'].includes(s);
+  if (filter === 'pending') return s === 'PENDING';
+  if (filter === 'completed') return s === 'COMPLETED';
+  if (filter === 'cancelled') return ['CANCELLED', 'REFUNDED'].includes(s);
+  return true;
+}
+
+function MyTicketsPanel() {
+  const [tickets, setTickets] = useState([]);
+  const [loadingTickets, setLoadingTickets] = useState(true);
+  const [ticketError, setTicketError] = useState('');
+  const [filter, setFilter] = useState('all');
+
+  useEffect(() => {
+    userAPI.getMyTickets()
+      .then(r => setTickets(r.data.data))
+      .catch(() => setTicketError('Không thể tải danh sách vé. Vui lòng thử lại.'))
+      .finally(() => setLoadingTickets(false));
+  }, []);
+
+  const filtered = useMemo(() => tickets.filter(t => matchFilter(t, filter)), [tickets, filter]);
+
+  const counts = useMemo(() => ({
+    all: tickets.length,
+    active: tickets.filter(t => matchFilter(t, 'active')).length,
+    pending: tickets.filter(t => matchFilter(t, 'pending')).length,
+    completed: tickets.filter(t => matchFilter(t, 'completed')).length,
+    cancelled: tickets.filter(t => matchFilter(t, 'cancelled')).length,
+  }), [tickets]);
+
+  if (loadingTickets) {
+    return (
+      <div className="mt-6 grid gap-3">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="card animate-pulse space-y-3">
+            <div className="h-5 w-2/3 rounded bg-gray-100" />
+            <div className="h-4 w-1/2 rounded bg-gray-100" />
+            <div className="h-10 rounded bg-gray-100" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (ticketError) {
+    return <div className="card mt-6 border-red-200 bg-red-50 text-red-700">{ticketError}</div>;
+  }
+
+  return (
+    <div className="mt-6">
+      {/* Filter tabs */}
+      <div className="flex flex-wrap gap-2 mb-5">
+        {FILTER_TABS.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setFilter(tab.key)}
+            className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition
+              ${filter === tab.key
+                ? 'bg-brand text-white shadow-sm'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+          >
+            {tab.label}
+            {counts[tab.key] > 0 && (
+              <span className={`rounded-full px-1.5 py-0.5 text-xs leading-none
+                ${filter === tab.key ? 'bg-white/20 text-white' : 'bg-gray-300 text-gray-600'}`}>
+                {counts[tab.key]}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="card py-14 text-center text-gray-500">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-2xl">🎫</div>
+          <p className="font-semibold text-gray-700">
+            {filter === 'all' ? 'Bạn chưa có vé nào' : 'Không có vé ở mục này'}
+          </p>
+          {filter === 'all' && (
+            <Link to="/" className="btn-primary mt-4 inline-block text-sm">Đặt vé ngay</Link>
+          )}
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {filtered.map(ticket => {
+            const badge = STATUS_MAP[ticket.status] || { label: ticket.status, cls: 'bg-gray-100 text-gray-500', tone: 'border-gray-200' };
+            const trip = ticket.tripSeat?.trip;
+            const route = trip?.route;
+            const isPending = ticket.status === 'PENDING';
+            const canCancel = ticket.status === 'PAID';
+            const canReview = ticket.status === 'COMPLETED' && !ticket.review;
+
+            return (
+              <article key={ticket.id} className={`card border ${badge.tone} transition-shadow hover:shadow-md`}>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  {/* Left — route + meta */}
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-bold text-gray-900">
+                        {route?.originCity || '—'} → {route?.destinationCity || '—'}
+                      </h3>
+                      <span className={`badge ${badge.cls}`}>{badge.label}</span>
+                      {isPending && (
+                        <span className="badge animate-pulse bg-yellow-100 text-yellow-700">⚡ Cần thanh toán</span>
+                      )}
+                      {canReview && (
+                        <span className="badge bg-orange-100 text-brand">⭐ Chờ đánh giá</span>
+                      )}
+                    </div>
+
+                    <p className="text-sm text-gray-500">
+                      {trip
+                        ? format(new Date(trip.departureTime), 'HH:mm — EEEE, dd/MM/yyyy', { locale: vi })
+                        : '—'}
+                    </p>
+
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                      <span>
+                        Ghế <strong className="font-mono text-gray-700">{ticket.tripSeat?.seatLayout?.seatCode || '—'}</strong>
+                      </span>
+                      <span>·</span>
+                      <span>{ticket.passengerName}</span>
+                      <span>·</span>
+                      <span className="font-mono">{formatTicketCode(ticket)}</span>
+                    </div>
+                  </div>
+
+                  {/* Right — price + actions */}
+                  <div className="flex shrink-0 flex-col items-end gap-2">
+                    <span className="text-lg font-bold text-brand">{formatMoney(ticket.price)}</span>
+
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {isPending ? (
+                        <>
+                          <Link
+                            to={`/my-tickets/order/${ticket.order?.id}/pay`}
+                            className="rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-yellow-600"
+                          >
+                            💳 Thanh toán
+                          </Link>
+                          <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-1.5 text-xs">
+                            Chi tiết
+                          </Link>
+                        </>
+                      ) : (
+                        <>
+                          <Link to={`/my-tickets/${ticket.id}`} className="btn-primary px-3 py-1.5 text-xs">
+                            {canReview ? '⭐ Đánh giá' : canCancel ? '🎫 QR / Hủy' : 'Xem vé'}
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-6 text-center">
+        <Link to="/my-tickets" className="text-sm font-semibold text-brand hover:underline">
+          Xem trang Vé của tôi đầy đủ →
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main page
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function LookupPage() {
-  const [mode, setMode] = useState('ticket');
+  const { user } = useSelector(s => s.auth);
+  const isCustomer = user?.roles?.includes('CUSTOMER');
+
+  const [mode, setMode] = useState(() => isCustomer ? 'mine' : 'ticket');
   const [form, setForm] = useState({ code: '', phone: '' });
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const tabs = [
+    ...(isCustomer ? [{ value: 'mine', label: '🎫 Vé của tôi' }] : []),
+    { value: 'ticket', label: 'Tra cứu vé' },
+    { value: 'invoice', label: 'Tra cứu hóa đơn' },
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -161,70 +367,87 @@ export default function LookupPage() {
     <div className="max-w-4xl mx-auto px-4 py-12">
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-black text-gray-800">Tra cứu vé và hóa đơn</h1>
-        <p className="text-gray-500 mt-2">Nhập mã được cấp sau thanh toán kèm số điện thoại đặt vé.</p>
+        <p className="text-gray-500 mt-2">
+          {isCustomer
+            ? 'Xem vé của bạn hoặc tra cứu theo mã vé / mã hóa đơn.'
+            : 'Nhập mã được cấp sau thanh toán kèm số điện thoại đặt vé.'}
+        </p>
       </div>
 
       <div className="card">
-        <div className="inline-flex rounded-xl bg-gray-100 p-1 mb-6">
-          {[
-            ['ticket', 'Tra cứu vé'],
-            ['invoice', 'Tra cứu hóa đơn'],
-          ].map(([value, label]) => (
+        {/* Tab switcher */}
+        <div className="inline-flex flex-wrap rounded-xl bg-gray-100 p-1 mb-6 gap-0.5">
+          {tabs.map(tab => (
             <button
-              key={value}
+              key={tab.value}
               type="button"
               onClick={() => {
-                setMode(value);
+                setMode(tab.value);
                 setResult(null);
                 setError('');
               }}
               className={`px-5 py-2 rounded-lg text-sm font-bold transition-colors ${
-                mode === value ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                mode === tab.value ? 'bg-white text-brand shadow-sm' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {label}
+              {tab.label}
             </button>
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4">
-          <div>
-            <label className="label">{mode === 'ticket' ? 'Mã vé' : 'Mã hóa đơn'}</label>
-            <input
-              className="input"
-              placeholder={mode === 'ticket' ? 'VD: VE-AB12CD34' : 'VD: HD-AB12CD34'}
-              value={form.code}
-              onChange={(e) => setForm({ ...form, code: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label className="label">Số điện thoại</label>
-            <input
-              className="input"
-              placeholder="Số điện thoại hành khách"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              required
-            />
-          </div>
-          <button type="submit" disabled={loading} className="btn-primary self-end px-8 py-3">
-            {loading ? 'Đang tra...' : 'Tra cứu'}
-          </button>
-        </form>
+        {/* Lookup form — only for ticket / invoice tabs */}
+        {mode !== 'mine' && (
+          <>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4">
+              <div>
+                <label className="label">{mode === 'ticket' ? 'Mã vé' : 'Mã hóa đơn'}</label>
+                <input
+                  className="input"
+                  placeholder={mode === 'ticket' ? 'VD: VE-AB12CD34' : 'VD: HD-AB12CD34'}
+                  value={form.code}
+                  onChange={(e) => setForm({ ...form, code: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <label className="label">Số điện thoại</label>
+                <input
+                  className="input"
+                  placeholder="Số điện thoại hành khách"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  required
+                />
+              </div>
+              <button type="submit" disabled={loading} className="btn-primary self-end px-8 py-3">
+                {loading ? 'Đang tra...' : 'Tra cứu'}
+              </button>
+            </form>
 
-        <p className="text-xs text-gray-400 mt-4">
-          Bạn cũng có thể nhập mã đầy đủ trong chi tiết vé hoặc hóa đơn.
-        </p>
+            <p className="text-xs text-gray-400 mt-4">
+              Bạn cũng có thể nhập mã đầy đủ trong chi tiết vé hoặc hóa đơn.
+            </p>
+          </>
+        )}
       </div>
 
-      {error && <div className="card border-red-200 bg-red-50 text-red-700 mt-6">{error}</div>}
+      {/* Results */}
+      {mode === 'mine' && <MyTicketsPanel />}
+      {mode !== 'mine' && error && (
+        <div className="card border-red-200 bg-red-50 text-red-700 mt-6">{error}</div>
+      )}
+      {mode !== 'mine' && result && (
+        mode === 'ticket' ? <TicketResult ticket={result} /> : <InvoiceResult invoice={result} />
+      )}
 
-      {result && (mode === 'ticket' ? <TicketResult ticket={result} /> : <InvoiceResult invoice={result} />)}
-
-      <div className="mt-8 text-center text-sm text-gray-500">
-        Đã đăng nhập? <Link to="/my-tickets" className="font-semibold text-brand hover:underline">Xem vé của tôi</Link>
-      </div>
+      {/* Footer hint */}
+      {!isCustomer && (
+        <div className="mt-8 text-center text-sm text-gray-500">
+          Đã đăng nhập?{' '}
+          <Link to="/login" className="font-semibold text-brand hover:underline">Đăng nhập</Link>
+          {' '}để xem nhanh vé của bạn.
+        </div>
+      )}
     </div>
   );
 }

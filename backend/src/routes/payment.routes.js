@@ -325,6 +325,89 @@ router.get('/invoices/lookup', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+router.get('/order/:orderId/detail', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
+  try {
+    const customerId = req.user.customer?.id;
+    if (!customerId) {
+      return res.status(403).json({ success: false, message: 'Chi khach hang moi co the xem don hang.' });
+    }
+
+    const order = await prisma.order.findFirst({
+      where: { id: req.params.orderId, customer: { userId: req.user.id } },
+      include: {
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { id: true, status: true, method: true, gateway: true },
+        },
+        ticketDetails: {
+          select: {
+            id: true,
+            publicCode: true,
+            passengerName: true,
+            passengerPhone: true,
+            price: true,
+            status: true,
+            tripSeatId: true,
+            tripSeat: {
+              select: {
+                id: true,
+                status: true,
+                lockExpiresAt: true,
+                seatLayout: { select: { seatCode: true, floor: true } },
+                trip: {
+                  select: {
+                    id: true,
+                    departureTime: true,
+                    estimatedArrival: true,
+                    basePrice: true,
+                    status: true,
+                    route: {
+                      select: {
+                        id: true,
+                        originCity: true,
+                        destinationCity: true,
+                        originAddress: true,
+                        destinationAddress: true,
+                        operator: { select: { id: true, companyName: true, hotline: true } },
+                      },
+                    },
+                    vehicle: { select: { licensePlate: true, vehicleType: { select: { name: true } } } },
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Khong tim thay don hang.' });
+    }
+    if (order.status !== 'PENDING') {
+      return res.status(400).json({ success: false, message: 'Don hang nay khong o trang thai cho thanh toan.', data: { status: order.status } });
+    }
+
+    // Compute lock status from the first ticket seat
+    const firstSeat = order.ticketDetails[0]?.tripSeat;
+    const lockExpiresAt = firstSeat?.lockExpiresAt ?? null;
+    const isLockValid = lockExpiresAt && new Date(lockExpiresAt) > new Date();
+
+    const data = decryptOrderTickets(order);
+
+    res.json({
+      success: true,
+      data: {
+        ...data,
+        lockExpiresAt,
+        isLockValid,
+      },
+    });
+  } catch (err) { next(err); }
+});
+
 router.get('/order/:orderId', authenticate, async (req, res, next) => {
   try {
     if (!req.roles?.includes('ADMIN')) {

@@ -4,6 +4,7 @@ import { userAPI } from '../../services/api';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { formatInvoiceCode, formatTicketCode } from '../../utils/codes';
+import { useSelector } from 'react-redux';
 
 const STATUS_MAP = {
   PENDING: { label: 'Chờ thanh toán', cls: 'bg-yellow-100 text-yellow-700', tone: 'border-yellow-200 bg-yellow-50' },
@@ -15,6 +16,7 @@ const STATUS_MAP = {
 };
 
 const REVIEWABLE_STATUSES = new Set(['COMPLETED']);
+const PENDING_PAYMENT_STATUSES = new Set(['PENDING']);
 
 export default function MyTicketsPage() {
   const [tickets, setTickets] = useState([]);
@@ -23,6 +25,7 @@ export default function MyTicketsPage() {
   const location = useLocation();
   const success = location.state?.success;
   const paidOrder = location.state?.order;
+  const { user } = useSelector(s => s.auth);
 
   useEffect(() => {
     userAPI.getMyTickets()
@@ -30,6 +33,11 @@ export default function MyTicketsPage() {
       .catch(() => setError('Không thể tải danh sách vé. Vui lòng thử lại.'))
       .finally(() => setLoading(false));
   }, []);
+
+  const pendingTickets = useMemo(
+    () => tickets.filter(ticket => PENDING_PAYMENT_STATUSES.has(ticket.status)),
+    [tickets]
+  );
 
   const reviewableTickets = useMemo(
     () => tickets.filter(ticket => REVIEWABLE_STATUSES.has(ticket.status) && !ticket.review),
@@ -59,11 +67,18 @@ export default function MyTicketsPage() {
             Quản lý mã vé, QR, hủy vé và đánh giá chuyến đã hoàn thành.
           </p>
         </div>
-        {reviewableTickets.length > 0 && (
-          <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-brand">
-            {reviewableTickets.length} vé chờ đánh giá
-          </span>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {pendingTickets.length > 0 && (
+            <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-700">
+              {pendingTickets.length} vé chờ thanh toán
+            </span>
+          )}
+          {reviewableTickets.length > 0 && (
+            <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-brand">
+              {reviewableTickets.length} vé chờ đánh giá
+            </span>
+          )}
+        </div>
       </div>
 
       {error && (
@@ -89,6 +104,23 @@ export default function MyTicketsPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {pendingTickets.length > 0 && (
+        <div className="mb-5 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-bold text-gray-900">Bạn có vé chưa thanh toán</p>
+              <p className="text-sm text-gray-600">Hoàn tất thanh toán để xác nhận chỗ ngồi của bạn.</p>
+            </div>
+            <Link
+              to={`/my-tickets/order/${pendingTickets[0].order?.id}/pay`}
+              className="btn-primary px-4 py-2 text-center text-sm bg-yellow-500 hover:bg-yellow-600"
+            >
+              Thanh toán ngay
+            </Link>
+          </div>
         </div>
       )}
 
@@ -120,7 +152,8 @@ export default function MyTicketsPage() {
             const trip = ticket.tripSeat?.trip;
             const route = trip?.route;
             const canReview = REVIEWABLE_STATUSES.has(ticket.status) && !ticket.review;
-            const canCancel = ['PENDING', 'PAID'].includes(ticket.status);
+            const isPending = ticket.status === 'PENDING';
+            const canCancel = ticket.status === 'PAID';
             return (
               <article key={ticket.id} className={`card border ${badge.tone}`}>
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
@@ -131,6 +164,9 @@ export default function MyTicketsPage() {
                       </h2>
                       <span className={`badge ${badge.cls}`}>{badge.label}</span>
                       {canReview && <span className="badge bg-orange-100 text-brand">Chờ đánh giá</span>}
+                      {isPending && (
+                        <span className="badge bg-yellow-100 text-yellow-700 animate-pulse">⚡ Cần thanh toán</span>
+                      )}
                     </div>
                     <p className="text-sm font-medium text-gray-500">
                       {trip ? format(new Date(trip.departureTime), 'HH:mm - EEEE, dd/MM/yyyy', { locale: vi }) : '-'}
@@ -153,21 +189,37 @@ export default function MyTicketsPage() {
                       {Number(ticket.price).toLocaleString('vi-VN')}đ
                     </span>
                     <div className="grid w-full grid-cols-2 gap-2 lg:grid-cols-1">
-                      <Link to={`/my-tickets/${ticket.id}`} className="btn-primary px-3 py-2 text-center text-sm">
-                        Xem vé
-                      </Link>
-                      {canReview ? (
-                        <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm">
-                          Đánh giá
-                        </Link>
-                      ) : canCancel ? (
-                        <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm">
-                          QR / Hủy
-                        </Link>
+                      {isPending ? (
+                        <>
+                          <Link
+                            to={`/my-tickets/order/${ticket.order?.id}/pay`}
+                            className="col-span-2 rounded-xl bg-yellow-500 px-3 py-2 text-center text-sm font-semibold text-white transition hover:bg-yellow-600"
+                          >
+                            💳 Tiếp tục thanh toán
+                          </Link>
+                          <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm col-span-2">
+                            Xem chi tiết
+                          </Link>
+                        </>
                       ) : (
-                        <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm">
-                          Chi tiết
-                        </Link>
+                        <>
+                          <Link to={`/my-tickets/${ticket.id}`} className="btn-primary px-3 py-2 text-center text-sm">
+                            Xem vé
+                          </Link>
+                          {canReview ? (
+                            <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm">
+                              Đánh giá
+                            </Link>
+                          ) : canCancel ? (
+                            <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm">
+                              QR / Hủy
+                            </Link>
+                          ) : (
+                            <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm">
+                              Chi tiết
+                            </Link>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

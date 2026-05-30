@@ -130,6 +130,7 @@ export const paymentAPI = {
   initiate: (data) => api.post('/payments/initiate', data),
   completeMock: (data) => api.post('/payments/mock/complete', data),
   getByOrder: (orderId) => api.get(`/payments/order/${orderId}`),
+  getOrderDetail: (orderId) => api.get(`/payments/order/${orderId}/detail`),
   lookupInvoice: (params) => api.get('/payments/invoices/lookup', { params }),
 };
 
