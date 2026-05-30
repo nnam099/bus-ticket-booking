@@ -44,11 +44,47 @@ router.get('/trips/:tripId/passengers', authenticate, authorize('STAFF', 'BUS_OP
       return res.status(403).json({ success: false, message: 'You cannot view passengers for this trip.' });
     }
 
-    const passengers = await prisma.ticketDetail.findMany({
-      where: { tripSeat: { tripId: req.params.tripId }, status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] } },
-      include: { tripSeat: { include: { seatLayout: true } } },
-    });
-    res.json({ success: true, data: decryptTickets(passengers) });
+    const activeTicketWhere = {
+      tripSeat: { tripId: req.params.tripId },
+      status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] },
+    };
+
+    const [trip, passengers, tripSeats] = await Promise.all([
+      prisma.trip.findUnique({
+        where: { id: req.params.tripId },
+        include: {
+          route: true,
+          vehicle: { include: { vehicleType: true } },
+        },
+      }),
+      prisma.ticketDetail.findMany({
+        where: activeTicketWhere,
+        include: { tripSeat: { include: { seatLayout: true } } },
+        orderBy: [
+          { tripSeat: { seatLayout: { floor: 'asc' } } },
+          { tripSeat: { seatLayout: { row: 'asc' } } },
+          { tripSeat: { seatLayout: { col: 'asc' } } },
+        ],
+      }),
+      prisma.tripSeat.findMany({
+        where: { tripId: req.params.tripId },
+        include: { seatLayout: true },
+        orderBy: [
+          { seatLayout: { floor: 'asc' } },
+          { seatLayout: { row: 'asc' } },
+          { seatLayout: { col: 'asc' } },
+        ],
+      }),
+    ]);
+
+    const decryptedPassengers = decryptTickets(passengers);
+    const ticketBySeatId = new Map(decryptedPassengers.map((ticket) => [ticket.tripSeatId, ticket]));
+    const seats = tripSeats.map((seat) => ({
+      ...seat,
+      ticket: ticketBySeatId.get(seat.id) || null,
+    }));
+
+    res.json({ success: true, data: { trip, passengers: decryptedPassengers, seats } });
   } catch (err) { next(err); }
 });
 
