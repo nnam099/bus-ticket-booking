@@ -23,10 +23,10 @@ export default function AdminLayout() {
   };
 
   const links = [
-    { to: '/admin', label: 'Tong quan' },
-    { to: '/admin/operators', label: 'Nha xe' },
-    { to: '/admin/users', label: 'Nguoi dung' },
-    { to: '/admin/reviews', label: 'Danh gia' },
+    { to: '/admin', label: 'Tổng quan' },
+    { to: '/admin/operators', label: 'Nhà xe' },
+    { to: '/admin/users', label: 'Người dùng' },
+    { to: '/admin/reviews', label: 'Đánh giá' },
     { to: '/admin/audit', label: 'Audit Log' },
   ];
 
@@ -62,7 +62,7 @@ export default function AdminLayout() {
           onClick={handleLogout}
           className={`mx-2 mb-4 px-3 py-2 text-sm rounded-lg text-left transition ${isDark ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
         >
-          Dang xuat
+          Đăng xuất
         </button>
       </aside>
       <main className={`min-w-0 flex-1 p-6 overflow-auto page-enter ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>

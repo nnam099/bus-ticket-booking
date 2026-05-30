@@ -54,18 +54,18 @@ export default function AdminDashboard() {
     : routes;
 
   const cards = stats ? [
-    { label: 'Nguoi dung', value: stats.totalUsers, icon: 'users' },
-    { label: 'Nha xe', value: stats.totalOperators, icon: 'operator' },
-    { label: 'Chuyen trong ky', value: stats.totalTrips, icon: 'bus' },
-    { label: 'Ve da ban', value: stats.totalTickets, icon: 'ticket' },
-    { label: 'Chuyen hom nay', value: stats.todayTrips, icon: 'calendar' },
-    { label: 'Ve hom nay', value: stats.todayTickets, icon: 'check' },
+    { label: 'Người dùng', value: stats.totalUsers, icon: 'users' },
+    { label: 'Nhà xe', value: stats.totalOperators, icon: 'operator' },
+    { label: 'Chuyến trong kỳ', value: stats.totalTrips, icon: 'bus' },
+    { label: 'Vé đã bán', value: stats.totalTickets, icon: 'ticket' },
+    { label: 'Chuyến hôm nay', value: stats.todayTrips, icon: 'calendar' },
+    { label: 'Vé hôm nay', value: stats.todayTickets, icon: 'check' },
   ] : [];
 
   const quickLinks = [
-    { to: '/admin/operators', icon: 'operator', label: 'Quan ly nha xe' },
-    { to: '/admin/users', icon: 'users', label: 'Nguoi dung' },
-    { to: '/admin/reviews', icon: 'review', label: 'Danh gia' },
+    { to: '/admin/operators', icon: 'operator', label: 'Quản lý nhà xe' },
+    { to: '/admin/users', icon: 'users', label: 'Người dùng' },
+    { to: '/admin/reviews', icon: 'review', label: 'Đánh giá' },
     { to: '/admin/audit', icon: 'audit', label: 'Audit Log' },
   ];
 
@@ -73,8 +73,8 @@ export default function AdminDashboard() {
     <div className="space-y-8">
       <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tong quan he thong</h1>
-          <p className="mt-1 text-sm text-gray-500">Loc ve va chuyen theo ngay, tuyen hoac nha xe.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Tổng quan hệ thống</h1>
+          <p className="mt-1 text-sm text-gray-500">Lọc vé và chuyến theo ngày, tuyến hoặc nhà xe.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -83,9 +83,9 @@ export default function AdminDashboard() {
             value={filters.period}
             onChange={e => setFilters({ ...filters, period: e.target.value, dateFrom: '', dateTo: '' })}
           >
-            <option value="day">Hom nay</option>
-            <option value="month">Thang nay</option>
-            <option value="year">Nam nay</option>
+            <option value="day">Hôm nay</option>
+            <option value="month">Tháng này</option>
+            <option value="year">Năm nay</option>
           </select>
           <input
             type="date"
@@ -105,7 +105,7 @@ export default function AdminDashboard() {
             value={filters.operatorId}
             onChange={e => setFilters({ ...filters, operatorId: e.target.value, routeId: '' })}
           >
-            <option value="">Tat ca nha xe</option>
+            <option value="">Tất cả nhà xe</option>
             {operators.map(operator => (
               <option key={operator.id} value={operator.id}>{operator.companyName}</option>
             ))}
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
             value={filters.routeId}
             onChange={e => setFilters({ ...filters, routeId: e.target.value })}
           >
-            <option value="">Tat ca tuyen</option>
+            <option value="">Tất cả tuyến</option>
             {filteredRoutes.map(route => (
               <option key={route.id} value={route.id}>
                 {route.originCity} {'->'} {route.destinationCity}
@@ -143,8 +143,8 @@ export default function AdminDashboard() {
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-semibold text-gray-900">Nha xe cho duyet</p>
-                  <p className="mt-1 text-sm text-gray-500">Can xu ly de nha xe co the van hanh.</p>
+                  <p className="font-semibold text-gray-900">Nhà xe chờ duyệt</p>
+                  <p className="mt-1 text-sm text-gray-500">Cần xử lý để nhà xe có thể vận hành.</p>
                 </div>
                 <span className="text-3xl font-black text-red-600">{stats.pendingOperators}</span>
               </div>
@@ -152,8 +152,8 @@ export default function AdminDashboard() {
             <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-semibold text-gray-900">Tuyen dang mo</p>
-                  <p className="mt-1 text-sm text-gray-500">Tong so tuyen active trong he thong.</p>
+                  <p className="font-semibold text-gray-900">Tuyến đang mở</p>
+                  <p className="mt-1 text-sm text-gray-500">Tổng số tuyến đang hoạt động trong hệ thống.</p>
                 </div>
                 <span className="text-3xl font-black text-red-600">{stats.activeRoutes}</span>
               </div>
