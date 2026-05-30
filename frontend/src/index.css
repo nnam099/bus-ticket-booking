@@ -381,3 +381,65 @@ html.theme-dark .sidebar-link:hover {
   color: #f9fafb !important;
 }
 
+/* Admin uses a fixed light palette so it does not become half dark, half light
+   when a global theme preference was saved elsewhere in the app. */
+html.theme-dark .admin-light-shell {
+  color-scheme: light;
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+html.theme-dark .admin-light-shell .admin-surface,
+html.theme-dark .admin-light-shell .bg-white {
+  background-color: #ffffff !important;
+}
+
+html.theme-dark .admin-light-shell .bg-gray-50 {
+  background-color: #f9fafb !important;
+}
+
+html.theme-dark .admin-light-shell .bg-gray-100 {
+  background-color: #f3f4f6 !important;
+}
+
+html.theme-dark .admin-light-shell .bg-red-50 {
+  background-color: #fef2f2 !important;
+}
+
+html.theme-dark .admin-light-shell .border-gray-200,
+html.theme-dark .admin-light-shell .ring-red-100 {
+  border-color: #e5e7eb !important;
+}
+
+html.theme-dark .admin-light-shell .text-gray-900 {
+  color: #111827 !important;
+}
+
+html.theme-dark .admin-light-shell .text-gray-700 {
+  color: #374151 !important;
+}
+
+html.theme-dark .admin-light-shell .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+html.theme-dark .admin-light-shell .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+html.theme-dark .admin-light-shell .text-red-600 {
+  color: #dc2626 !important;
+}
+
+html.theme-dark .admin-light-shell .text-red-700 {
+  color: #b91c1c !important;
+}
+
+html.theme-dark .admin-light-shell input,
+html.theme-dark .admin-light-shell select {
+  background-color: #ffffff !important;
+  border-color: #e5e7eb !important;
+  color: #111827 !important;
+  color-scheme: light;
+}
+
