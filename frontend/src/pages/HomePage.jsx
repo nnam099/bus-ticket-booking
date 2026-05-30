@@ -56,6 +56,7 @@ function RouteImage({ src, alt }) {
       <img
         src={src}
         alt={alt}
+        referrerPolicy="no-referrer"
         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
         loading="lazy"
         onError={(e) => {
