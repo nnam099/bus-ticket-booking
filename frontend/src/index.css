@@ -389,9 +389,27 @@ html.theme-dark .admin-light-shell {
   color: #111827 !important;
 }
 
+html.theme-dark .admin-light-shell main {
+  background-color: #f9fafb !important;
+}
+
 html.theme-dark .admin-light-shell .admin-surface,
-html.theme-dark .admin-light-shell .bg-white {
+html.theme-dark .admin-light-shell .card,
+html.theme-dark .admin-light-shell .bg-white,
+html.theme-dark .admin-light-shell .bg-white\/70,
+html.theme-dark .admin-light-shell .bg-white\/80,
+html.theme-dark .admin-light-shell .bg-white\/90,
+html.theme-dark .admin-light-shell .bg-white\/95 {
   background-color: #ffffff !important;
+}
+
+html.theme-dark .admin-light-shell .card {
+  border-color: #e5e7eb !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+}
+
+html.theme-dark .admin-light-shell .card::before {
+  background: transparent !important;
 }
 
 html.theme-dark .admin-light-shell .bg-gray-50 {
@@ -402,11 +420,42 @@ html.theme-dark .admin-light-shell .bg-gray-100 {
   background-color: #f3f4f6 !important;
 }
 
+html.theme-dark .admin-light-shell .bg-blue-50,
+html.theme-dark .admin-light-shell .bg-blue-50\/20 {
+  background-color: #eff6ff !important;
+}
+
+html.theme-dark .admin-light-shell .bg-orange-50,
+html.theme-dark .admin-light-shell .bg-orange-50\/20 {
+  background-color: #fff7ed !important;
+}
+
 html.theme-dark .admin-light-shell .bg-red-50 {
   background-color: #fef2f2 !important;
 }
 
+html.theme-dark .admin-light-shell .bg-green-100 {
+  background-color: #dcfce7 !important;
+}
+
+html.theme-dark .admin-light-shell .bg-yellow-100 {
+  background-color: #fef9c3 !important;
+}
+
+html.theme-dark .admin-light-shell .bg-blue-100 {
+  background-color: #dbeafe !important;
+}
+
+html.theme-dark .admin-light-shell .bg-purple-100 {
+  background-color: #f3e8ff !important;
+}
+
 html.theme-dark .admin-light-shell .border-gray-200,
+html.theme-dark .admin-light-shell .border-gray-100,
+html.theme-dark .admin-light-shell .border-gray-100\/50,
+html.theme-dark .admin-light-shell .border-blue-100,
+html.theme-dark .admin-light-shell .border-orange-100,
+html.theme-dark .admin-light-shell .border-red-200,
 html.theme-dark .admin-light-shell .ring-red-100 {
   border-color: #e5e7eb !important;
 }
@@ -427,12 +476,46 @@ html.theme-dark .admin-light-shell .text-gray-500 {
   color: #6b7280 !important;
 }
 
+html.theme-dark .admin-light-shell .text-gray-400 {
+  color: #9ca3af !important;
+}
+
 html.theme-dark .admin-light-shell .text-red-600 {
   color: #dc2626 !important;
 }
 
 html.theme-dark .admin-light-shell .text-red-700 {
   color: #b91c1c !important;
+}
+
+html.theme-dark .admin-light-shell .text-green-700 {
+  color: #15803d !important;
+}
+
+html.theme-dark .admin-light-shell .text-yellow-700 {
+  color: #a16207 !important;
+}
+
+html.theme-dark .admin-light-shell .text-blue-700 {
+  color: #1d4ed8 !important;
+}
+
+html.theme-dark .admin-light-shell .text-purple-700 {
+  color: #7e22ce !important;
+}
+
+html.theme-dark .admin-light-shell table,
+html.theme-dark .admin-light-shell tbody,
+html.theme-dark .admin-light-shell thead,
+html.theme-dark .admin-light-shell tr,
+html.theme-dark .admin-light-shell td,
+html.theme-dark .admin-light-shell th {
+  border-color: #e5e7eb !important;
+}
+
+html.theme-dark .admin-light-shell tr:hover,
+html.theme-dark .admin-light-shell .hover\:bg-gray-50:hover {
+  background-color: #f9fafb !important;
 }
 
 html.theme-dark .admin-light-shell input,
