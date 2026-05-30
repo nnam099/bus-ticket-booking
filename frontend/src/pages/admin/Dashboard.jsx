@@ -1,74 +1,188 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { adminAPI } from '../../services/api';
+import { adminAPI, operatorAPI, routeAPI } from '../../services/api';
+
+const iconPaths = {
+  users: 'M17 20h5v-2a4 4 0 0 0-5.4-3.75M9 20H4v-2a4 4 0 0 1 5.4-3.75M15 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm6 3a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
+  operator: 'M4 21V7a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v14M9 21v-4h2v4M7 9h1M7 13h1M11 9h1M11 13h1M15 21h5v-8a2 2 0 0 0-2-2h-3',
+  bus: 'M5 16V7a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v9M5 16h14M7 19h.01M17 19h.01M8 4v12M16 4v12',
+  ticket: 'M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 1 0 0 4v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 1 0 0-4V7Zm8-1v12',
+  calendar: 'M7 3v4M17 3v4M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z',
+  check: 'm5 13 4 4L19 7',
+  route: 'M6 19a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm12-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM8.5 14.5 15.5 9.5',
+  review: 'm12 3 2.7 5.47 6.04.88-4.37 4.26 1.03 6.02L12 16.78 6.6 19.63l1.03-6.02-4.37-4.26 6.04-.88L12 3Z',
+  audit: 'M11 5H6a2 2 0 0 0-2 2v11h14v-5M15 4h5v5M20 4l-9 9',
+};
+
+function AdminIcon({ name }) {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={iconPaths[name]} />
+    </svg>
+  );
+}
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
+  const [operators, setOperators] = useState([]);
+  const [routes, setRoutes] = useState([]);
+  const [filters, setFilters] = useState({
+    period: 'month',
+    dateFrom: '',
+    dateTo: '',
+    operatorId: '',
+    routeId: '',
+  });
 
   useEffect(() => {
-    adminAPI.getStats({}).then(r => setStats(r.data.data));
+    Promise.all([
+      operatorAPI.getAll(),
+      routeAPI.getAll(),
+    ]).then(([operatorRes, routeRes]) => {
+      setOperators(operatorRes.data.data || []);
+      setRoutes(routeRes.data.data || []);
+    });
   }, []);
 
+  useEffect(() => {
+    const params = Object.fromEntries(Object.entries(filters).filter(([, value]) => value));
+    adminAPI.getStats(params).then(r => setStats(r.data.data));
+  }, [filters]);
+
+  const filteredRoutes = filters.operatorId
+    ? routes.filter(route => route.operatorId === filters.operatorId || route.operator?.id === filters.operatorId)
+    : routes;
+
   const cards = stats ? [
-    { label: 'Tổng người dùng', value: stats.totalUsers, icon: '👥', sub: 'Tài khoản đang hoạt động' },
-    { label: 'Nhà xe đã duyệt', value: stats.totalOperators, icon: '🏢', sub: 'Đang vận hành trong hệ thống' },
-    { label: 'Nhà xe chờ duyệt', value: stats.pendingOperators, icon: '⏳', sub: 'Cần xử lý để nhà xe vận hành', highlight: stats.pendingOperators > 0 },
+    { label: 'Nguoi dung', value: stats.totalUsers, icon: 'users' },
+    { label: 'Nha xe', value: stats.totalOperators, icon: 'operator' },
+    { label: 'Chuyen trong ky', value: stats.totalTrips, icon: 'bus' },
+    { label: 'Ve da ban', value: stats.totalTickets, icon: 'ticket' },
+    { label: 'Chuyen hom nay', value: stats.todayTrips, icon: 'calendar' },
+    { label: 'Ve hom nay', value: stats.todayTickets, icon: 'check' },
   ] : [];
 
+  const quickLinks = [
+    { to: '/admin/operators', icon: 'operator', label: 'Quan ly nha xe' },
+    { to: '/admin/users', icon: 'users', label: 'Nguoi dung' },
+    { to: '/admin/reviews', icon: 'review', label: 'Danh gia' },
+    { to: '/admin/audit', icon: 'audit', label: 'Audit Log' },
+  ];
+
   return (
-    <div>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Tổng quan hệ thống</h1>
-        <p className="text-sm text-gray-500 mt-1">Quản lý tài khoản người dùng, tài xế và nhà xe.</p>
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tong quan he thong</h1>
+          <p className="mt-1 text-sm text-gray-500">Loc ve va chuyen theo ngay, tuyen hoac nha xe.</p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <select
+            className="input bg-white border-gray-200"
+            value={filters.period}
+            onChange={e => setFilters({ ...filters, period: e.target.value, dateFrom: '', dateTo: '' })}
+          >
+            <option value="day">Hom nay</option>
+            <option value="month">Thang nay</option>
+            <option value="year">Nam nay</option>
+          </select>
+          <input
+            type="date"
+            className="input bg-white border-gray-200"
+            value={filters.dateFrom}
+            onChange={e => setFilters({ ...filters, dateFrom: e.target.value })}
+          />
+          <input
+            type="date"
+            className="input bg-white border-gray-200"
+            min={filters.dateFrom || undefined}
+            value={filters.dateTo}
+            onChange={e => setFilters({ ...filters, dateTo: e.target.value })}
+          />
+          <select
+            className="input bg-white border-gray-200"
+            value={filters.operatorId}
+            onChange={e => setFilters({ ...filters, operatorId: e.target.value, routeId: '' })}
+          >
+            <option value="">Tat ca nha xe</option>
+            {operators.map(operator => (
+              <option key={operator.id} value={operator.id}>{operator.companyName}</option>
+            ))}
+          </select>
+          <select
+            className="input bg-white border-gray-200"
+            value={filters.routeId}
+            onChange={e => setFilters({ ...filters, routeId: e.target.value })}
+          >
+            <option value="">Tat ca tuyen</option>
+            {filteredRoutes.map(route => (
+              <option key={route.id} value={route.id}>
+                {route.originCity} {'->'} {route.destinationCity}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Stat cards */}
       {stats ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          {cards.map(c => (
-            <div
-              key={c.label}
-              className={`card flex items-center gap-4 ${c.highlight ? 'border-yellow-300 bg-yellow-50' : ''}`}
-            >
-              <div className="text-4xl">{c.icon}</div>
-              <div>
-                <div className="text-2xl font-bold text-gray-800">{c.value}</div>
-                <div className="font-medium text-gray-700 text-sm">{c.label}</div>
-                <div className="text-xs text-gray-400 mt-0.5">{c.sub}</div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {cards.map(c => (
+              <div key={c.label} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                  <AdminIcon name={c.icon} />
+                </div>
+                <div className="text-2xl font-bold text-gray-900">{c.value}</div>
+                <div className="mt-1 text-sm font-medium text-gray-500">{c.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-gray-900">Nha xe cho duyet</p>
+                  <p className="mt-1 text-sm text-gray-500">Can xu ly de nha xe co the van hanh.</p>
+                </div>
+                <span className="text-3xl font-black text-red-600">{stats.pendingOperators}</span>
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="card animate-pulse flex items-center gap-4">
-              <div className="h-10 w-10 rounded-full bg-gray-100" />
-              <div className="flex-1">
-                <div className="h-6 w-16 rounded bg-gray-100" />
-                <div className="mt-2 h-4 w-28 rounded bg-gray-100" />
+            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-gray-900">Tuyen dang mo</p>
+                  <p className="mt-1 text-sm text-gray-500">Tong so tuyen active trong he thong.</p>
+                </div>
+                <span className="text-3xl font-black text-red-600">{stats.activeRoutes}</span>
               </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map(i => (
+            <div key={i} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+              <div className="mb-5 h-11 w-11 animate-pulse rounded-xl bg-gray-100" />
+              <div className="h-7 w-16 animate-pulse rounded bg-gray-100" />
+              <div className="mt-3 h-4 w-28 animate-pulse rounded bg-gray-100" />
             </div>
           ))}
         </div>
       )}
 
-      {/* Quick links */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { to: '/admin/operators', icon: '🏢', label: 'Quản lý nhà xe' },
-          { to: '/admin/users',     icon: '👥', label: 'Người dùng' },
-          { to: '/admin/reviews',   icon: '⭐', label: 'Đánh giá' },
-          { to: '/admin/audit',     icon: '🔍', label: 'Audit Log' },
-        ].map(item => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {quickLinks.map(item => (
           <Link
             key={item.to}
             to={item.to}
-            className="card text-center hover:shadow-md transition-shadow"
+            className="group rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm transition hover:border-red-200 hover:shadow-md"
           >
-            <div className="text-3xl mb-1">{item.icon}</div>
-            <div className="text-sm font-medium text-gray-700">{item.label}</div>
+            <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 text-gray-600 transition group-hover:bg-red-50 group-hover:text-red-600">
+              <AdminIcon name={item.icon} />
+            </div>
+            <div className="text-sm font-semibold text-gray-700">{item.label}</div>
           </Link>
         ))}
       </div>

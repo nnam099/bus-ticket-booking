@@ -37,6 +37,7 @@ export default function AdminLayout() {
   const linkHover    = isDark ? 'hover:bg-slate-800 hover:text-white' : 'hover:bg-gray-100 hover:text-gray-900';
   const logoutColor  = isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100';
   const mainBg       = isDark ? 'bg-slate-900' : 'bg-gray-50';
+  const activeLink   = isDark ? 'bg-red-600 text-white shadow-sm shadow-red-950/30' : 'bg-red-50 text-red-700 ring-1 ring-red-100';
 
   return (
     <div className={`min-h-screen w-full flex ${shellBg}`}>
@@ -49,7 +50,7 @@ export default function AdminLayout() {
           {links.map(l => (
             <Link key={l.to} to={l.to}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors
-                ${isActive(l.to) ? 'bg-red-600 text-white' : `${sidebarText} ${linkHover}`}`}>
+                ${isActive(l.to) ? activeLink : `${sidebarText} ${linkHover}`}`}>
               {l.label}
             </Link>
           ))}
