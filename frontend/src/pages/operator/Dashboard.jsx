@@ -12,20 +12,20 @@ export default function OperatorDashboard() {
   }, [filters]);
 
   const cards = stats ? [
-    { label: 'Chuyen trong ky', value: stats.totalTrips, icon: '🚌' },
-    { label: 'Ve da ban', value: stats.totalTickets, icon: '🎫' },
+    { label: 'Chuyến trong kỳ', value: stats.totalTrips, icon: '🚌' },
+    { label: 'Vé đã bán', value: stats.totalTickets, icon: '🎫' },
     { label: 'Doanh thu', value: `${Number(stats.totalRevenue).toLocaleString('vi-VN')}đ`, icon: '💰' },
-    { label: 'Chuyen hom nay', value: stats.todayTrips, icon: '📅' },
-    { label: 'Ve hom nay', value: stats.todayTickets, icon: '✅' },
-    { label: 'Doanh thu hom nay', value: `${Number(stats.todayRevenue).toLocaleString('vi-VN')}đ`, icon: '⚡' },
+    { label: 'Chuyến hôm nay', value: stats.todayTrips, icon: '📅' },
+    { label: 'Vé hôm nay', value: stats.todayTickets, icon: '✅' },
+    { label: 'Doanh thu hôm nay', value: `${Number(stats.todayRevenue).toLocaleString('vi-VN')}đ`, icon: '⚡' },
   ] : [];
 
   return (
     <div>
       <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard Nha Xe</h1>
-          <p className="text-sm text-gray-500 mt-1">Theo doi doanh thu, ve ban va lich chay trong ngay.</p>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard Nhà Xe</h1>
+          <p className="text-sm text-gray-500 mt-1">Theo dõi doanh thu, vé bán và lịch chạy trong ngày.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <select
@@ -33,9 +33,9 @@ export default function OperatorDashboard() {
             value={filters.period}
             onChange={e => setFilters({ ...filters, period: e.target.value, dateFrom: '', dateTo: '' })}
           >
-            <option value="day">Hom nay</option>
-            <option value="month">Thang nay</option>
-            <option value="year">Nam nay</option>
+            <option value="day">Hôm nay</option>
+            <option value="month">Tháng này</option>
+            <option value="year">Năm nay</option>
           </select>
           <input
             type="date"
@@ -55,7 +55,7 @@ export default function OperatorDashboard() {
             value={filters.routeId}
             onChange={e => setFilters({ ...filters, routeId: e.target.value })}
           >
-            <option value="">Tat ca tuyen</option>
+            <option value="">Tất cả tuyến</option>
             {(stats?.routes || []).map(route => (
               <option key={route.id} value={route.id}>
                 {route.originCity} → {route.destinationCity}
@@ -78,8 +78,8 @@ export default function OperatorDashboard() {
       {stats && (
         <div className="card mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
-            <p className="text-sm font-semibold text-gray-800">Chuyen sap chay</p>
-            <p className="text-sm text-gray-500">Cac chuyen con o trang thai lich trinh, len xe hoac tre gio.</p>
+            <p className="text-sm font-semibold text-gray-800">Chuyến sắp chạy</p>
+            <p className="text-sm text-gray-500">Các chuyến còn ở trạng thái lịch trình, lên xe hoặc trễ giờ.</p>
           </div>
           <div className="text-3xl font-black text-brand">{stats.upcomingTrips}</div>
         </div>
@@ -87,10 +87,10 @@ export default function OperatorDashboard() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { to: '/operator/vehicles', icon: '🚌', label: 'Quan ly xe' },
-          { to: '/operator/routes', icon: '🗺️', label: 'Tuyen xe' },
-          { to: '/operator/trips', icon: '📅', label: 'Chuyen xe' },
-          { to: '/operator/reports', icon: '📈', label: 'Bao cao' },
+          { to: '/operator/vehicles', icon: '🚌', label: 'Quản lý xe' },
+          { to: '/operator/routes', icon: '🗺️', label: 'Tuyến xe' },
+          { to: '/operator/trips', icon: '📅', label: 'Chuyến xe' },
+          { to: '/operator/reports', icon: '📈', label: 'Báo cáo' },
         ].map(item => (
           <Link key={item.to} to={item.to}
             className="card text-center hover:shadow-md transition-shadow cursor-pointer">

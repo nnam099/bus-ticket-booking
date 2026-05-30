@@ -326,3 +326,54 @@ html.theme-dark body {
 /* Page transition */
 .page-enter { animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ============================================================
+   Sidebar – theme-aware (light & dark)
+   Light: bg trắng xám, chữ tối
+   Dark : bg gray-900, chữ sáng
+   ============================================================ */
+.sidebar-nav {
+  background-color: #f8fafc;
+  color: #374151;
+  border-right: 1px solid #e5e7eb;
+}
+.sidebar-title {
+  color: #111827;
+}
+.sidebar-sub {
+  color: #6b7280;
+}
+.border-sidebar-border {
+  border-color: #e5e7eb;
+}
+.sidebar-link {
+  color: #4b5563;
+}
+.sidebar-link:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+/* Dark mode overrides */
+html.theme-dark .sidebar-nav {
+  background-color: #111827 !important;
+  color: #d1d5db !important;
+  border-right-color: #374151 !important;
+}
+html.theme-dark .sidebar-title {
+  color: #f9fafb !important;
+}
+html.theme-dark .sidebar-sub {
+  color: #9ca3af !important;
+}
+html.theme-dark .border-sidebar-border {
+  border-color: #374151 !important;
+}
+html.theme-dark .sidebar-link {
+  color: #9ca3af !important;
+}
+html.theme-dark .sidebar-link:hover {
+  background-color: #1f2937 !important;
+  color: #f9fafb !important;
+}
+
