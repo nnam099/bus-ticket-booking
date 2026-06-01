@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 const icons = {
   search: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
   ticket: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>,
+  invoice: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14h6m-6 4h6m2 4H7a2 2 0 01-2-2V4a1 1 0 011.447-.894L8 4l2-1 2 1 2-1 2 1 1.553-.894A1 1 0 0119 4v16a2 2 0 01-2 2z" /></svg>,
   profile: <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
 };
 
@@ -40,10 +41,11 @@ export default function CustomerDashboard() {
         <h2 className="text-2xl font-black text-gray-800 tracking-tight">Truy cập nhanh</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
           { to: '/', icon: icons.search, title: 'Tìm chuyến xe', desc: 'Khám phá hơn 500+ tuyến đường khắp cả nước' },
           { to: '/my-tickets', icon: icons.ticket, title: 'Vé của tôi', desc: 'Xem lịch trình và mã QR vé điện tử' },
+          { to: '/my-invoices', icon: icons.invoice, title: 'Hóa đơn của tôi', desc: 'Theo dõi hóa đơn, giao dịch và danh sách vé đã mua' },
           { to: '/profile', icon: icons.profile, title: 'Hồ sơ cá nhân', desc: 'Quản lý thông tin và bảo mật tài khoản' },
         ].map(item => (
           <Link key={item.to} to={item.to} className="group relative bg-white rounded-3xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 hover:border-brand/30 hover:shadow-[0_8px_30px_rgb(232,93,4,0.1)] transition-all duration-300 overflow-hidden text-left flex flex-col h-full hover:-translate-y-1">

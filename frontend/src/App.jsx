@@ -24,6 +24,7 @@ const BookingPage = React.lazy(() => import('./pages/customer/BookingPage'));;
 const PaymentPage = React.lazy(() => import('./pages/customer/PaymentPage'));;
 const PaymentCallbackPage = React.lazy(() => import('./pages/customer/PaymentCallbackPage'));;
 const MyTicketsPage = React.lazy(() => import('./pages/customer/MyTicketsPage'));;
+const MyInvoicesPage = React.lazy(() => import('./pages/customer/MyInvoicesPage'));;
 const TicketDetailPage = React.lazy(() => import('./pages/customer/TicketDetailPage'));;
 const ResumePaymentPage = React.lazy(() => import('./pages/customer/ResumePaymentPage'));;
 const ProfilePage = React.lazy(() => import('./pages/customer/ProfilePage'));;
@@ -77,6 +78,7 @@ export default function App() {
           <Route path="/payment" element={<PaymentPage />} />
           <Route path="/payment/callback" element={<PaymentCallbackPage />} />
           <Route path="/my-tickets" element={<MyTicketsPage />} />
+          <Route path="/my-invoices" element={<MyInvoicesPage />} />
           <Route path="/my-tickets/order/:orderId/pay" element={<ResumePaymentPage />} />
           <Route path="/my-tickets/:id" element={<TicketDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />

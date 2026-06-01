@@ -64,6 +64,7 @@ export const userAPI = {
   updateMe: (data) => api.put('/users/me', data),
   changePassword: (data) => api.put('/users/me/password', data),
   getMyTickets: () => api.get('/users/me/tickets'),
+  getMyInvoices: () => api.get('/users/me/invoices'),
   deleteAccount: () => api.delete('/users/me'),
 };
 

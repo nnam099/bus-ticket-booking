@@ -3,7 +3,7 @@ const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const bcrypt = require('bcryptjs');
 const prisma = require('../config/prisma');
-const { decryptTickets } = require('../utils/privacy');
+const { decryptOrderTickets, decryptTickets } = require('../utils/privacy');
 
 router.get('/me', authenticate, async (req, res) => {
   const user = { ...req.user };
@@ -77,6 +77,65 @@ router.get('/me/tickets', authenticate, authorize('CUSTOMER'), async (req, res, 
       orderBy: { createdAt: 'desc' },
     });
     res.json({ success: true, data: decryptTickets(tickets) });
+  } catch (err) { next(err); }
+});
+
+router.get('/me/invoices', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
+  try {
+    const customerId = req.user.customer?.id;
+    if (!customerId) {
+      return res.status(403).json({ success: false, message: 'Chi khach hang moi co the xem hoa don.' });
+    }
+
+    const invoices = await prisma.order.findMany({
+      where: { customerId },
+      include: {
+        payments: {
+          orderBy: { createdAt: 'desc' },
+          select: {
+            id: true,
+            method: true,
+            gateway: true,
+            gatewayTxnId: true,
+            status: true,
+            amount: true,
+            paidAt: true,
+            refundedAt: true,
+            refundAmount: true,
+            createdAt: true,
+          },
+        },
+        ticketDetails: {
+          include: {
+            tripSeat: {
+              include: {
+                seatLayout: { select: { seatCode: true, floor: true } },
+                trip: {
+                  include: {
+                    route: {
+                      include: {
+                        operator: { select: { id: true, companyName: true, hotline: true } },
+                      },
+                    },
+                    vehicle: {
+                      select: {
+                        id: true,
+                        licensePlate: true,
+                        vehicleType: { select: { name: true, seatCount: true } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({ success: true, data: invoices.map(decryptOrderTickets) });
   } catch (err) { next(err); }
 });
 
