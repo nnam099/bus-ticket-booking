@@ -3,7 +3,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
-const { decryptSensitiveValue, decryptTickets } = require('../utils/privacy');
+const { decryptOrderTickets, decryptSensitiveValue, decryptTickets } = require('../utils/privacy');
 
 const parsePagination = (query, defaultLimit = 50, maxLimit = 100) => {
   const page = Number.parseInt(query.page, 10) || 1;
@@ -263,6 +263,78 @@ router.get('/users/:id/tickets', async (req, res, next) => {
     });
 
     res.json({ success: true, data: { user, tickets: decryptTickets(tickets) } });
+  } catch (err) { next(err); }
+});
+
+// GET /api/admin/users/:id/invoices - Xem hóa đơn của một user
+router.get('/users/:id/invoices', async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        customer: { select: { id: true, fullName: true } },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy tài khoản.' });
+    }
+    if (!user.customer) {
+      return res.json({ success: true, data: { user, invoices: [] } });
+    }
+
+    const invoices = await prisma.order.findMany({
+      where: { customerId: user.customer.id },
+      include: {
+        payments: {
+          select: {
+            id: true,
+            method: true,
+            gateway: true,
+            gatewayTxnId: true,
+            status: true,
+            amount: true,
+            paidAt: true,
+            refundedAt: true,
+            refundAmount: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        },
+        ticketDetails: {
+          include: {
+            tripSeat: {
+              include: {
+                seatLayout: { select: { seatCode: true, floor: true } },
+                trip: {
+                  include: {
+                    route: {
+                      include: {
+                        operator: { select: { id: true, companyName: true, hotline: true } },
+                      },
+                    },
+                    vehicle: {
+                      select: {
+                        id: true,
+                        licensePlate: true,
+                        vehicleType: { select: { name: true, seatCount: true } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({ success: true, data: { user, invoices: invoices.map(decryptOrderTickets) } });
   } catch (err) { next(err); }
 });
 

@@ -34,6 +34,20 @@ const ticketStatusLabels = {
   REFUNDED: 'Đã hoàn tiền',
 };
 
+const paymentStatusLabels = {
+  PENDING: 'Chờ xử lý',
+  SUCCESS: 'Thành công',
+  FAILED: 'Thất bại',
+  REFUNDED: 'Đã hoàn tiền',
+};
+
+const paymentStatusClass = {
+  PENDING: 'bg-yellow-100 text-yellow-700',
+  SUCCESS: 'bg-green-100 text-green-700',
+  FAILED: 'bg-red-100 text-red-600',
+  REFUNDED: 'bg-purple-100 text-purple-700',
+};
+
 const tripStatusClass = {
   SCHEDULED: 'bg-blue-100 text-blue-700',
   BOARDING: 'bg-yellow-100 text-yellow-700',
@@ -93,6 +107,8 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [ticketPanel, setTicketPanel] = useState(null);
   const [ticketLoading, setTicketLoading] = useState(false);
+  const [invoicePanel, setInvoicePanel] = useState(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [routePanel, setRoutePanel] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
 
@@ -121,6 +137,7 @@ export default function AdminUsersPage() {
 
   const handleViewTickets = async (user) => {
     setRoutePanel(null);
+    setInvoicePanel(null);
     setTicketPanel({ user, tickets: [] });
     setTicketLoading(true);
     try {
@@ -134,8 +151,25 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleViewInvoices = async (user) => {
+    setRoutePanel(null);
+    setTicketPanel(null);
+    setInvoicePanel({ user, invoices: [] });
+    setInvoiceLoading(true);
+    try {
+      const res = await api.get(`/admin/users/${user.id}/invoices`);
+      setInvoicePanel(res.data.data);
+    } catch {
+      alert('Không tải được danh sách hóa đơn.');
+      setInvoicePanel(null);
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
+
   const handleViewRoutes = async (user) => {
     setTicketPanel(null);
+    setInvoicePanel(null);
     if (routePanel?.user?.id === user.id) {
       setRoutePanel(null);
       return;
@@ -230,6 +264,117 @@ export default function AdminUsersPage() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderInvoicePanel = () => (
+    <div className="card border border-emerald-100 bg-emerald-50/20">
+      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-800">
+            Hóa đơn của {invoicePanel.user?.customer?.fullName || invoicePanel.user?.email || invoicePanel.user?.phone}
+          </h2>
+          <p className="text-sm text-gray-500">{invoicePanel.user?.email || invoicePanel.user?.phone}</p>
+        </div>
+        <button
+          onClick={() => setInvoicePanel(null)}
+          className="self-start rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-50"
+        >
+          Đóng
+        </button>
+      </div>
+
+      {invoiceLoading ? (
+        <div className="py-8 text-center text-gray-500">Đang tải danh sách hóa đơn...</div>
+      ) : invoicePanel.invoices.length === 0 ? (
+        <div className="py-8 text-center text-gray-500">Người dùng này chưa có hóa đơn nào.</div>
+      ) : (
+        <div className="mt-4 grid gap-4">
+          {invoicePanel.invoices.map((invoice) => {
+            const latestPayment = invoice.payments?.[0];
+            const firstTicket = invoice.ticketDetails?.[0];
+            const trip = firstTicket?.tripSeat?.trip;
+            const route = trip?.route;
+            const routeName = route ? `${route.originCity} - ${route.destinationCity}` : 'Chưa có tuyến';
+            const ticketCount = invoice.ticketDetails?.length || 0;
+
+            return (
+              <article key={invoice.id} className="rounded-2xl border border-gray-100 bg-white p-4">
+                <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr_auto] lg:items-start">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="break-all font-mono text-sm font-black text-gray-900">{invoice.publicCode || invoice.id}</p>
+                      <span className={`badge ${ticketStatusClass[invoice.status] || 'bg-gray-100 text-gray-700'}`}>
+                        {ticketStatusLabels[invoice.status] || invoice.status}
+                      </span>
+                    </div>
+                    <p className="mt-2 font-semibold text-gray-800">{routeName}</p>
+                    <p className="text-xs text-gray-500">
+                      {route?.operator?.companyName || 'Chưa có nhà xe'} · Tạo: {formatDateTime(invoice.createdAt)}
+                    </p>
+                  </div>
+
+                  <div className="text-sm text-gray-700">
+                    <p className="font-bold text-brand">{formatCurrency(invoice.totalAmount)}</p>
+                    <p className="mt-1 text-xs text-gray-500">{ticketCount} vé trong hóa đơn</p>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {latestPayment
+                        ? `${latestPayment.method}${latestPayment.gateway ? ` / ${latestPayment.gateway}` : ''}`
+                        : 'Chưa có giao dịch'}
+                    </p>
+                  </div>
+
+                  <div className="lg:text-right">
+                    <span className={`badge ${paymentStatusClass[latestPayment?.status] || 'bg-gray-100 text-gray-700'}`}>
+                      {paymentStatusLabels[latestPayment?.status] || latestPayment?.status || 'Chưa thanh toán'}
+                    </span>
+                    {latestPayment?.gatewayTxnId && (
+                      <p className="mt-2 break-all font-mono text-xs text-gray-500">{latestPayment.gatewayTxnId}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4 overflow-x-auto rounded-xl border border-gray-100">
+                  <table className="min-w-full divide-y divide-gray-100 text-sm">
+                    <thead className="bg-gray-50 text-left text-gray-500">
+                      <tr>
+                        <th className="px-3 py-2 font-medium">Vé</th>
+                        <th className="px-3 py-2 font-medium">Hành khách</th>
+                        <th className="px-3 py-2 font-medium">Ghế</th>
+                        <th className="px-3 py-2 font-medium">Giá</th>
+                        <th className="px-3 py-2 font-medium">Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {invoice.ticketDetails?.map((ticket) => (
+                        <tr key={ticket.id}>
+                          <td className="px-3 py-2">
+                            <p className="break-all font-mono text-xs font-semibold text-gray-800">{ticket.publicCode || ticket.id}</p>
+                          </td>
+                          <td className="px-3 py-2">
+                            <p className="font-medium text-gray-800">{ticket.passengerName}</p>
+                            <p className="text-xs text-gray-500">{ticket.passengerPhone || 'Không có SĐT'}</p>
+                          </td>
+                          <td className="px-3 py-2 text-gray-700">
+                            {ticket.tripSeat?.seatLayout?.seatCode || '-'}
+                            {ticket.tripSeat?.seatLayout?.floor ? ` / Tầng ${ticket.tripSeat.seatLayout.floor}` : ''}
+                          </td>
+                          <td className="px-3 py-2 font-semibold text-gray-800">{formatCurrency(ticket.price)}</td>
+                          <td className="px-3 py-2">
+                            <span className={`badge ${ticketStatusClass[ticket.status] || 'bg-gray-100 text-gray-700'}`}>
+                              {ticketStatusLabels[ticket.status] || ticket.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
     </div>
@@ -333,6 +478,7 @@ export default function AdminUsersPage() {
             onClick={() => {
               setActiveTab(tab.key);
               setTicketPanel(null);
+              setInvoicePanel(null);
               setRoutePanel(null);
             }}
             className={`rounded-lg border px-3 py-2 text-sm font-medium transition
@@ -347,8 +493,10 @@ export default function AdminUsersPage() {
         {filteredUsers.map(u => {
           const roles = getRoles(u);
           const isTicketSelected = ticketPanel?.user?.id === u.id;
+          const isInvoiceSelected = invoicePanel?.user?.id === u.id;
           const isRouteSelected = routePanel?.user?.id === u.id;
           const canViewTickets = hasRole(u, 'CUSTOMER') && u.customer;
+          const canViewInvoices = canViewTickets;
           const canViewRoutes = hasRole(u, 'STAFF') || hasRole(u, 'BUS_OPERATOR');
 
           return (
@@ -397,6 +545,16 @@ export default function AdminUsersPage() {
                       {ticketLoading && isTicketSelected ? 'Đang tải...' : 'Xem vé'}
                     </button>
                   )}
+                  {canViewInvoices && (
+                    <button
+                      onClick={() => handleViewInvoices(u)}
+                      disabled={invoiceLoading && isInvoiceSelected}
+                      className={`rounded-lg border px-3 py-1 text-sm transition disabled:cursor-not-allowed disabled:opacity-70
+                        ${isInvoiceSelected ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'}`}
+                    >
+                      {invoiceLoading && isInvoiceSelected ? 'Đang tải...' : 'Xem hóa đơn'}
+                    </button>
+                  )}
                   {canViewRoutes && (
                     <button
                       onClick={() => handleViewRoutes(u)}
@@ -417,6 +575,7 @@ export default function AdminUsersPage() {
                 </div>
               </div>
               {isTicketSelected && renderTicketPanel()}
+              {isInvoiceSelected && renderInvoicePanel()}
               {isRouteSelected && renderRoutePanel()}
             </div>
           );

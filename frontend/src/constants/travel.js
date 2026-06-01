@@ -26,37 +26,37 @@ export const popularRoutes = [
     origin: 'Hồ Chí Minh',
     destination: 'Đà Lạt',
     price: 280000,
-    image: 'https://picsum.photos/seed/dalat/900/675',
+    image: '/route-images/dalat-bus.jpg',
   },
   {
     origin: 'Hồ Chí Minh',
     destination: 'Nha Trang',
     price: 320000,
-    image: 'https://picsum.photos/seed/nhatrang/900/675',
+    image: '/route-images/nhatrang-bus.jpg',
   },
   {
     origin: 'Hà Nội',
     destination: 'Lào Cai',
     price: 260000,
-    image: 'https://picsum.photos/seed/laocai/900/675',
+    image: '/route-images/laocai-bus.jpg',
   },
   {
     origin: 'Đà Nẵng',
     destination: 'Huế',
     price: 140000,
-    image: 'https://picsum.photos/seed/hue/900/675',
+    image: '/route-images/hue-bus.jpg',
   },
   {
     origin: 'Hồ Chí Minh',
     destination: 'Vũng Tàu',
     price: 120000,
-    image: 'https://picsum.photos/seed/vungtau/900/675',
+    image: '/route-images/vungtau-bus.jpg',
   },
   {
     origin: 'Hồ Chí Minh',
     destination: 'Cần Thơ',
     price: 180000,
-    image: 'https://picsum.photos/seed/cantho/900/675',
+    image: '/route-images/cantho-bus.jpg',
   },
 ];
 
