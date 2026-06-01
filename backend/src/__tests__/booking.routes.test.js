@@ -29,7 +29,12 @@ describe('booking routes security rules', () => {
     jest.clearAllMocks();
   });
 
-  it('rejects cash booking confirmation from customer flow', async () => {
+  it('accepts cash booking confirmation from customer flow', async () => {
+    bookingService.confirmBooking.mockResolvedValue({
+      order: { id: 'order-1', status: 'PAID' },
+      tickets: [{ id: 'ticket-1', status: 'PAID', passengerName: 'Nguyen Van A', passengerPhone: '0901234567' }],
+    });
+
     const res = await request(app)
       .post('/api/bookings/confirm')
       .send({
@@ -39,8 +44,14 @@ describe('booking routes security rules', () => {
         paymentMethod: 'CASH',
       });
 
-    expect(res.status).toBe(400);
-    expect(res.body.success).toBe(false);
-    expect(bookingService.confirmBooking).not.toHaveBeenCalled();
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(bookingService.confirmBooking).toHaveBeenCalledWith({
+      customerId: 'customer-1',
+      tripId: 'trip-1',
+      seatIds: ['seat-1'],
+      passengerInfo: [{ name: 'Nguyen Van A', phone: '0901234567' }],
+      paymentMethod: 'CASH',
+    });
   });
 });

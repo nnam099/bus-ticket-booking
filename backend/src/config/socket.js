@@ -3,6 +3,7 @@ const { createAdapter } = require('@socket.io/redis-adapter');
 const { redisClient } = require('./redis');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
+const { corsOrigin } = require('./cors');
 
 let io;
 
@@ -13,7 +14,7 @@ const initSocket = async (httpServer) => {
 
   io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:5173',
+      origin: corsOrigin,
       credentials: true,
     },
   });

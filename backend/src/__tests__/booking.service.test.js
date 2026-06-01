@@ -50,7 +50,6 @@ const {
 } = require('../services/booking.service');
 
 const futureDate = (hours = 48) => new Date(Date.now() + hours * 60 * 60 * 1000);
-const pastDate = () => new Date(Date.now() - 60 * 60 * 1000);
 
 describe('booking business rules', () => {
   let tx;

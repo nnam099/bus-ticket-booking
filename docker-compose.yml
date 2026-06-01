@@ -54,6 +54,7 @@ services:
       LOOKUP_CODE_SECRET: ${LOOKUP_CODE_SECRET:?Set LOOKUP_CODE_SECRET in .env}
       QR_SIGNING_SECRET: ${QR_SIGNING_SECRET:?Set QR_SIGNING_SECRET in .env}
       PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY:?Set PII_ENCRYPTION_KEY in .env}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost}
       PORT: 3000
     volumes:
       - ./backend:/app
@@ -68,13 +69,16 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api}
+        VITE_SOCKET_URL: ${VITE_SOCKET_URL:-}
     container_name: bus_ticket_web
     restart: unless-stopped
     expose:
       - "80"
     environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000/api}
-      VITE_SOCKET_URL: ${VITE_SOCKET_URL:-http://localhost:3000}
+      VITE_API_URL: ${VITE_API_URL:-/api}
+      VITE_SOCKET_URL: ${VITE_SOCKET_URL:-}
     volumes:
       - ./frontend:/app
       - /app/node_modules

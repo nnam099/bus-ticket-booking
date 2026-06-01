@@ -7,7 +7,8 @@ export const connectSocket = () => {
   if (socket?.connected) return socket;
 
   const token = store.getState().auth.token;
-  socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000', {
+  const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+  socket = io(socketUrl, {
     auth: { token },
     reconnectionAttempts: 5,
     reconnectionDelay: 2000,
