@@ -1,8 +1,27 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authAPI } from '../../services/api';
 
+const inferRoles = (rawUser) => {
+  const explicitRoles = rawUser?.userRoles?.map(ur => ur.role?.name).filter(Boolean) || [];
+  if (explicitRoles.length) return explicitRoles;
 
-const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const inferred = [];
+  if (rawUser?.customer) inferred.push('CUSTOMER');
+  if (rawUser?.busOperator) inferred.push('BUS_OPERATOR');
+  if (rawUser?.staff) inferred.push('STAFF');
+  return inferred;
+};
+
+const normalizeUser = (rawUser) => {
+  if (!rawUser) return null;
+  const existingRoles = Array.isArray(rawUser.roles) ? rawUser.roles.filter(Boolean) : [];
+  return {
+    ...rawUser,
+    roles: existingRoles.length ? existingRoles : inferRoles(rawUser),
+  };
+};
+
+const user = normalizeUser(JSON.parse(localStorage.getItem('user') || 'null'));
 
 export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
   try {
@@ -39,9 +58,7 @@ const authSlice = createSlice({
       .addCase(login.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(login.fulfilled, (state, { payload }) => {
         state.loading = false;
-        
-        state.user = { ...payload.user, roles: payload.user.userRoles?.map(ur => ur.role.name) || [] };
-        
+        state.user = normalizeUser(payload.user);
         localStorage.setItem('user', JSON.stringify(state.user));
       })
       .addCase(login.rejected, (state, { payload }) => {
@@ -51,9 +68,7 @@ const authSlice = createSlice({
       .addCase(register.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(register.fulfilled, (state, { payload }) => {
         state.loading = false;
-        
-        state.user = { ...payload.user, roles: payload.user.userRoles?.map(ur => ur.role.name) || [] };
-        
+        state.user = normalizeUser(payload.user);
         localStorage.setItem('user', JSON.stringify(state.user));
       })
       .addCase(register.rejected, (state, { payload }) => {
