@@ -158,10 +158,14 @@ router.patch('/:id/check-in', authenticate, authorize('STAFF', 'BUS_OPERATOR'), 
       return res.status(400).json({ success: false, message: 'Ticket has not been paid.' });
     }
 
-    const updated = await prisma.ticketDetail.update({
-      where: { id: req.params.id },
+    const checkedIn = await prisma.ticketDetail.updateMany({
+      where: { id: req.params.id, status: 'PAID' },
       data: { checkedInAt: new Date(), status: 'CHECKED_IN' },
     });
+    if (checkedIn.count !== 1) {
+      return res.status(409).json({ success: false, message: 'Ticket has already been updated.' });
+    }
+    const updated = await prisma.ticketDetail.findUnique({ where: { id: req.params.id } });
     res.json({ success: true, message: 'Ticket check-in completed.', data: decryptTicket(updated) });
   } catch (err) { next(err); }
 });

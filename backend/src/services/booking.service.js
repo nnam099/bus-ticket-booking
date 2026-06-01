@@ -303,17 +303,22 @@ const cancelTicket = async (ticketId, customerId) => {
   const finalTicketStatus = ticket.status === 'PAID' ? 'REFUNDED' : 'CANCELLED';
 
   await prisma.$transaction(async (tx) => {
-    await tx.ticketDetail.update({
-      where: { id: ticketId },
+    const claimedTicket = await tx.ticketDetail.updateMany({
+      where: { id: ticketId, status: ticket.status },
       data: {
         status: finalTicketStatus,
         cancelledAt: new Date(),
         cancelReason: 'Khách hàng hủy vé',
       },
     });
+    if (claimedTicket.count !== 1) {
+      const error = new Error('Ve da duoc cap nhat boi thao tac khac. Vui long tai lai.');
+      error.statusCode = 409;
+      throw error;
+    }
 
-    await tx.tripSeat.update({
-      where: { id: ticket.tripSeatId },
+    await tx.tripSeat.updateMany({
+      where: { id: ticket.tripSeatId, status: { in: ['PROCESSING', 'BOOKED'] } },
       data: { status: 'AVAILABLE', lockedBy: null, lockedAt: null, lockExpiresAt: null },
     });
 

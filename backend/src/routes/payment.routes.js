@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
+const { Prisma } = require('@prisma/client');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const { redisClient } = require('../config/redis');
 const prisma = require('../config/prisma');
@@ -92,6 +93,13 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
   const lockKeysToClear = [];
 
   await prisma.$transaction(async (tx) => {
+    const lockedRows = await tx.$queryRaw`SELECT id FROM "payments" WHERE id = ${paymentId} FOR UPDATE`;
+    if (!lockedRows.length) {
+      const error = new Error('Payment not found.');
+      error.statusCode = 404;
+      throw error;
+    }
+
     const payment = await tx.payment.findUnique({
       where: { id: paymentId },
       include: {
@@ -114,13 +122,7 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
       },
     });
 
-    if (!payment) {
-      const error = new Error('Payment not found.');
-      error.statusCode = 404;
-      throw error;
-    }
-
-    if (payment.status === 'SUCCESS' || payment.status === 'REFUNDED') return;
+    if (!payment || payment.status !== 'PENDING') return;
     lockOwnerCustomerId = payment.order.customerId;
 
     if (gatewayTxnId) {
@@ -257,30 +259,49 @@ router.post('/initiate', authenticate, authorize('CUSTOMER'), async (req, res, n
       return res.status(400).json({ success: false, message: 'Cong thanh toan khong hop le.' });
     }
 
-    const order = await prisma.order.findFirst({
-      where: { id: orderId, customer: { userId: req.user.id } },
-      include: { payments: { where: { status: { in: ['PENDING', 'SUCCESS'] } }, select: { id: true, status: true } } },
+    const { order, payment } = await prisma.$transaction(async (tx) => {
+      const lockedRows = await tx.$queryRaw`SELECT id FROM "orders" WHERE id = ${orderId} FOR UPDATE`;
+      if (!lockedRows.length) return { order: null, payment: null };
+
+      const lockedOrder = await tx.order.findFirst({
+        where: { id: orderId, customer: { userId: req.user.id } },
+        include: { payments: { where: { status: { in: ['PENDING', 'SUCCESS'] } }, select: { id: true, status: true } } },
+      });
+      if (!lockedOrder) return { order: null, payment: null };
+      if (lockedOrder.status !== 'PENDING') {
+        const error = new Error('Don hang khong con o trang thai cho thanh toan.');
+        error.statusCode = 400;
+        throw error;
+      }
+      if (lockedOrder.payments.some((item) => item.status === 'SUCCESS')) {
+        const error = new Error('Don hang da duoc thanh toan.');
+        error.statusCode = 409;
+        throw error;
+      }
+      if (lockedOrder.payments.some((item) => item.status === 'PENDING')) {
+        const error = new Error('Don hang dang co giao dich thanh toan cho xu ly.');
+        error.statusCode = 409;
+        throw error;
+      }
+
+      const createdPayment = await tx.payment.create({
+        data: { orderId, amount: lockedOrder.totalAmount, method, gateway, status: 'PENDING' },
+      });
+
+      return { order: lockedOrder, payment: createdPayment };
     });
     if (!order) return res.status(404).json({ success: false, message: 'Khong tim thay don hang.' });
-    if (order.status !== 'PENDING') {
-      return res.status(400).json({ success: false, message: 'Don hang khong con o trang thai cho thanh toan.' });
-    }
-    if (order.payments.some((payment) => payment.status === 'SUCCESS')) {
-      return res.status(409).json({ success: false, message: 'Don hang da duoc thanh toan.' });
-    }
-    if (order.payments.some((payment) => payment.status === 'PENDING')) {
-      return res.status(409).json({ success: false, message: 'Don hang dang co giao dich thanh toan cho xu ly.' });
-    }
-
-    const payment = await prisma.payment.create({
-      data: { orderId, amount: order.totalAmount, method, gateway, status: 'PENDING' },
-    });
 
     const clientUrl = process.env.CLIENT_URL || req.headers.origin || 'http://localhost';
     const paymentUrl = `${clientUrl}/payment/callback?paymentId=${payment.id}&mockStatus=success&amount=${order.totalAmount}`;
 
     res.json({ success: true, data: { paymentId: payment.id, paymentUrl } });
-  } catch (err) { next(err); }
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+      return res.status(409).json({ success: false, message: 'Don hang dang co giao dich thanh toan cho xu ly.' });
+    }
+    next(err);
+  }
 });
 
 if (process.env.NODE_ENV !== 'production') {

@@ -72,6 +72,7 @@ describe('payment routes business rules', () => {
     jest.clearAllMocks();
 
     tx = {
+      $queryRaw: jest.fn(),
       payment: {
         findUnique: jest.fn(),
         findFirst: jest.fn(),
@@ -88,6 +89,7 @@ describe('payment routes business rules', () => {
         updateMany: jest.fn(),
       },
     };
+    tx.$queryRaw.mockResolvedValue([{ id: 'payment-1' }]);
     tx.payment.findFirst.mockResolvedValue(null);
 
     prisma.$transaction.mockImplementation(async (callback) => callback(tx));

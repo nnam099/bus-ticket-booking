@@ -69,6 +69,7 @@ describe('booking business rules', () => {
         findMany: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
+        updateMany: jest.fn(),
         count: jest.fn(),
       },
       order: {
@@ -221,6 +222,7 @@ describe('booking business rules', () => {
       tripSeat: { tripId: 'trip-1', trip: { departureTime: futureDate(96) } },
     });
     tx.ticketDetail.count.mockResolvedValue(0);
+    tx.ticketDetail.updateMany.mockResolvedValue({ count: 1 });
 
     const result = await cancelTicket('ticket-1', 'customer-1');
 
@@ -230,12 +232,12 @@ describe('booking business rules', () => {
       cancellationDeadline: expect.any(Date),
       policy: { deadlineDays: 3, refundPercent: 90 },
     }));
-    expect(tx.ticketDetail.update).toHaveBeenCalledWith({
-      where: { id: 'ticket-1' },
+    expect(tx.ticketDetail.updateMany).toHaveBeenCalledWith({
+      where: { id: 'ticket-1', status: 'PAID' },
       data: expect.objectContaining({ status: 'REFUNDED', cancelledAt: expect.any(Date) }),
     });
-    expect(tx.tripSeat.update).toHaveBeenCalledWith({
-      where: { id: 'seat-1' },
+    expect(tx.tripSeat.updateMany).toHaveBeenCalledWith({
+      where: { id: 'seat-1', status: { in: ['PROCESSING', 'BOOKED'] } },
       data: { status: 'AVAILABLE', lockedBy: null, lockedAt: null, lockExpiresAt: null },
     });
     expect(tx.order.update).toHaveBeenCalledWith({

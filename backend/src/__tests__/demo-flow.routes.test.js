@@ -5,7 +5,7 @@ jest.mock('../config/prisma', () => ({
   },
   ticketDetail: {
     findUnique: jest.fn(),
-    update: jest.fn(),
+    updateMany: jest.fn(),
   },
 }));
 
@@ -121,17 +121,19 @@ describe('demo booking flow routes', () => {
   });
 
   it('checks in a paid ticket for assigned staff', async () => {
-    prisma.ticketDetail.findUnique.mockResolvedValue({
-      id: 'ticket-1',
-      status: 'PAID',
-      tripSeat: { id: 'seat-1', tripId: 'trip-1' },
-    });
+    prisma.ticketDetail.findUnique
+      .mockResolvedValueOnce({
+        id: 'ticket-1',
+        status: 'PAID',
+        tripSeat: { id: 'seat-1', tripId: 'trip-1' },
+      })
+      .mockResolvedValueOnce({
+        id: 'ticket-1',
+        status: 'CHECKED_IN',
+        checkedInAt: new Date(),
+      });
+    prisma.ticketDetail.updateMany.mockResolvedValue({ count: 1 });
     prisma.trip.findFirst.mockResolvedValue({ id: 'trip-1' });
-    prisma.ticketDetail.update.mockResolvedValue({
-      id: 'ticket-1',
-      status: 'CHECKED_IN',
-      checkedInAt: new Date(),
-    });
 
     const res = await request(app)
       .patch('/api/tickets/ticket-1/check-in')
@@ -144,8 +146,8 @@ describe('demo booking flow routes', () => {
       where: { id: 'trip-1', tripStaffs: { some: { staffId: 'staff-1' } } },
       select: { id: true },
     });
-    expect(prisma.ticketDetail.update).toHaveBeenCalledWith({
-      where: { id: 'ticket-1' },
+    expect(prisma.ticketDetail.updateMany).toHaveBeenCalledWith({
+      where: { id: 'ticket-1', status: 'PAID' },
       data: { checkedInAt: expect.any(Date), status: 'CHECKED_IN' },
     });
   });

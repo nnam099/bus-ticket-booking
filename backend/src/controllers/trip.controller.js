@@ -140,20 +140,23 @@ const createTrip = async (req, res, next) => {
     if (!vehicle) return res.status(403).json({ success: false, message: 'Xe không thuộc nhà xe của bạn.' });
     const route = await prisma.route.findFirst({ where: { id: routeId, operatorId, isActive: true } });
     if (!route) return res.status(403).json({ success: false, message: 'Tuyến không thuộc nhà xe của bạn.' });
-    const overlappingTrip = await prisma.trip.findFirst({
-      where: {
-        vehicleId,
-        status: { not: 'CANCELLED' },
-        departureTime: { lt: new Date(arrival.getTime() + TURNAROUND_MINUTES * 60 * 1000) },
-        estimatedArrival: { gt: new Date(departure.getTime() - TURNAROUND_MINUTES * 60 * 1000) },
-      },
-      select: { id: true },
-    });
-    if (overlappingTrip) {
-      return res.status(409).json({ success: false, message: `Xe đã có chuyến khác trong khung giờ này hoặc chưa đủ ${TURNAROUND_MINUTES} phút quay đầu.` });
-    }
-
     const trip = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${vehicleId}))`;
+      const lockedOverlap = await tx.trip.findFirst({
+        where: {
+          vehicleId,
+          status: { not: 'CANCELLED' },
+          departureTime: { lt: new Date(arrival.getTime() + TURNAROUND_MINUTES * 60 * 1000) },
+          estimatedArrival: { gt: new Date(departure.getTime() - TURNAROUND_MINUTES * 60 * 1000) },
+        },
+        select: { id: true },
+      });
+      if (lockedOverlap) {
+        const error = new Error(`Xe da co chuyen khac trong khung gio nay hoac chua du ${TURNAROUND_MINUTES} phut quay dau.`);
+        error.statusCode = 409;
+        throw error;
+      }
+
       const newTrip = await tx.trip.create({
         data: { routeId, vehicleId, departureTime: departure, estimatedArrival: arrival, basePrice: parsedPrice },
       });
@@ -201,10 +204,29 @@ const updateTripStatus = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Không thể chuyển trạng thái chuyến xe theo thứ tự này.' });
     }
 
-    const trip = await prisma.trip.update({
-      where: { id: req.params.id },
-      data: { status, cancelReason: cancelReason || null },
-      include: { route: true },
+    const trip = await prisma.$transaction(async (tx) => {
+      const lockedRows = await tx.$queryRaw`SELECT id FROM "trips" WHERE id = ${req.params.id} FOR UPDATE`;
+      if (!lockedRows.length) {
+        const error = new Error('Khong tim thay chuyen xe.');
+        error.statusCode = 404;
+        throw error;
+      }
+
+      const currentTrip = await tx.trip.findUnique({
+        where: { id: req.params.id },
+        include: { route: true },
+      });
+      if (currentTrip.status && !allowedTransitions[currentTrip.status]?.includes(status)) {
+        const error = new Error('Khong the chuyen trang thai chuyen xe theo thu tu nay.');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      return tx.trip.update({
+        where: { id: req.params.id },
+        data: { status, cancelReason: cancelReason || null },
+        include: { route: true },
+      });
     });
 
     // If operator cancels trip, auto-refund all paid tickets (QD_OP_03)
@@ -213,10 +235,15 @@ const updateTripStatus = async (req, res, next) => {
         where: { tripSeat: { tripId: trip.id }, status: 'PAID' },
       });
       for (const ticket of paidTickets) {
-        await prisma.ticketDetail.update({ where: { id: ticket.id }, data: { status: 'REFUNDED', cancelledAt: new Date() } });
-        await prisma.payment.create({
-          data: { orderId: ticket.orderId, amount: -Number(ticket.price), method: 'REFUND', status: 'REFUNDED', refundedAt: new Date(), refundAmount: ticket.price },
+        const claimedTicket = await prisma.ticketDetail.updateMany({
+          where: { id: ticket.id, status: 'PAID' },
+          data: { status: 'REFUNDED', cancelledAt: new Date() },
         });
+        if (claimedTicket.count === 1) {
+          await prisma.payment.create({
+            data: { orderId: ticket.orderId, amount: -Number(ticket.price), method: 'REFUND', status: 'REFUNDED', refundedAt: new Date(), refundAmount: ticket.price },
+          });
+        }
       }
     }
 
