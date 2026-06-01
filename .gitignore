@@ -16,6 +16,7 @@ build/
 logs/
 *.log
 npm-debug.log*
+vite-dev.*.log
 
 # OS
 .DS_Store
