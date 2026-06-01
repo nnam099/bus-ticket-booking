@@ -1,7 +1,7 @@
 // admin.routes.js
 const express = require('express');
 const router = express.Router();
-const { authenticate, authorize } = require('../middlewares/auth.middleware');
+const { authenticate, authorize, invalidateUserCache } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
 const { decryptOrderTickets, decryptSensitiveValue, decryptTickets } = require('../utils/privacy');
 
@@ -153,6 +153,10 @@ router.patch('/users/:id/toggle-active', async (req, res, next) => {
 
       return result;
     });
+
+    // Xóa auth cache ngay lập tức để lock/unlock có hiệu lực tức thì
+    await invalidateUserCache(req.params.id);
+
     res.json({ success: true, data: { id: updated.id, isActive: updated.isActive } });
   } catch (err) { next(err); }
 });
