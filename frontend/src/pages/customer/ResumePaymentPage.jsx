@@ -23,6 +23,7 @@ function CountdownTimer({ expiresAt }) {
       if (diff <= 0) {
         setExpired(true);
         setRemaining('00:00');
+        setTimeout(() => window.location.reload(), 2000);
         return;
       }
       const mins = Math.floor(diff / 60000);

@@ -2,10 +2,12 @@ const express = require('express');
 const { body } = require('express-validator');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
+const { authLimiter, otpLimiter } = require('../middlewares/rateLimiter');
 
 // POST /api/auth/register
 router.post(
   '/register',
+  authLimiter,
   [
     body('fullName').trim().notEmpty().withMessage('Họ tên không được để trống.'),
     body('email').trim().optional({ checkFalsy: true }).isEmail().withMessage('Email không hợp lệ.'),
@@ -22,6 +24,7 @@ router.post(
 // POST /api/auth/login
 router.post(
   '/login',
+  authLimiter,
   [
     body('identifier').trim().optional({ checkFalsy: true }).isString(),
     body('email').trim().optional({ checkFalsy: true }).isString(),
@@ -39,10 +42,10 @@ router.post(
 router.post('/logout', authController.logout);
 
 // POST /api/auth/send-otp
-router.post('/send-otp', authController.sendOtp);
+router.post('/send-otp', otpLimiter, authController.sendOtp);
 
 // POST /api/auth/verify-otp
-router.post('/verify-otp', authController.verifyOtp);
+router.post('/verify-otp', authLimiter, authController.verifyOtp);
 
 // POST /api/auth/forgot-password
 router.post('/forgot-password', authController.forgotPassword);

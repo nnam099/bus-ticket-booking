@@ -54,7 +54,7 @@ export default function SeatMap({ tripSeats, tripId }) {
         onClick={() => handleClick(seat)}
         className={`${getSeatClass(seat)} bus-seat`}
         title={`Ghế ${seat.seatLayout.seatCode}`}
-        disabled={seat.status === 'BOOKED' || seat.status === 'UNAVAILABLE' || seat.status === 'PROCESSING'}
+        disabled={seat.status === 'BOOKED' || seat.status === 'UNAVAILABLE' || (seat.status === 'PROCESSING' && !selectedSeats.some(s => s.id === seat.id))}
       >
         {seat.seatLayout.seatCode}
       </button>

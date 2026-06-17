@@ -135,6 +135,22 @@ const releaseExpiredSeatLocks = async () => {
   if (!expiredSeats.length) return 0;
 
   const seatIds = expiredSeats.map((seat) => seat.id);
+  const pendingTickets = await prisma.ticketDetail.findMany({
+    where: { tripSeatId: { in: seatIds }, status: 'PENDING' },
+    select: { id: true, orderId: true }
+  });
+  if (pendingTickets.length > 0) {
+    const ticketIds = pendingTickets.map(t => t.id);
+    const orderIds = [...new Set(pendingTickets.map(t => t.orderId))];
+    await prisma.ticketDetail.updateMany({
+      where: { id: { in: ticketIds } },
+      data: { status: 'CANCELLED', cancelledAt: new Date(), cancelReason: 'Hết hạn giữ chỗ' }
+    });
+    await prisma.order.updateMany({
+      where: { id: { in: orderIds }, status: 'PENDING' },
+      data: { status: 'CANCELLED' }
+    });
+  }
   await prisma.tripSeat.updateMany({
     where: { id: { in: seatIds }, status: 'PROCESSING' },
     data: { status: 'AVAILABLE', lockedAt: null, lockedBy: null, lockExpiresAt: null },
@@ -158,6 +174,11 @@ const releaseExpiredSeatLocks = async () => {
  * Tạo đơn hàng và vé sau khi thanh toán thành công
  */
 const confirmBooking = async ({ customerId, tripId, seatIds, passengerInfo, paymentMethod }) => {
+  const idempotencyKey = `idemp:confirm:${customerId}:${tripId}:${seatIds.join(',')}`;
+  const acquired = await redisClient.set(idempotencyKey, 'LOCKED', { EX: 15, NX: true });
+  if (!acquired) {
+    throw new Error('Hệ thống đang xử lý yêu cầu đặt vé của bạn. Vui lòng không thao tác nhiều lần liên tiếp.');
+  }
   for (const seatId of seatIds) {
     const owner = await redisClient.get(`seat_lock:${tripId}:${seatId}`);
     if (owner !== customerId) {

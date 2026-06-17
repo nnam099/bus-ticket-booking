@@ -236,6 +236,7 @@ model Trip {
   tripSeats  TripSeat[]
 
   @@index([departureTime, status])
+  @@index([routeId, departureTime, status]) // Search optimization
   @@map("trips")
 }
 
@@ -274,6 +275,7 @@ model TripSeat {
 
   @@unique([tripId, seatLayoutId])
   @@index([tripId, status])
+  @@index([status, lockExpiresAt]) // Cron job optimization
   @@map("trip_seats")
 }
 
@@ -342,6 +344,7 @@ model TicketDetail {
 
   @@index([orderId])
   @@index([tripSeatId])
+  @@index([status])
   @@map("ticket_details")
 }
 

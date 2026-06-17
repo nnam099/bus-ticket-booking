@@ -91,7 +91,7 @@ export default function PaymentPage() {
         <p className="text-sm text-gray-500">Ghế chỉ được giữ trong thời gian đếm ngược. Hết giờ hệ thống sẽ tự thả ghế.</p>
       </div>
 
-      {lockExpiresAt && !currentOrder && (
+      {lockExpiresAt && (
         <BookingTimer
           expiresAt={lockExpiresAt}
           tripId={selectedTrip.id}
