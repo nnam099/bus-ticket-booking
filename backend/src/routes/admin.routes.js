@@ -640,4 +640,98 @@ router.delete('/reviews/:id', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+
+// GET /api/admin/refunds/pending - Danh sách giao dịch cần hoàn tiền (thanh toán trễ/đã bị hủy)
+router.get('/refunds/pending', async (req, res, next) => {
+  try {
+    const { page, limit, skip } = parsePagination(req.query);
+    const where = {
+      status: 'SUCCESS',
+      order: { status: 'CANCELLED' }
+    };
+    
+    const [payments, total] = await Promise.all([
+      prisma.payment.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          order: {
+            select: { id: true, publicCode: true, status: true, customer: { select: { fullName: true, user: { select: { phone: true, email: true } } } } }
+          }
+        }
+      }),
+      prisma.payment.count({ where }),
+    ]);
+    
+    // Filter out payments that already have a REFUND record
+    const orderIds = payments.map(p => p.orderId);
+    
+    const existingRefunds = await prisma.payment.findMany({
+      where: { orderId: { in: orderIds }, method: 'REFUND', status: 'REFUNDED' }
+    });
+    
+    const refundedOrderIds = new Set(existingRefunds.map(r => r.orderId));
+    const pendingRefunds = payments.filter(p => !refundedOrderIds.has(p.orderId));
+    
+    res.json({ success: true, data: pendingRefunds, meta: { page, limit, total: pendingRefunds.length } });
+  } catch (err) { next(err); }
+});
+
+// PATCH /api/admin/refunds/:id/process - Xử lý hoàn tiền
+router.patch('/refunds/:id/process', async (req, res, next) => {
+  try {
+    const payment = await prisma.payment.findFirst({
+      where: { 
+        id: req.params.id,
+        status: 'SUCCESS',
+        order: { status: 'CANCELLED' }
+      },
+      include: { order: { include: { customer: { include: { user: true } } } } }
+    });
+    
+    if (!payment) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy giao dịch cần hoàn tiền hợp lệ.' });
+    }
+    
+    const existingRefund = await prisma.payment.findFirst({
+      where: { orderId: payment.orderId, method: 'REFUND', status: 'REFUNDED' }
+    });
+    
+    if (existingRefund) {
+      return res.status(400).json({ success: false, message: 'Giao dịch này đã được hoàn tiền trước đó.' });
+    }
+    
+    const result = await prisma.$transaction(async (tx) => {
+      const refundRecord = await tx.payment.create({
+        data: {
+          orderId: payment.orderId,
+          amount: -payment.amount,
+          method: 'REFUND',
+          status: 'REFUNDED',
+          refundedAt: new Date(),
+          refundAmount: payment.amount,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: req.user.id,
+          action: 'PROCESS_REFUND',
+          resource: 'Payment',
+          resourceId: refundRecord.id,
+          details: { originalPaymentId: payment.id, amount: payment.amount },
+          ipAddress: req.ip,
+          userAgent: req.get('user-agent'),
+        },
+      });
+      
+      return refundRecord;
+    });
+    
+    res.json({ success: true, message: 'Đã hoàn tiền thành công.', data: result });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;

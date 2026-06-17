@@ -182,8 +182,12 @@ const applyPaymentResult = async ({ paymentId, status, gatewayTxnId }) => {
       expiredBooking = true;
       await tx.payment.update({
         where: { id: paymentId },
-        data: { status: 'FAILED', gatewayTxnId, paidAt: null },
+        data: { status: isSuccess ? 'SUCCESS' : 'FAILED', gatewayTxnId, paidAt: isSuccess ? new Date() : null },
       });
+      if (isSuccess) {
+        // Log manual refund needed for expired but successful payment
+        console.error('PAYMENT SUCCESSFUL BUT BOOKING EXPIRED: Needs manual refund for order ' + payment.orderId);
+      }
       await tx.order.update({ where: { id: payment.orderId }, data: { status: 'CANCELLED' } });
       await tx.ticketDetail.deleteMany({ where: { id: { in: ticketIds }, status: 'PENDING' } });
       await tx.tripSeat.updateMany({
