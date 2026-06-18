@@ -63,7 +63,8 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('combined', { stream: { write: (msg) => logger.info(msg.trim()) } }));
 }
 
-// Health check
+// Root and Health check
+app.get('/', (req, res) => res.json({ success: true, message: 'Bus Ticket API is running' }));
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

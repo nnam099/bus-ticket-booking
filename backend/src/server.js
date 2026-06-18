@@ -32,7 +32,7 @@ const start = async () => {
     }
   }, 60 * 1000);
 
-  httpServer.listen(PORT, () => {
+  httpServer.listen(PORT, '0.0.0.0', () => {
     logger.info(`Bus Ticket API running on port ${PORT}`);
     logger.info(`API Docs: http://localhost:${PORT}/api/docs`);
     logger.info(`Environment: ${process.env.NODE_ENV}`);
