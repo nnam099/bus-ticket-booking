@@ -83,8 +83,8 @@ async function main() {
     upsertRole('STAFF', 'Nhan vien / Tai xe'),
   ]);
 
-  const adminPassword = await bcrypt.hash('Admin@123', 10);
-  const demoPassword = await bcrypt.hash('Demo@123', 10);
+  const adminPassword = await bcrypt.hash(process.env.SEED_ADMIN_PWD || 'Admin@123', 10);
+  const demoPassword = await bcrypt.hash(process.env.SEED_DEMO_PWD || 'Demo@123', 10);
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@busticket.vn' },
