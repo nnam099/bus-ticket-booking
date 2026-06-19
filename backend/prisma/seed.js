@@ -1293,9 +1293,16 @@ async function main() {
   const futureDays = 60;
 
   for (const corridor of corridorDefinitions) {
+    const layouts = await getSeatLayouts(corridor.vehicleType.id);
+
+    const allTripData = [];
+    const allSeatData = [];
+    const staffData = [];
+
     for (let dayOffset = -pastDays; dayOffset < futureDays; dayOffset += 1) {
       const serviceDate = new Date(today);
       serviceDate.setDate(today.getDate() + dayOffset);
+      const dateId = formatDateId(serviceDate);
 
       const outwardTimes = ['06:00', '10:00', '14:00', '18:00'];
       for (const time of outwardTimes) {
@@ -1306,27 +1313,30 @@ async function main() {
         const estimatedArrival = addMinutes(departureTime, corridor.durationMinutes);
         const status = departureTime < new Date() ? 'COMPLETED' : 'SCHEDULED';
 
-        const outwardTripId = `trip-${corridor.key}-outward-${formatDateId(serviceDate)}-${time.replace(':', '')}`;
-        const outwardTrip = await prisma.trip.create({
-          data: {
-            id: outwardTripId,
-            routeId: corridor.outwardId,
-            vehicleId: corridor.vehicle.id,
-            departureTime,
-            estimatedArrival,
-            basePrice: corridor.basePrice,
-            status,
-          },
+        const outwardTripId = `trip-${corridor.key}-outward-${dateId}-${time.replace(':', '')}`;
+        allTripData.push({
+          id: outwardTripId,
+          routeId: corridor.outwardId,
+          vehicleId: corridor.vehicle.id,
+          departureTime,
+          estimatedArrival,
+          basePrice: corridor.basePrice,
+          status,
         });
-        const layouts = await getSeatLayouts(corridor.vehicleType.id);
-        await prisma.tripSeat.createMany({
-          data: layouts.map((l) => ({ tripId: outwardTrip.id, seatLayoutId: l.id, status: 'AVAILABLE' })),
-          skipDuplicates: true,
+        
+        for (const layout of layouts) {
+          allSeatData.push({
+            tripId: outwardTripId,
+            seatLayoutId: layout.id,
+            status: 'AVAILABLE',
+          });
+        }
+
+        staffData.push({
+          tripId: outwardTripId,
+          staffId: corridor.driver.id,
+          role: 'DRIVER'
         });
-        await prisma.tripStaff.create({
-          data: { tripId: outwardTrip.id, staffId: corridor.driver.id, role: 'DRIVER' },
-        });
-        tripCount += 1;
       }
 
       const returnTimes = ['08:00', '12:00', '16:00', '20:00'];
@@ -1338,29 +1348,61 @@ async function main() {
         const estimatedArrival = addMinutes(departureTime, corridor.durationMinutes);
         const status = departureTime < new Date() ? 'COMPLETED' : 'SCHEDULED';
 
-        const returnTripId = `trip-${corridor.key}-return-${formatDateId(serviceDate)}-${time.replace(':', '')}`;
-        const returnTrip = await prisma.trip.create({
-          data: {
-            id: returnTripId,
-            routeId: corridor.returnId,
-            vehicleId: corridor.vehicle.id,
-            departureTime,
-            estimatedArrival,
-            basePrice: corridor.basePrice,
-            status,
-          },
+        const returnTripId = `trip-${corridor.key}-return-${dateId}-${time.replace(':', '')}`;
+        allTripData.push({
+          id: returnTripId,
+          routeId: corridor.returnId,
+          vehicleId: corridor.vehicle.id,
+          departureTime,
+          estimatedArrival,
+          basePrice: corridor.basePrice,
+          status,
         });
-        const retLayouts = await getSeatLayouts(corridor.vehicleType.id);
-        await prisma.tripSeat.createMany({
-          data: retLayouts.map((l) => ({ tripId: returnTrip.id, seatLayoutId: l.id, status: 'AVAILABLE' })),
-          skipDuplicates: true,
+
+        for (const layout of layouts) {
+          allSeatData.push({
+            tripId: returnTripId,
+            seatLayoutId: layout.id,
+            status: 'AVAILABLE',
+          });
+        }
+
+        staffData.push({
+          tripId: returnTripId,
+          staffId: corridor.driver.id,
+          role: 'DRIVER'
         });
-        await prisma.tripStaff.create({
-          data: { tripId: returnTrip.id, staffId: corridor.driver.id, role: 'DRIVER' },
-        });
-        tripCount += 1;
       }
     }
+
+    const BATCH_SIZE = 500;
+    
+    // Batch insert Trips
+    for (let i = 0; i < allTripData.length; i += BATCH_SIZE) {
+      await prisma.trip.createMany({
+        data: allTripData.slice(i, i + BATCH_SIZE),
+        skipDuplicates: true,
+      });
+    }
+
+    // Batch insert TripSeats
+    for (let i = 0; i < allSeatData.length; i += BATCH_SIZE) {
+      await prisma.tripSeat.createMany({
+        data: allSeatData.slice(i, i + BATCH_SIZE),
+        skipDuplicates: true,
+      });
+    }
+
+    // Batch insert TripStaff
+    for (let i = 0; i < staffData.length; i += BATCH_SIZE) {
+      await prisma.tripStaff.createMany({
+        data: staffData.slice(i, i + BATCH_SIZE),
+        skipDuplicates: true,
+      });
+    }
+    
+    tripCount += allTripData.length;
+    console.log(`  ✓ ${corridor.key}: ${allTripData.length} trips`);
   }
 
   const createDemoTicket = async ({
