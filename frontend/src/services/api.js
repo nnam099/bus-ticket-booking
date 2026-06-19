@@ -3,13 +3,25 @@ import { store } from '../store';
 import { logout } from '../store/slices/authSlice';
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const HEALTH_URL = (import.meta.env.VITE_API_URL || '/api').replace('/api', '') || '';
 
+// Tăng timeout lên 30s để chờ Render.com wake up từ trạng thái ngủ đông
 const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
-  timeout: 15000,
+  timeout: 30000,
   headers: { 'Content-Type': 'application/json' },
 });
+
+// Đánh thức server nếu đang ngủ (Render Free tier)
+export const wakeUpServer = async () => {
+  try {
+    await axios.get(`${HEALTH_URL}/health`, { timeout: 30000 });
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 // Request interceptor - attach JWT
 api.interceptors.request.use((config) => {
@@ -18,15 +30,31 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor - handle 401
+// Hàm retry khi server đang khởi động (network error hoặc 503)
+const retryRequest = async (error) => {
+  const config = error.config;
+  // Chỉ retry 1 lần, chỉ với lỗi network hoặc 503
+  if (config._retried) return Promise.reject(error);
+  const isNetworkError = !error.response;
+  const is503 = error.response?.status === 503;
+  if (isNetworkError || is503) {
+    config._retried = true;
+    // Đợi 3 giây rồi thử lại (server đang wake up)
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    return api(config);
+  }
+  return Promise.reject(error);
+};
+
+// Response interceptor - handle 401 & retry on wake-up
 api.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
     if (err.response?.status === 401) {
       store.dispatch(logout());
       window.location.href = '/login';
     }
-    return Promise.reject(err);
+    return retryRequest(err);
   }
 );
 
