@@ -210,10 +210,13 @@ const logout = (req, res) => {
 };
 
 function cookieOptions() {
+  const isProduction = process.env.NODE_ENV === 'production';
   return {
     httpOnly: true,
-    sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
+    // 'none' is required for cross-origin cookies (Vercel frontend <-> Render backend)
+    // 'strict' would silently block all cookies in cross-site requests
+    sameSite: isProduction ? 'none' : 'strict',
+    secure: isProduction, // 'none' requires secure:true
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 }
