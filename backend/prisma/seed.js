@@ -57,20 +57,16 @@ function sleeper40Seats() {
   return seats;
 }
 
-async function ensureTripSeats(tripId, vehicleTypeId) {
-  const layouts = await prisma.seatLayout.findMany({
-    where: { vehicleTypeId },
-    select: { id: true },
-  });
-
-  await prisma.tripSeat.createMany({
-    data: layouts.map((layout) => ({
-      tripId,
-      seatLayoutId: layout.id,
-      status: 'AVAILABLE',
-    })),
-    skipDuplicates: true,
-  });
+// Cache layouts để tránh query lặp lại
+const seatLayoutCache = {};
+async function getSeatLayouts(vehicleTypeId) {
+  if (!seatLayoutCache[vehicleTypeId]) {
+    seatLayoutCache[vehicleTypeId] = await prisma.seatLayout.findMany({
+      where: { vehicleTypeId },
+      select: { id: true },
+    });
+  }
+  return seatLayoutCache[vehicleTypeId];
 }
 
 async function main() {
@@ -992,6 +988,9 @@ async function main() {
       outwardId: 'route-hanoi-quangninh',
       returnId: 'route-quangninh-hanoi',
       outward: { originCity: 'HÃ  Ná»™i', destinationCity: 'Quáº£ng Ninh', originAddress: 'Báº¿n xe Gia LÃ¢m', destinationAddress: 'Báº¿n xe BÃ£i ChÃ¡y' },
+      distanceKm: 160,
+      durationMinutes: 210,
+      basePrice: 180000,
       vehicle: vehicles.hanoiQuangNinh,
       vehicleType: limousine22,
       driver: drivers.hanoiQuangNinh,
@@ -1256,8 +1255,8 @@ async function main() {
   today.setHours(0, 0, 0, 0);
 
   let tripCount = 0;
-  const pastDays = 15;
-  const futureDays = 200;
+  const pastDays = 7;
+  const futureDays = 60;
 
   for (const corridor of corridorDefinitions) {
     for (let dayOffset = -pastDays; dayOffset < futureDays; dayOffset += 1) {
