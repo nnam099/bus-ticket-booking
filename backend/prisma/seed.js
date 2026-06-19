@@ -1210,19 +1210,53 @@ async function main() {
   ]).map((route) => [route.id, route])).values());
   const routeIds = routeDefinitions.map((route) => route.id);
 
-  await prisma.review.deleteMany({
-    where: { ticketDetail: { tripSeat: { trip: { routeId: { in: routeIds } } } } },
-  });
-  await prisma.payment.deleteMany({
-    where: { order: { ticketDetails: { some: { tripSeat: { trip: { routeId: { in: routeIds } } } } } } },
-  });
-  await prisma.ticketDetail.deleteMany({
-    where: { tripSeat: { trip: { routeId: { in: routeIds } } } },
-  });
-  await prisma.order.deleteMany({ where: { ticketDetails: { none: {} } } });
-  await prisma.tripStaff.deleteMany({ where: { trip: { routeId: { in: routeIds } } } });
-  await prisma.tripSeat.deleteMany({ where: { trip: { routeId: { in: routeIds } } } });
-  await prisma.trip.deleteMany({ where: { routeId: { in: routeIds } } });
+  console.log('Cleaning up old trips data...');
+  // Dùng SQL trực tiếp để xóa nhanh hơn ORM (tránh N+1 với dataset lớn)
+  await prisma.$executeRaw`
+    DELETE FROM reviews
+    WHERE ticket_detail_id IN (
+      SELECT td.id FROM ticket_details td
+      JOIN trip_seats ts ON td.trip_seat_id = ts.id
+      JOIN trips t ON ts.trip_id = t.id
+      WHERE t.route_id = ANY(${routeIds})
+    )
+  `;
+  console.log('  ✓ reviews deleted');
+
+  await prisma.$executeRaw`
+    DELETE FROM payments
+    WHERE order_id IN (
+      SELECT DISTINCT o.id FROM orders o
+      JOIN ticket_details td ON td.order_id = o.id
+      JOIN trip_seats ts ON td.trip_seat_id = ts.id
+      JOIN trips t ON ts.trip_id = t.id
+      WHERE t.route_id = ANY(${routeIds})
+    )
+  `;
+  console.log('  ✓ payments deleted');
+
+  await prisma.$executeRaw`
+    DELETE FROM ticket_details
+    WHERE trip_seat_id IN (
+      SELECT ts.id FROM trip_seats ts
+      JOIN trips t ON ts.trip_id = t.id
+      WHERE t.route_id = ANY(${routeIds})
+    )
+  `;
+  console.log('  ✓ ticket_details deleted');
+
+  await prisma.$executeRaw`DELETE FROM orders WHERE id NOT IN (SELECT DISTINCT order_id FROM ticket_details)`;
+  console.log('  ✓ empty orders deleted');
+
+  await prisma.$executeRaw`DELETE FROM trip_staffs WHERE trip_id IN (SELECT id FROM trips WHERE route_id = ANY(${routeIds}))`;
+  console.log('  ✓ trip_staffs deleted');
+
+  await prisma.$executeRaw`DELETE FROM trip_seats WHERE trip_id IN (SELECT id FROM trips WHERE route_id = ANY(${routeIds}))`;
+  console.log('  ✓ trip_seats deleted');
+
+  await prisma.$executeRaw`DELETE FROM trips WHERE route_id = ANY(${routeIds})`;
+  console.log('  ✓ trips deleted');
+
 
   const routeById = {};
   for (const routeData of routeDefinitions) {
@@ -1284,7 +1318,11 @@ async function main() {
             status,
           },
         });
-        await ensureTripSeats(outwardTrip.id, corridor.vehicleType.id);
+        const layouts = await getSeatLayouts(corridor.vehicleType.id);
+        await prisma.tripSeat.createMany({
+          data: layouts.map((l) => ({ tripId: outwardTrip.id, seatLayoutId: l.id, status: 'AVAILABLE' })),
+          skipDuplicates: true,
+        });
         await prisma.tripStaff.create({
           data: { tripId: outwardTrip.id, staffId: corridor.driver.id, role: 'DRIVER' },
         });
@@ -1312,7 +1350,11 @@ async function main() {
             status,
           },
         });
-        await ensureTripSeats(returnTrip.id, corridor.vehicleType.id);
+        const retLayouts = await getSeatLayouts(corridor.vehicleType.id);
+        await prisma.tripSeat.createMany({
+          data: retLayouts.map((l) => ({ tripId: returnTrip.id, seatLayoutId: l.id, status: 'AVAILABLE' })),
+          skipDuplicates: true,
+        });
         await prisma.tripStaff.create({
           data: { tripId: returnTrip.id, staffId: corridor.driver.id, role: 'DRIVER' },
         });
