@@ -28,6 +28,7 @@ export default function AdminLayout() {
     { to: '/admin/users', label: 'Người dùng', icon: 'ti-users' },
     { to: '/admin/reviews', label: 'Đánh giá', icon: 'ti-star' },
     { to: '/admin/audit', label: 'Nhật ký', icon: 'ti-history' },
+    { to: '/admin/profile', label: 'Hồ sơ cá nhân', icon: 'ti-user' },
   ];
 
   return (

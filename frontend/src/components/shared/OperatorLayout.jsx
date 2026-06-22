@@ -28,6 +28,7 @@ export default function OperatorLayout() {
     { to: '/operator/routes',   label: 'Tuyến xe', icon: 'ti-map-route' },
     { to: '/operator/trips',    label: 'Chuyến xe', icon: 'ti-calendar-event' },
     { to: '/operator/reports',  label: 'Báo cáo', icon: 'ti-chart-bar' },
+    { to: '/operator/profile',  label: 'Hồ sơ cá nhân', icon: 'ti-user' },
   ];
 
   return (

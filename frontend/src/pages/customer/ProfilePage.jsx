@@ -10,7 +10,8 @@ export default function ProfilePage() {
   useEffect(() => {
     userAPI.getMe().then(r => {
       const u = r.data.data;
-      setForm({ fullName: u.customer?.fullName || '', phone: u.phone || '' });
+      const name = u.customer?.fullName || u.staff?.fullName || u.busOperator?.companyName || u.admin?.fullName || u.email || '';
+      setForm({ fullName: name, phone: u.phone || '' });
     });
   }, []);
 

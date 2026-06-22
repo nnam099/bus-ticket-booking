@@ -92,12 +92,14 @@ export default function App() {
           <Route path="/operator/trips" element={<TripsPage />} />
           <Route path="/operator/trips/:tripId/check-in" element={<TripCheckInPage />} />
           <Route path="/operator/reports" element={<OperatorReportsPage />} />
+          <Route path="/operator/profile" element={<ProfilePage />} />
         </Route>
 
         {/* Staff */}
         <Route element={<PrivateRoute roles={['STAFF']}><StaffLayout /></PrivateRoute>}>
           <Route path="/staff" element={<StaffDashboard />} />
           <Route path="/staff/trips/:tripId/check-in" element={<TripCheckInPage />} />
+          <Route path="/staff/profile" element={<ProfilePage />} />
         </Route>
 
         {/* Admin */}
@@ -107,6 +109,7 @@ export default function App() {
           <Route path="/admin/users" element={<AdminUsersPage />} />
           <Route path="/admin/audit" element={<AdminAuditPage />} />
           <Route path="/admin/reviews" element={<AdminReviewsPage />} />
+          <Route path="/admin/profile" element={<ProfilePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

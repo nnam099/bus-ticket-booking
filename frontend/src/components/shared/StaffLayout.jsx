@@ -36,6 +36,12 @@ export default function StaffLayout() {
             </div>
           </Link>
           <div className="flex items-center gap-4">
+            <Link to="/staff/profile" className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-2xl transition-all duration-300 ${
+              isDark ? 'text-slate-300 hover:text-white hover:bg-slate-800' : 'text-mocha-light hover:text-brand hover:bg-peach'
+            }`}>
+              <i className="ti ti-user text-[18px]" />
+              <span className="hidden sm:inline">Hồ sơ</span>
+            </Link>
             <ThemeToggle compact />
             <button onClick={handleLogout}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-2xl transition-all duration-300 ${
