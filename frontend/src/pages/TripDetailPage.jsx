@@ -202,7 +202,7 @@ export default function TripDetailPage() {
                 <div className="flex-1 h-px bg-gradient-to-r from-brand/40 via-brand to-brand/40" />
                 <span className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-brand shadow-md shadow-brand/40 border-2 border-white" />
               </div>
-              <div className="text-xs text-gray-400">✈ thẳng</div>
+              <div className="text-xs text-gray-400">đi thẳng</div>
             </div>
 
             {/* Arrival */}
