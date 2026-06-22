@@ -87,13 +87,6 @@ export default function HomePage() {
       
       <PartnersSection />
 
-      {/* Pulse animation defined in tailwind config ideally, but added here for the LIVE indicator if not in config */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.05); }
-        }
-      `}</style>
     </div>
   );
 }
