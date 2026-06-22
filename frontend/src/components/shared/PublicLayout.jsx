@@ -34,31 +34,25 @@ export default function PublicLayout() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#fdfbf7', fontFamily: "'Nunito', sans-serif" }}>
+    <div className="min-h-screen flex flex-col bg-[#fdfbf7] dark:bg-slate-900 transition-colors duration-300" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {/* ── Navbar ── */}
       <nav
-        className="sticky top-0 z-50 w-full"
-        style={{
-          background: 'rgba(253,251,247,0.92)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1.5px solid #f0e6d8',
-        }}
+        className="sticky top-0 z-50 w-full backdrop-blur-md border-b-[1.5px] border-[#f0e6d8] dark:border-slate-800 bg-[#fdfbf7]/90 dark:bg-slate-900/90 transition-colors duration-300"
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 no-underline">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ background: '#e85d04' }}
+              className="w-9 h-9 rounded-xl flex items-center justify-center bg-[#e85d04]"
             >
               <i className="ti ti-bus text-white" style={{ fontSize: 18 }} />
             </div>
             <span
-              className="text-xl font-bold"
-              style={{ fontFamily: "'Quicksand', sans-serif", color: '#4a3b32' }}
+              className="text-xl font-bold text-[#4a3b32] dark:text-gray-100 transition-colors duration-300"
+              style={{ fontFamily: "'Quicksand', sans-serif" }}
             >
               BusGo{' '}
-              <span style={{ color: '#e85d04' }}>Việt Nam</span>
+              <span className="text-[#e85d04]">Việt Nam</span>
             </span>
           </Link>
 
@@ -73,8 +67,7 @@ export default function PublicLayout() {
               <Link
                 key={label}
                 to={to}
-                className="px-4 py-2 rounded-full text-sm transition-colors hover:bg-peach"
-                style={{ color: '#9a7d6e', fontWeight: 600 }}
+                className="px-4 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800"
               >
                 {label}
               </Link>
@@ -88,12 +81,10 @@ export default function PublicLayout() {
               <>
                 <Link
                   to={getDashboardLink()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-colors hover:bg-peach"
-                  style={{ color: '#4a3b32', fontWeight: 700, border: '1.5px solid #f0e6d8' }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors hover:bg-orange-50 dark:hover:bg-slate-800 border-[1.5px] border-[#f0e6d8] dark:border-slate-700 text-[#4a3b32] dark:text-gray-200"
                 >
                   <span
-                    className="w-7 h-7 rounded-full flex items-center justify-center"
-                    style={{ background: '#fff0e6', color: '#e85d04', fontSize: 14 }}
+                    className="w-7 h-7 rounded-full flex items-center justify-center bg-[#fff0e6] dark:bg-slate-800 text-[#e85d04] text-[14px]"
                   >
                     <i className="ti ti-user" />
                   </span>
@@ -103,8 +94,7 @@ export default function PublicLayout() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-peach"
-                  style={{ color: '#4a3b32', border: '1.5px solid #f0e6d8', fontWeight: 700, background: 'transparent', cursor: 'pointer' }}
+                  className="px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-orange-50 dark:hover:bg-slate-800 border-[1.5px] border-[#f0e6d8] dark:border-slate-700 text-[#4a3b32] dark:text-gray-200 bg-transparent cursor-pointer"
                 >
                   Đăng xuất
                 </button>
@@ -113,15 +103,13 @@ export default function PublicLayout() {
               <>
                 <Link
                   to="/login"
-                  className="px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-peach"
-                  style={{ color: '#4a3b32', border: '1.5px solid #f0e6d8', fontWeight: 700 }}
+                  className="px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-orange-50 dark:hover:bg-slate-800 border-[1.5px] border-[#f0e6d8] dark:border-slate-700 text-[#4a3b32] dark:text-gray-200"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="px-5 py-2.5 rounded-full text-sm font-bold text-white transition-all hover:opacity-90"
-                  style={{ background: '#e85d04', fontWeight: 700, boxShadow: '0 4px 16px rgba(232,93,4,0.35)' }}
+                  className="px-5 py-2.5 rounded-full text-sm font-bold text-white transition-all hover:opacity-90 bg-[#e85d04] shadow-[0_4px_16px_rgba(232,93,4,0.35)]"
                 >
                   Đặt vé ngay
                 </Link>
@@ -137,7 +125,7 @@ export default function PublicLayout() {
       </main>
 
       {/* ── Footer ── */}
-      <footer style={{ background: '#2c1f17' }} className="pt-16 pb-8 px-6">
+      <footer className="pt-16 pb-8 px-6 bg-[#2c1f17] dark:bg-slate-950 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
             {/* Brand */}

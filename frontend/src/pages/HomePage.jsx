@@ -53,7 +53,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="font-nunito bg-sand min-h-screen flex flex-col">
+    <div className="font-nunito bg-sand dark:bg-slate-900 transition-colors duration-300 min-h-screen flex flex-col">
       {/* Toast Notification Error */}
       {error && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-red-50 text-red-600 px-6 py-3 rounded-full font-bold shadow-lg border border-red-200 flex items-center gap-2 animate-bounce">
