@@ -66,7 +66,7 @@ export default function PublicLayout() {
           <div className="hidden md:flex items-center gap-1">
             {[
               { label: 'Trang chủ', to: '/' },
-              { label: 'Tìm chuyến', to: '/search' },
+              { label: 'Tìm chuyến', to: '/#search-form' },
               { label: 'Tra cứu vé', to: '/lookup' },
               { label: 'Hỗ trợ', to: '#' },
             ].map(({ label, to }) => (

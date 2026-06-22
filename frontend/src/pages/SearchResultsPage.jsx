@@ -30,6 +30,10 @@ export default function SearchResultsPage() {
 
   useEffect(() => {
     if (hasInvalidSearch) {
+      if (!origin && !destination && !date) {
+        navigate('/', { replace: true });
+        return;
+      }
       dispatch(clearResults());
       return;
     }

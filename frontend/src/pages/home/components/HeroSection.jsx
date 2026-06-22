@@ -2,7 +2,7 @@ import CitySuggestInput from '../../../components/ui/CitySuggestInput';
 
 export default function HeroSection({ form, setForm, selectedCity, setSelectedCity, handleSearch, handleQuickRoute, today }) {
   return (
-    <section className="relative overflow-x-clip bg-sand pt-[88px] pb-24 px-6">
+    <section id="search-form" className="relative overflow-x-clip bg-sand pt-[88px] pb-24 px-6">
       {/* Blob decorations */}
       <div className="absolute rounded-full pointer-events-none -top-[180px] -left-[140px] w-[700px] h-[700px] bg-[radial-gradient(circle,rgba(255,204,153,0.55)_0%,transparent_65%)]" />
       <div className="absolute rounded-full pointer-events-none top-[60px] -right-[180px] w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(255,224,204,0.6)_0%,transparent_65%)]" />
