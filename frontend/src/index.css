@@ -70,7 +70,7 @@ html.dark body {
 
 .dark .bg-gray-50,
 .dark .bg-gray-50\/50,
-.dark .bg-slate-50,
+.dark .bg-slate-50, .dark .bg-sand,
 .dark .bg-white,
 .dark .bg-white\/50,
 .dark .bg-white\/70,
@@ -78,6 +78,10 @@ html.dark body {
 .dark .bg-white\/90,
 .dark .bg-white\/95 {
   background-color: rgba(15, 23, 42, 0.92) !important;
+}
+
+.dark .fill-sand {
+  fill: rgba(15, 23, 42, 0.92) !important;
 }
 
 .dark .bg-gradient-to-b {
@@ -91,27 +95,27 @@ html.dark body {
 
 .dark .bg-gray-100,
 .dark .bg-gray-100\/50,
-.dark .bg-orange-50,
+.dark .bg-orange-50, .dark .bg-peach,
 .dark .bg-primary-50 {
   background-color: rgba(30, 41, 59, 0.95) !important;
 }
 
 .dark .text-gray-900,
 .dark .text-gray-800,
-.dark .text-gray-700 {
+.dark .text-gray-700, .dark .text-mocha {
   color: #f8fafc !important;
 }
 
 .dark .text-gray-600,
 .dark .text-gray-500,
-.dark .text-gray-400 {
+.dark .text-gray-400, .dark .text-mocha-light, .dark .text-mocha-card {
   color: #cbd5e1 !important;
 }
 
 .dark .border-gray-50,
 .dark .border-gray-100,
 .dark .border-gray-100\/50,
-.dark .border-gray-200,
+.dark .border-gray-200, .dark .border-mocha-border, .dark .border-mocha-accent,
 .dark .border-white\/50 {
   border-color: rgba(71, 85, 105, 0.75) !important;
 }
