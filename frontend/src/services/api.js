@@ -134,6 +134,7 @@ export const ticketAPI = {
 export const reviewAPI = {
   create: (data) => api.post('/reviews', data),
   getByOperator: (operatorId) => api.get(`/reviews/operator/${operatorId}`),
+  getLatest: (limit) => api.get('/reviews/latest', { params: { limit } }),
 };
 
 // Notification API

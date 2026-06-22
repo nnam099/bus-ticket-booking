@@ -9,8 +9,6 @@ import HeroSection from './home/components/HeroSection';
 import DestinationsGallery from './home/components/DestinationsGallery';
 import ActivityFeedSection from './home/components/ActivityFeedSection';
 import TestimonialsSection from './home/components/TestimonialsSection';
-import CTABannerSection from './home/components/CTABannerSection';
-import PartnersSection from './home/components/PartnersSection';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -83,10 +81,6 @@ export default function HomePage() {
       
       <TestimonialsSection />
       
-      <CTABannerSection />
-      
-      <PartnersSection />
-
     </div>
   );
 }

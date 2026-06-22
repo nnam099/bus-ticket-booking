@@ -36,6 +36,22 @@ router.post('/', authenticate, authorize('CUSTOMER'), async (req, res, next) => 
   } catch (err) { next(err); }
 });
 
+// GET /api/reviews/latest - Lấy các đánh giá mới nhất đã được duyệt cho trang chủ
+router.get('/latest', async (req, res, next) => {
+  try {
+    const limit = parseInt(req.query.limit) || 6;
+    const reviews = await prisma.review.findMany({
+      where: { isApproved: true },
+      include: { 
+        customer: { select: { fullName: true, avatarUrl: true, address: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+    res.json({ success: true, data: reviews });
+  } catch (err) { next(err); }
+});
+
 // GET /api/reviews/operator/:operatorId
 router.get('/operator/:operatorId', async (req, res, next) => {
   try {
