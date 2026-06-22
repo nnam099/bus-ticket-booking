@@ -23,50 +23,72 @@ export default function OperatorLayout() {
   };
 
   const links = [
-    { to: '/operator',          label: '📊 Tổng quan' },
-    { to: '/operator/vehicles', label: '🚌 Xe' },
-    { to: '/operator/routes',   label: '🗺️ Tuyến xe' },
-    { to: '/operator/trips',    label: '📅 Chuyến xe' },
-    { to: '/operator/reports',  label: '📈 Báo cáo' },
+    { to: '/operator',          label: 'Tổng quan', icon: 'ti-layout-dashboard' },
+    { to: '/operator/vehicles', label: 'Xe khách', icon: 'ti-car' },
+    { to: '/operator/routes',   label: 'Tuyến xe', icon: 'ti-map-route' },
+    { to: '/operator/trips',    label: 'Chuyến xe', icon: 'ti-calendar-event' },
+    { to: '/operator/reports',  label: 'Báo cáo', icon: 'ti-chart-bar' },
   ];
 
-  const shellBg     = isDark ? 'bg-slate-900' : 'bg-gray-50';
-  const sidebarBg   = isDark ? 'bg-slate-950 border-slate-800' : 'bg-white border-gray-200';
-  const sidebarText = isDark ? 'text-slate-300' : 'text-gray-700';
-  const titleColor  = isDark ? 'text-white' : 'text-gray-900';
-  const subColor    = isDark ? 'text-slate-400' : 'text-gray-500';
-  const linkHover   = isDark ? 'hover:bg-slate-800 hover:text-white' : 'hover:bg-gray-100 hover:text-gray-900';
-  const logoutColor = isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100';
-  const mainBg      = isDark ? 'bg-slate-900' : 'bg-gray-50';
-
   return (
-    <div className={`min-h-screen w-full flex ${shellBg}`}>
-      {/* Sidebar */}
-      <aside className={`w-56 shrink-0 border-r flex flex-col ${sidebarBg} ${sidebarText}`}>
-        <div className={`px-4 py-5 border-b ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
-          <Link to="/" className={`font-bold text-lg ${titleColor}`}>🚌 BusTicket</Link>
-          <p className={`text-xs mt-0.5 ${subColor}`}>Cổng Nhà Xe</p>
+    <div className={`min-h-screen w-full flex ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-[#fdfbf7] text-mocha'}`}>
+      <aside className={`w-64 shrink-0 flex flex-col border-r transition-colors ${isDark ? 'border-slate-800 bg-slate-950 text-slate-300' : 'border-[#f0e6d8] bg-white text-mocha'}`}>
+        <div className={`border-b px-6 py-6 ${isDark ? 'border-slate-800' : 'border-[#f0e6d8]'}`}>
+          <Link to="/" className="flex items-center gap-2 no-underline">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-brand shadow-[0_4px_16px_rgba(232,93,4,0.35)]">
+              <i className="ti ti-bus text-white text-[18px]" />
+            </div>
+            <div className="flex flex-col">
+              <span className={`text-xl font-bold font-quicksand leading-tight ${isDark ? 'text-white' : 'text-[#4a3b32]'}`}>
+                BusGo <span className="text-brand">Việt Nam</span>
+              </span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-brand">Cổng Nhà Xe</span>
+            </div>
+          </Link>
         </div>
-        <nav className="flex-1 px-2 py-4 space-y-1">
-          {links.map(l => (
-            <Link key={l.to} to={l.to}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors
-                ${isActive(l.to) ? 'bg-brand text-white' : `${sidebarText} ${linkHover}`}`}>
-              {l.label}
-            </Link>
-          ))}
+
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          {links.map(l => {
+            const active = isActive(l.to);
+            return (
+              <Link
+                key={l.to}
+                to={l.to}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
+                  active
+                    ? 'bg-brand text-white shadow-[0_8px_24px_rgba(232,93,4,0.35)]'
+                    : isDark 
+                      ? 'text-slate-400 hover:bg-slate-800 hover:text-white' 
+                      : 'text-mocha-light hover:bg-peach hover:text-brand'
+                }`}
+              >
+                <i className={`ti ${l.icon} text-[20px] ${active ? 'text-white' : ''}`} />
+                {l.label}
+              </Link>
+            );
+          })}
         </nav>
-        <div className="mx-2 mb-3">
+
+        <div className="px-4 mb-4">
           <ThemeToggle />
         </div>
-        <button onClick={handleLogout}
-          className={`mx-2 mb-4 px-3 py-2 text-sm rounded-lg transition text-left ${logoutColor}`}>
-          🚪 Đăng xuất
-        </button>
+        <div className="px-4 mb-6">
+          <button
+            onClick={handleLogout}
+            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-300 ${
+              isDark ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-mocha-light hover:bg-peach hover:text-brand border-[1.5px] border-transparent hover:border-mocha-accent'
+            }`}
+          >
+            <i className="ti ti-logout text-[20px]" />
+            Đăng xuất
+          </button>
+        </div>
       </aside>
-      {/* Main */}
-      <main className={`min-w-0 flex-1 ${mainBg} p-6 overflow-auto page-enter`}>
-        <Outlet />
+
+      <main className={`min-w-0 flex-1 p-8 overflow-auto page-enter ${isDark ? 'bg-slate-900' : 'bg-[#fdfbf7]'}`}>
+        <div className="max-w-7xl mx-auto">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

@@ -39,11 +39,16 @@ export default function CustomerLayout() {
 
       <nav className="bg-white/70 backdrop-blur-xl border-b border-white/50 shadow-sm sticky top-0 z-50 transition-all duration-300">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group">
-            <span className="text-2xl drop-shadow-sm group-hover:scale-110 transition-transform duration-300">🚌</span>
-            <span className="font-black text-xl tracking-tight text-gray-800">
-              Bus<span className="text-brand">Ticket</span>
-            </span>
+          <Link to="/" className="flex items-center gap-2 no-underline group">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-brand shadow-[0_4px_16px_rgba(232,93,4,0.35)] group-hover:scale-110 transition-transform duration-300">
+              <i className="ti ti-bus text-white text-[18px]" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold font-quicksand leading-tight text-[#4a3b32]">
+                BusGo <span className="text-brand">Việt Nam</span>
+              </span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-brand">Khách Hàng</span>
+            </div>
           </Link>
           <div className="flex items-center gap-8 text-sm font-semibold">
             {links.map(l => (
