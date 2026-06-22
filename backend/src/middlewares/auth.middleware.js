@@ -81,7 +81,7 @@ const authenticate = async (req, res, next) => {
           userRoles: { include: { role: true } },
           customer: true,
           busOperator: true,
-          staff: true,
+          staff: { include: { operator: true } },
         },
       });
 

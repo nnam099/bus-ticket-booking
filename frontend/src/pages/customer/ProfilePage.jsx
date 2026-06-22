@@ -6,12 +6,14 @@ export default function ProfilePage() {
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '' });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [userExt, setUserExt] = useState(null);
 
   useEffect(() => {
     userAPI.getMe().then(r => {
       const u = r.data.data;
       const name = u.customer?.fullName || u.staff?.fullName || u.busOperator?.companyName || u.admin?.fullName || u.email || '';
       setForm({ fullName: name, phone: u.phone || '' });
+      setUserExt(u);
     });
   }, []);
 
@@ -34,6 +36,15 @@ export default function ProfilePage() {
   return (
     <div className="max-w-lg">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Hồ sơ cá nhân</h1>
+      
+      {userExt?.staff?.operator && (
+        <div className="card mb-6 border-brand bg-peach text-mocha-light">
+          <p className="font-semibold flex items-center gap-2">
+            <span>🏢</span> Nơi công tác: <strong className="text-brand">{userExt.staff.operator.companyName}</strong>
+          </p>
+        </div>
+      )}
+
       {msg && <div className="card border-green-200 bg-green-50 text-green-700 text-sm mb-4">{msg}</div>}
       <div className="card mb-6">
         <h2 className="font-semibold text-gray-700 mb-4">Thông tin cá nhân</h2>
