@@ -10,7 +10,7 @@
     @apply bg-gray-50 text-gray-800 antialiased;
     font-family: 'Inter', 'Segoe UI', sans-serif;
   }
-  html.theme-dark {
+  html.dark {
     color-scheme: dark;
   }
 }
@@ -50,119 +50,119 @@
   }
 }
 
-html.theme-dark body {
+html.dark body {
   background: #0f172a;
   color: #e5e7eb;
 }
 
-.theme-dark .hero-section {
+.dark .hero-section {
   background-image: url('/hero-bg.png') !important;
   background-color: #0f172a !important;
 }
 
-.theme-dark .hero-section .bg-black\/40 {
+.dark .hero-section .bg-black\/40 {
   background-color: rgba(0, 0, 0, 0.42) !important;
 }
 
-.theme-dark .hero-section .bg-gradient-to-t {
+.dark .hero-section .bg-gradient-to-t {
   background-image: linear-gradient(to top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.24), transparent) !important;
 }
 
-.theme-dark .bg-gray-50,
-.theme-dark .bg-gray-50\/50,
-.theme-dark .bg-slate-50,
-.theme-dark .bg-white,
-.theme-dark .bg-white\/50,
-.theme-dark .bg-white\/70,
-.theme-dark .bg-white\/80,
-.theme-dark .bg-white\/90,
-.theme-dark .bg-white\/95 {
+.dark .bg-gray-50,
+.dark .bg-gray-50\/50,
+.dark .bg-slate-50,
+.dark .bg-white,
+.dark .bg-white\/50,
+.dark .bg-white\/70,
+.dark .bg-white\/80,
+.dark .bg-white\/90,
+.dark .bg-white\/95 {
   background-color: rgba(15, 23, 42, 0.92) !important;
 }
 
-.theme-dark .bg-gradient-to-b {
+.dark .bg-gradient-to-b {
   background-image: linear-gradient(to bottom, #0f172a, #111827) !important;
 }
 
-.theme-dark .bg-gradient-to-br.from-orange-50,
-.theme-dark .bg-gradient-to-br.from-orange-50.to-amber-50 {
+.dark .bg-gradient-to-br.from-orange-50,
+.dark .bg-gradient-to-br.from-orange-50.to-amber-50 {
   background-image: linear-gradient(to bottom right, rgba(30, 41, 59, 0.98), rgba(51, 65, 85, 0.98)) !important;
 }
 
-.theme-dark .bg-gray-100,
-.theme-dark .bg-gray-100\/50,
-.theme-dark .bg-orange-50,
-.theme-dark .bg-primary-50 {
+.dark .bg-gray-100,
+.dark .bg-gray-100\/50,
+.dark .bg-orange-50,
+.dark .bg-primary-50 {
   background-color: rgba(30, 41, 59, 0.95) !important;
 }
 
-.theme-dark .text-gray-900,
-.theme-dark .text-gray-800,
-.theme-dark .text-gray-700 {
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 {
   color: #f8fafc !important;
 }
 
-.theme-dark .text-gray-600,
-.theme-dark .text-gray-500,
-.theme-dark .text-gray-400 {
+.dark .text-gray-600,
+.dark .text-gray-500,
+.dark .text-gray-400 {
   color: #cbd5e1 !important;
 }
 
-.theme-dark .border-gray-50,
-.theme-dark .border-gray-100,
-.theme-dark .border-gray-100\/50,
-.theme-dark .border-gray-200,
-.theme-dark .border-white\/50 {
+.dark .border-gray-50,
+.dark .border-gray-100,
+.dark .border-gray-100\/50,
+.dark .border-gray-200,
+.dark .border-white\/50 {
   border-color: rgba(71, 85, 105, 0.75) !important;
 }
 
-.theme-dark .card {
+.dark .card {
   background: rgba(15, 23, 42, 0.92) !important;
   border-color: rgba(71, 85, 105, 0.75) !important;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
 }
 
-.theme-dark .card::before {
+.dark .card::before {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent);
 }
 
-.theme-dark .input {
+.dark .input {
   background: rgba(15, 23, 42, 0.8) !important;
   border-color: rgba(71, 85, 105, 0.9) !important;
   color: #f8fafc !important;
 }
 
-.theme-dark .input:focus {
+.dark .input:focus {
   background: rgba(15, 23, 42, 0.98) !important;
 }
 
-.theme-dark .input::placeholder {
+.dark .input::placeholder {
   color: #94a3b8 !important;
 }
 
-.theme-dark .label {
+.dark .label {
   color: #e2e8f0 !important;
 }
 
-.theme-dark .btn-outline {
+.dark .btn-outline {
   background: rgba(15, 23, 42, 0.7) !important;
 }
 
-.theme-dark table,
-.theme-dark tbody,
-.theme-dark thead,
-.theme-dark tr,
-.theme-dark td,
-.theme-dark th {
+.dark table,
+.dark tbody,
+.dark thead,
+.dark tr,
+.dark td,
+.dark th {
   border-color: rgba(71, 85, 105, 0.75) !important;
 }
 
-.theme-dark input[type="date"] {
+.dark input[type="date"] {
   color-scheme: dark;
 }
 
-.theme-dark ::-webkit-scrollbar-track { background: #111827; }
-.theme-dark ::-webkit-scrollbar-thumb { background: #475569; }
+.dark ::-webkit-scrollbar-track { background: #111827; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
 
 /* Seat map */
 .bus-floor {
@@ -282,43 +282,43 @@ html.theme-dark body {
   @apply h-11 w-11 rounded-xl shadow-sm;
 }
 
-.theme-dark .seat-available {
+.dark .seat-available {
   background-color: #1e293b !important;
   border-color: #64748b !important;
   color: #e2e8f0 !important;
 }
-.theme-dark .seat-booked,
-.theme-dark .seat-unavailable {
+.dark .seat-booked,
+.dark .seat-unavailable {
   background-color: #334155 !important;
   border-color: #475569 !important;
   color: #94a3b8 !important;
 }
 
-.theme-dark .bus-floor-title span:first-child {
+.dark .bus-floor-title span:first-child {
   color: #f8fafc !important;
 }
 
-.theme-dark .bus-floor-title span:last-child,
-.theme-dark .bus-shell,
-.theme-dark .bus-front,
-.theme-dark .bus-seat-grid,
-.theme-dark .bus-rear {
+.dark .bus-floor-title span:last-child,
+.dark .bus-shell,
+.dark .bus-front,
+.dark .bus-seat-grid,
+.dark .bus-rear {
   background-color: rgba(15, 23, 42, 0.82) !important;
   border-color: rgba(71, 85, 105, 0.75) !important;
 }
 
-.theme-dark .bus-window-strip,
-.theme-dark .bus-windshield {
+.dark .bus-window-strip,
+.dark .bus-windshield {
   background: #1e293b !important;
   border-color: #475569 !important;
 }
 
-.theme-dark .bus-seat-grid::before {
+.dark .bus-seat-grid::before {
   background: rgba(30, 41, 59, 0.9) !important;
   border-color: rgba(71, 85, 105, 0.9) !important;
 }
 
-.theme-dark .bus-door {
+.dark .bus-door {
   background-color: rgba(154, 52, 18, 0.25) !important;
 }
 
@@ -359,55 +359,55 @@ html.theme-dark body {
 }
 
 /* Dark mode overrides */
-html.theme-dark .sidebar-nav {
+html.dark .sidebar-nav {
   background-color: #111827 !important;
   color: #d1d5db !important;
   border-right-color: #374151 !important;
 }
-html.theme-dark .sidebar-title {
+html.dark .sidebar-title {
   color: #f9fafb !important;
 }
-html.theme-dark .sidebar-sub {
+html.dark .sidebar-sub {
   color: #9ca3af !important;
 }
-html.theme-dark .border-sidebar-border {
+html.dark .border-sidebar-border {
   border-color: #374151 !important;
 }
-html.theme-dark .sidebar-link {
+html.dark .sidebar-link {
   color: #9ca3af !important;
 }
-html.theme-dark .sidebar-link:hover {
+html.dark .sidebar-link:hover {
   background-color: #1f2937 !important;
   color: #f9fafb !important;
 }
 
 /* Admin has its own shell, but follows the same global light/dark toggle. */
-html.theme-dark .admin-theme-shell {
+html.dark .admin-theme-shell {
   color-scheme: dark;
 }
 
-html.theme-dark .admin-theme-shell .admin-surface {
+html.dark .admin-theme-shell .admin-surface {
   background-color: #020617 !important;
   border-color: #1e293b !important;
 }
 
-html.theme-dark .admin-theme-shell .card {
+html.dark .admin-theme-shell .card {
   background: rgba(15, 23, 42, 0.92) !important;
   border-color: rgba(71, 85, 105, 0.75) !important;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28) !important;
 }
 
-html.theme-dark .admin-theme-shell table,
-html.theme-dark .admin-theme-shell tbody,
-html.theme-dark .admin-theme-shell thead,
-html.theme-dark .admin-theme-shell tr,
-html.theme-dark .admin-theme-shell td,
-html.theme-dark .admin-theme-shell th {
+html.dark .admin-theme-shell table,
+html.dark .admin-theme-shell tbody,
+html.dark .admin-theme-shell thead,
+html.dark .admin-theme-shell tr,
+html.dark .admin-theme-shell td,
+html.dark .admin-theme-shell th {
   border-color: rgba(71, 85, 105, 0.75) !important;
 }
 
-html.theme-dark .admin-theme-shell tr:hover,
-html.theme-dark .admin-theme-shell .hover\:bg-gray-50:hover {
+html.dark .admin-theme-shell tr:hover,
+html.dark .admin-theme-shell .hover\:bg-gray-50:hover {
   background-color: rgba(30, 41, 59, 0.72) !important;
 }
 

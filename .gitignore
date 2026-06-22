@@ -49,3 +49,4 @@ backend/prisma/migrations/dev.db
 # Misc
 .cache/
 tmp/
+.kombai/
