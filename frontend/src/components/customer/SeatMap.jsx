@@ -28,13 +28,13 @@ export default function SeatMap({ tripSeats, tripId }) {
 
   const getSeatClass = useCallback((seat) => {
     const isSelected = selectedSeats.some(s => s.id === seat.id);
-    if (isSelected) return 'seat seat-selected';
+    if (isSelected) return 'bg-gradient-to-br from-orange-400 to-brand border-transparent text-white shadow-[0_4px_12px_rgba(232,93,4,0.35)] scale-105';
     switch (seat.status) {
-      case 'AVAILABLE': return 'seat seat-available';
-      case 'PROCESSING': return 'seat seat-processing';
-      case 'BOOKED': return 'seat seat-booked';
-      case 'UNAVAILABLE': return 'seat seat-unavailable';
-      default: return 'seat seat-unavailable';
+      case 'AVAILABLE': return 'bg-white border-gray-200 text-gray-600 hover:border-brand hover:bg-orange-50 hover:text-brand hover:-translate-y-1 hover:shadow-md dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300 dark:hover:border-brand dark:hover:bg-brand/10 dark:hover:text-orange-500';
+      case 'PROCESSING': return 'bg-amber-50 border-amber-300 text-amber-600 cursor-not-allowed shadow-inner dark:bg-amber-500/10 dark:border-amber-500/40 dark:text-amber-400';
+      case 'BOOKED': return 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-70 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-600';
+      case 'UNAVAILABLE': return 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-600';
+      default: return 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50 dark:bg-slate-900 dark:border-slate-800';
     }
   }, [selectedSeats]);
 
@@ -46,13 +46,13 @@ export default function SeatMap({ tripSeats, tripId }) {
   const floors = [...new Set(seats.map(s => s.seatLayout.floor))].sort((a, b) => a - b);
 
   const renderSeat = (seat) => {
-    if (!seat) return <div className="bus-seat-placeholder" />;
+    if (!seat) return <div className="h-11 w-11" />;
 
     return (
       <button
         key={seat.id}
         onClick={() => handleClick(seat)}
-        className={`${getSeatClass(seat)} bus-seat`}
+        className={`w-11 h-11 rounded-[12px] flex items-center justify-center text-xs font-bold cursor-pointer transition-all duration-300 border-[1.5px] select-none outline-none ${getSeatClass(seat)}`}
         title={`Ghế ${seat.seatLayout.seatCode}`}
         disabled={seat.status === 'BOOKED' || seat.status === 'UNAVAILABLE' || (seat.status === 'PROCESSING' && !selectedSeats.some(s => s.id === seat.id))}
       >
@@ -62,7 +62,7 @@ export default function SeatMap({ tripSeats, tripId }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {floors.map(floor => {
         const floorSeats = seats.filter(s => s.seatLayout.floor === floor);
         const rows = [...new Set(floorSeats.map(s => s.seatLayout.row))].sort((a, b) => a - b);
@@ -70,79 +70,106 @@ export default function SeatMap({ tripSeats, tripId }) {
         const aisleAfter = Math.ceil(maxCol / 2);
         const leftCols = Array.from({ length: aisleAfter }, (_, index) => index + 1);
         const rightCols = Array.from({ length: maxCol - aisleAfter }, (_, index) => aisleAfter + index + 1);
-        const gridTemplateColumns = `1.25rem repeat(${leftCols.length}, 2.75rem) minmax(1.5rem, 2rem) repeat(${rightCols.length}, 2.75rem)`;
+        
+        // Horizontal mapping: Grid columns = Label + Seat Rows
+        const gridTemplateColumns = `1.5rem repeat(${rows.length}, 2.75rem)`;
 
         return (
-          <section key={floor} className="bus-floor">
-            <div className="bus-floor-title">
-              <span>{floors.length > 1 ? `Tầng ${floor}` : 'Sơ đồ xe'}</span>
-              <span>{floorSeats.length} ghế</span>
-            </div>
-
-            <div className="bus-shell">
-              <div className="bus-window-strip" />
-              <div className="bus-front">
-                <div className="bus-windshield" />
-                <div className="bus-driver">
-                  <span className="bus-steering" aria-hidden="true" />
-                  <span>Tài xế</span>
-                </div>
-                <div className="bus-door">Cửa lên</div>
+          <section key={floor} className="max-w-full overflow-x-auto pb-4">
+            <div className="min-w-fit mx-auto p-1">
+              <div className="mb-4 flex items-center justify-between text-sm font-bold text-gray-700 dark:text-slate-300 px-2">
+                <span className="text-gray-800 dark:text-slate-100">{floors.length > 1 ? `Tầng ${floor}` : 'Sơ đồ xe'}</span>
+                <span className="rounded-full bg-orange-50 text-brand px-3 py-1 text-xs border border-orange-100 shadow-sm dark:bg-brand/10 dark:border-brand/20">{floorSeats.length} ghế</span>
               </div>
 
-              <div className="bus-seat-grid" style={{ gridTemplateColumns }}>
-                <div />
-                {leftCols.map(col => (
-                  <div key={`left-head-${col}`} className="bus-lane-label">
-                    {floorSeats.find(seat => seat.seatLayout.col === col)?.seatLayout.seatCode?.replace(/\d+$/, '')}
-                  </div>
-                ))}
-                <div className="bus-aisle-label">Lối đi</div>
-                {rightCols.map(col => (
-                  <div key={`right-head-${col}`} className="bus-lane-label">
-                    {floorSeats.find(seat => seat.seatLayout.col === col)?.seatLayout.seatCode?.replace(/\d+$/, '')}
-                  </div>
-                ))}
+              {/* Bus Shell (Horizontal) */}
+              <div className="relative flex flex-row items-stretch rounded-[2.5rem] bg-white px-3 py-5 shadow-[0_8px_30px_rgba(74,59,50,0.08)] border border-orange-100/50 dark:bg-slate-900/95 dark:border-slate-800 dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+                
+                {/* Rear of bus (Left side) */}
+                <div className="flex flex-col items-center justify-center w-12 mr-2 rounded-l-[1.5rem] border-r border-gray-100 bg-gray-50/50 dark:bg-slate-800/50 dark:border-slate-700/50">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-slate-500" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Khoang sau</span>
+                </div>
 
-                {rows.map(row => {
-                  const rowSeats = floorSeats.filter(s => s.seatLayout.row === row);
-                  return (
-                    <div key={row} className="contents">
-                      <span className="bus-row-number">{row}</span>
-                      {leftCols.map(col => (
-                        <div key={`${row}-${col}`} className="bus-seat-cell">
-                          {renderSeat(rowSeats.find(s => s.seatLayout.col === col))}
-                        </div>
-                      ))}
-                      <div className="bus-aisle" />
-                      {rightCols.map(col => (
-                        <div key={`${row}-${col}`} className="bus-seat-cell">
-                          {renderSeat(rowSeats.find(s => s.seatLayout.col === col))}
+                {/* Seat Grid */}
+                <div className="relative grid gap-x-2.5 gap-y-2 p-1" style={{ gridTemplateColumns }}>
+                  
+                  {/* Left Cols (Top side of horizontal bus) */}
+                  {leftCols.map(col => (
+                    <div key={`col-${col}`} className="contents">
+                      <div className="flex items-center justify-center text-[10px] font-bold text-gray-400 dark:text-slate-500">
+                        {floorSeats.find(seat => seat.seatLayout.col === col)?.seatLayout.seatCode?.replace(/\d+$/, '')}
+                      </div>
+                      {rows.map(row => (
+                        <div key={`${row}-${col}`} className="flex items-center justify-center relative z-10">
+                          {renderSeat(floorSeats.find(s => s.seatLayout.row === row && s.seatLayout.col === col))}
                         </div>
                       ))}
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
 
-              <div className="bus-rear">
-                <span>Khoang sau</span>
+                  {/* Aisle */}
+                  <div className="contents">
+                    <div className="flex items-center justify-center text-[9px] font-bold uppercase tracking-widest text-gray-300 dark:text-slate-600">
+                      Lối đi
+                    </div>
+                    {rows.map(row => (
+                      <div key={`aisle-${row}`} className="flex items-center justify-center relative z-10">
+                        <span className="text-[11px] font-bold text-gray-300 dark:text-slate-600">{row}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Right Cols (Bottom side of horizontal bus) */}
+                  {rightCols.map(col => (
+                    <div key={`col-${col}`} className="contents">
+                      <div className="flex items-center justify-center text-[10px] font-bold text-gray-400 dark:text-slate-500">
+                        {floorSeats.find(seat => seat.seatLayout.col === col)?.seatLayout.seatCode?.replace(/\d+$/, '')}
+                      </div>
+                      {rows.map(row => (
+                        <div key={`${row}-${col}`} className="flex items-center justify-center relative z-10">
+                          {renderSeat(floorSeats.find(s => s.seatLayout.row === row && s.seatLayout.col === col))}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+
+                  {/* Aisle dashed line overlay */}
+                  <div className="absolute left-8 right-0 top-1/2 -translate-y-1/2 h-8 border-y-2 border-dashed border-gray-200/60 dark:border-slate-700/40 pointer-events-none rounded-full" />
+                </div>
+
+                {/* Front of bus (Right side) */}
+                <div className="relative flex flex-col items-center justify-between w-20 ml-4 rounded-r-[2rem] border-l border-gray-100 bg-gray-50/50 py-4 dark:bg-slate-800/50 dark:border-slate-700/50">
+                  <div className="w-6 h-3/4 rounded-r-3xl rounded-l-xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white shadow-inner dark:border-sky-900/20 dark:from-slate-800 dark:to-slate-900/80 absolute right-2 top-1/2 -translate-y-1/2" />
+                  
+                  <div className="flex flex-col items-center gap-2 z-10 mt-2">
+                    <div className="h-6 w-6 rounded-full border-2 border-gray-300 shadow-sm bg-white dark:bg-slate-800 dark:border-slate-600 flex items-center justify-center">
+                      <div className="h-2 w-2 rounded-full bg-gray-300 dark:bg-slate-600" />
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-500 dark:text-slate-400" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tài xế</span>
+                  </div>
+
+                  <div className="z-10 rounded-lg border border-brand/20 bg-orange-50/80 px-1.5 py-2.5 text-[10px] font-black uppercase text-brand shadow-sm backdrop-blur-sm dark:bg-brand/10 dark:border-brand/30" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                    Cửa lên
+                  </div>
+                </div>
+
               </div>
             </div>
           </section>
         );
       })}
 
-      <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100 text-xs">
+      {/* Legend */}
+      <div className="flex flex-wrap justify-center gap-4 pt-4 border-t border-gray-100 dark:border-slate-800 text-xs">
         {[
-          { cls: 'seat-available', label: 'Còn trống' },
-          { cls: 'seat-selected', label: 'Đang chọn' },
-          { cls: 'seat-processing', label: 'Đang giữ' },
-          { cls: 'seat-booked', label: 'Đã bán' },
+          { cls: 'bg-white border-gray-200 dark:bg-slate-800 dark:border-slate-600', label: 'Còn trống' },
+          { cls: 'bg-gradient-to-br from-orange-400 to-brand border-transparent', label: 'Đang chọn' },
+          { cls: 'bg-amber-50 border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/40', label: 'Đang giữ' },
+          { cls: 'bg-gray-100 border-gray-200 opacity-70 dark:bg-slate-900 dark:border-slate-800', label: 'Đã bán' },
         ].map(l => (
-          <div key={l.label} className="flex items-center gap-1.5">
-            <div className={`w-5 h-5 rounded seat ${l.cls}`} />
-            <span className="text-gray-600">{l.label}</span>
+          <div key={l.label} className="flex items-center gap-2">
+            <div className={`w-5 h-5 rounded-[6px] border-[1.5px] ${l.cls}`} />
+            <span className="text-gray-600 dark:text-slate-400 font-medium">{l.label}</span>
           </div>
         ))}
       </div>
