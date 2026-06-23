@@ -15,7 +15,7 @@ export default function DestinationsGallery({ handleQuickRoute }) {
             Khám phá Việt Nam
           </h2>
           <p className="text-mocha-light text-base font-semibold">
-            Mỗi chuyến đi là một câu chuyện mới 🌏
+            Mỗi chuyến đi là một trải nghiệm đáng nhớ
           </p>
         </div>
 

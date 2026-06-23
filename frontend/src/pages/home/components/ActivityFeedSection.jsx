@@ -10,13 +10,13 @@ export default function ActivityFeedSection() {
         {/* Why BusGo */}
         <div className="text-center mb-12">
           <span className="inline-block px-5 py-2 rounded-full text-sm font-bold mb-4 bg-peach text-brand font-quicksand">
-            💫 Tại sao chọn BusGo?
+            Tại sao chọn BusGo?
           </span>
           <h2 className="font-quicksand text-[clamp(30px,3.5vw,40px)] font-bold text-mocha mt-3 mb-2.5 leading-[1.2]">
             Đơn giản · Nhanh chóng · Tin cậy
           </h2>
           <p className="text-mocha-light text-[16px] font-semibold">
-            Chúng tôi luôn đồng hành cùng bạn trên mỗi chuyến đi 🌟
+            Chúng tôi luôn đồng hành cùng bạn trên mỗi chuyến đi
           </p>
         </div>
 
