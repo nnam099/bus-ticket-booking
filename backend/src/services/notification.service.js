@@ -3,6 +3,10 @@ const logger = require('../utils/logger');
 
 const createNotification = async ({ userId, title, message, type = 'INFO', link = null, metadata = null }) => {
   if (!userId || !title || !message) return null;
+  if (!prisma || !prisma.notification) {
+    logger.error('Prisma notification delegate is not available - cannot create notification');
+    return null;
+  }
 
   try {
     return await prisma.notification.create({
@@ -34,6 +38,10 @@ const createNotifications = async (items = []) => {
     }));
 
   if (!data.length) return { count: 0 };
+  if (!prisma || !prisma.notification) {
+    logger.error('Prisma notification delegate is not available - cannot create notifications');
+    return { count: 0 };
+  }
   try {
     return await prisma.notification.createMany({ data });
   } catch (err) {

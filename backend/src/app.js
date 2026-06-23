@@ -9,6 +9,7 @@ const rateLimit = require('express-rate-limit');
 const { errorHandler } = require('./middlewares/errorHandler');
 const { corsOrigin } = require('./config/cors');
 const logger = require('./utils/logger');
+const prisma = require('./config/prisma');
 
 // Routes
 const authRoutes = require('./routes/auth.routes');
@@ -66,7 +67,13 @@ if (process.env.NODE_ENV !== 'test') {
 // Root and Health check
 app.get('/', (req, res) => res.json({ success: true, message: 'Bus Ticket API is running' }));
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  const basic = { status: 'ok', timestamp: new Date().toISOString() };
+  if (req.query.full === 'true') {
+    const hasPrisma = !!prisma;
+    const hasNotificationDelegate = !!(prisma && prisma.notification);
+    return res.json({ ...basic, prisma: { present: hasPrisma, notificationDelegate: hasNotificationDelegate } });
+  }
+  res.json(basic);
 });
 
 // API Routes
