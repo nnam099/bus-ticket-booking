@@ -9,7 +9,7 @@ export default function DestinationsGallery({ handleQuickRoute }) {
       <div className="max-w-7xl mx-auto mt-4">
         <div className="text-center mb-12">
           <span className="inline-block px-5 py-2 rounded-full text-sm font-bold mb-4 bg-white text-brand border-[1.5px] border-mocha-accent font-quicksand">
-            ✈️ Điểm đến nổi bật
+            Điểm đến nổi bật
           </span>
           <h2 className="font-quicksand text-[clamp(32px,4vw,46px)] font-bold text-mocha m-0 mb-[10px]">
             Khám phá Việt Nam

@@ -52,7 +52,6 @@ export const ACTIVITY_FEED = [
 export const WHY_CARDS = [
   { emoji: '🚌', title: 'Chọn ghế yêu thích', desc: 'Tự chọn vị trí ghế ngồi thoải mái theo sở thích', bg: 'bg-peach' },
   { emoji: '💳', title: 'Thanh toán siêu tốc', desc: 'Đa dạng hình thức, an toàn và bảo mật tuyệt đối', bg: 'bg-green-50' },
-  { emoji: '📍', title: 'Theo dõi xe thời gian thực', desc: 'Biết chính xác xe đang ở đâu, không cần đợi chờ', bg: 'bg-peach' },
   { emoji: '🎫', title: 'Hoàn vé không rắc rối', desc: 'Đổi hoặc hoàn vé trong 24h, không câu hỏi thêm', bg: 'bg-green-50' },
 ];
 
