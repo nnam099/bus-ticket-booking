@@ -96,18 +96,7 @@ export default function HeroSection({ form, setForm, selectedCity, setSelectedCi
               </div>
             </div>
 
-            {/* Passenger */}
-            <div className="relative flex-1 px-5 py-4">
-              <div className="text-xs font-bold uppercase mb-1.5 text-brand tracking-[0.8px]">
-                Hành khách
-              </div>
-              <div className="flex items-center gap-2">
-                <i className="ti ti-users text-mocha-card text-[18px]" />
-                <span className="text-base font-semibold text-mocha">
-                  1 người
-                </span>
-              </div>
-            </div>
+            {/* Passenger selector removed */}
 
             {/* Search button */}
             <div className="px-3 py-3 shrink-0">
