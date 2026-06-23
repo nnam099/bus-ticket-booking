@@ -139,32 +139,7 @@ export default function HeroSection({ form, setForm, selectedCity, setSelectedCi
           ))}
         </div>
 
-        {/* Mini stats */}
-        <div className="flex items-center justify-center gap-8 mt-10 flex-wrap">
-          {[
-            { icon: 'ti-bus', label: 'Tuyến đường', value: '200+', bg: 'bg-peach', color: 'text-brand' },
-            { icon: 'ti-users', label: 'Hành khách', value: '2M+', bg: 'bg-green-50', color: 'text-forest' },
-            { icon: 'ti-star-filled', label: 'Đánh giá', value: '4.9★', bg: 'bg-peach', color: 'text-brand' },
-            { icon: 'ti-shield-check', label: 'Bảo mật', value: '100%', bg: 'bg-green-50', color: 'text-forest' },
-          ].map(({ icon, label, value, bg, color }, idx, arr) => (
-            <div key={label} className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${bg}`}>
-                <i className={`ti ${icon} ${color} text-[18px]`} />
-              </div>
-              <div className="text-left">
-                <div className="text-lg font-bold text-mocha font-quicksand">
-                  {value}
-                </div>
-                <div className="text-xs text-mocha-light">
-                  {label}
-                </div>
-              </div>
-              {idx < arr.length - 1 && (
-                <div className="w-px h-10 ml-5 bg-mocha-border" />
-              )}
-            </div>
-          ))}
-        </div>
+        {/* Mini stats removed per customer UI request */}
       </div>
     </section>
   );
