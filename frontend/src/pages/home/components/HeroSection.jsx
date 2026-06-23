@@ -18,10 +18,10 @@ export default function HeroSection({ form, setForm, selectedCity, setSelectedCi
         <h1 className="mb-4 font-quicksand text-[clamp(44px,5vw,68px)] font-bold text-mocha leading-[1.1]">
           Đặt vé xe khách
           <br />
-          <span className="text-brand">nhanh &amp; dễ dàng 🚌</span>
+          <span className="text-brand">nhanh &amp; dễ dàng </span>
         </h1>
         <p className="mb-12 text-mocha-light text-[19px] font-semibold">
-          Hơn 200+ tuyến đường · Giá tốt nhất · Đặt ngay hôm nay 🎉
+          Hơn 200+ tuyến đường · Giá tốt nhất · Đặt ngay hôm nay
         </p>
 
         {/* Search widget */}
@@ -30,7 +30,7 @@ export default function HeroSection({ form, setForm, selectedCity, setSelectedCi
           className="mx-auto rounded-3xl bg-white p-4 shadow-[0_24px_80px_rgba(232,93,4,0.13),0_4px_24px_rgba(74,59,50,0.07)] max-w-[960px]"
         >
           <div className="text-left px-4 pb-3 font-bold font-quicksand text-xl text-mocha">
-            Đi đâu hôm nay? 🌟
+            Đi đâu hôm nay?
           </div>
           <div className="flex items-center rounded-2xl flex-wrap md:flex-nowrap bg-sand">
             {/* Origin */}
