@@ -1289,8 +1289,8 @@ async function main() {
   today.setHours(0, 0, 0, 0);
 
   let tripCount = 0;
-  const pastDays = 7;
-  const futureDays = 60;
+  const pastDays = 14;
+  const futureDays = 120;
 
   for (const corridor of corridorDefinitions) {
     const layouts = await getSeatLayouts(corridor.vehicleType.id);
@@ -1304,7 +1304,7 @@ async function main() {
       serviceDate.setDate(today.getDate() + dayOffset);
       const dateId = formatDateId(serviceDate);
 
-      const outwardTimes = ['06:00', '10:00', '14:00', '18:00'];
+      const outwardTimes = ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
       for (const time of outwardTimes) {
         const [hour, minute] = time.split(':').map(Number);
         const departureTime = new Date(serviceDate);
@@ -1339,7 +1339,7 @@ async function main() {
         });
       }
 
-      const returnTimes = ['08:00', '12:00', '16:00', '20:00'];
+      const returnTimes = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '21:00', '23:00'];
       for (const time of returnTimes) {
         const [hour, minute] = time.split(':').map(Number);
         const departureTime = new Date(serviceDate);
@@ -1500,7 +1500,14 @@ async function main() {
       status: 'COMPLETED',
     },
   });
-  await ensureTripSeats(completedTrip.id, sleeper40.id);
+  const completedTripLayouts = await getSeatLayouts(sleeper40.id);
+  await prisma.tripSeat.createMany({
+    data: completedTripLayouts.map((layout) => ({
+      tripId: completedTrip.id,
+      seatLayoutId: layout.id,
+      status: 'AVAILABLE',
+    })),
+  });
   await prisma.tripStaff.create({
     data: { tripId: completedTrip.id, staffId: drivers.hcmNhaTrang.id, role: 'DRIVER' },
   });

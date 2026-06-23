@@ -11,7 +11,7 @@ export default function HeroSection({ form, setForm, selectedCity, setSelectedCi
       <div className="relative z-10 text-center max-w-5xl mx-auto">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-bold mb-6 bg-peach text-brand border-[1.5px] border-mocha-accent font-quicksand">
-          🇻🇳 Khám phá Việt Nam cùng BusGo
+          Trải Nghiệm Việt Nam cùng BusGo
         </div>
 
         {/* Heading */}
