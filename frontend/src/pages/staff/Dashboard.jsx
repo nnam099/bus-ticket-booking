@@ -55,7 +55,7 @@ export default function StaffDashboard() {
               </div>
             </div>
             <Link to={`/staff/trips/${trip.id}/check-in`} className="shrink-0 w-full sm:w-auto">
-              <Button fullWidth icon={<i className="ti ti-qrcode" />}>Soát vé</Button>
+              <Button fullWidth icon={<i className="ti ti-ticket" />}>Soát vé</Button>
             </Link>
           </Card>
         ))}

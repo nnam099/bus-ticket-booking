@@ -302,7 +302,7 @@ export default function TripsPage() {
                   
                   <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end mt-1">
                     <Link to={`/operator/trips/${trip.id}/check-in`}>
-                      <Button variant="outline" size="sm" icon={<i className="ti ti-qrcode" />}>Soát vé</Button>
+                      <Button variant="outline" size="sm" icon={<i className="ti ti-ticket" />}>Soát vé</Button>
                     </Link>
                     
                     {actions.map(action => {

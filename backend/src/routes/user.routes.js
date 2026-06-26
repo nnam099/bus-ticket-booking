@@ -80,6 +80,26 @@ router.get('/me/tickets', authenticate, authorize('CUSTOMER'), async (req, res, 
   } catch (err) { next(err); }
 });
 
+router.get('/me/locked-seats', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
+  try {
+    const customerId = req.user.customer?.id;
+    if (!customerId) return res.status(403).json({ success: false, message: 'Chỉ khách hàng mới có ghế đang giữ.' });
+    const lockedSeats = await prisma.tripSeat.findMany({
+      where: {
+        lockedBy: customerId,
+        status: 'PROCESSING',
+        lockExpiresAt: { gt: new Date() }
+      },
+      include: {
+        trip: { include: { route: true, vehicle: true } },
+        seatLayout: true
+      },
+      orderBy: { lockedAt: 'desc' },
+    });
+    res.json({ success: true, data: lockedSeats });
+  } catch (err) { next(err); }
+});
+
 router.get('/me/invoices', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
   try {
     const customerId = req.user.customer?.id;

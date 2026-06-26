@@ -93,6 +93,7 @@ export const userAPI = {
   changePassword: (data) => api.put('/users/me/password', data),
   getMyTickets: () => api.get('/users/me/tickets'),
   getMyInvoices: () => api.get('/users/me/invoices'),
+  getMyLockedSeats: () => api.get('/users/me/locked-seats'),
   deleteAccount: () => api.delete('/users/me'),
 };
 

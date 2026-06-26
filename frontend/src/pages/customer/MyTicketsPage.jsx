@@ -73,7 +73,7 @@ export default function MyTicketsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Vé của tôi</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Quản lý mã vé, QR, hủy vé và đánh giá chuyến đã hoàn thành.
+            Quản lý mã vé, hủy vé và đánh giá chuyến đã hoàn thành.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -181,7 +181,7 @@ export default function MyTicketsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Vé của tôi</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Quản lý mã vé, QR, hủy vé và đánh giá chuyến đã hoàn thành.
+            Quản lý mã vé, hủy vé và đánh giá chuyến đã hoàn thành.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

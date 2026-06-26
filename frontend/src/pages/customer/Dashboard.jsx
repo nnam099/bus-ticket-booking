@@ -44,7 +44,7 @@ export default function CustomerDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
           { to: '/', icon: icons.search, title: 'Tìm chuyến xe', desc: 'Khám phá hơn 500+ tuyến đường khắp cả nước' },
-          { to: '/my-tickets', icon: icons.ticket, title: 'Vé của tôi', desc: 'Xem lịch trình và mã QR vé điện tử' },
+          { to: '/my-tickets', icon: icons.ticket, title: 'Vé của tôi', desc: 'Xem lịch trình vé điện tử' },
           { to: '/my-invoices', icon: icons.invoice, title: 'Hóa đơn của tôi', desc: 'Theo dõi hóa đơn, giao dịch và danh sách vé đã mua' },
           { to: '/profile', icon: icons.profile, title: 'Hồ sơ cá nhân', desc: 'Quản lý thông tin và bảo mật tài khoản' },
         ].map(item => (

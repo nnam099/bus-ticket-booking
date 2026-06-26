@@ -75,7 +75,7 @@ function SupportModal({ onClose }) {
     { num: '2', title: 'Chọn ghế', desc: 'Xem sơ đồ ghế, chọn vị trí phù hợp với bạn.' },
     { num: '3', title: 'Nhập thông tin', desc: 'Điền tên hành khách và số điện thoại liên hệ.' },
     { num: '4', title: 'Thanh toán', desc: 'Thanh toán qua ví điện tử, thẻ ngân hàng hoặc tiền mặt.' },
-    { num: '5', title: 'Nhận vé', desc: 'Vé điện tử và mã QR được gửi về mục "Vé của tôi".' },
+    { num: '5', title: 'Nhận vé', desc: 'Vé điện tử và mã vé được gửi về mục "Vé của tôi".' },
   ];
 
   return (
@@ -308,7 +308,7 @@ export default function PublicLayout() {
                 Cách đặt vé
               </h4>
               <ol className="flex flex-col gap-2">
-                {['Tìm chuyến xe trên trang chủ', 'Chọn ghế ngồi phù hợp', 'Nhập thông tin hành khách', 'Thanh toán online hoặc tiền mặt', 'Nhận vé QR điện tử'].map((item, i) => (
+                {['Tìm chuyến xe trên trang chủ', 'Chọn ghế ngồi phù hợp', 'Nhập thông tin hành khách', 'Thanh toán online hoặc tiền mặt', 'Nhận vé điện tử'].map((item, i) => (
                   <li key={item} className="flex items-start gap-2 text-sm" style={{ color: '#c4a898' }}>
                     <span className="w-5 h-5 rounded-full bg-[#e85d04] text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
                     {item}

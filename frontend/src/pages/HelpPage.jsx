@@ -2,7 +2,7 @@ export default function HelpPage() {
   const faqs = [
     {
       q: 'Làm thế nào để đặt vé xe?',
-      a: 'Nhập điểm đi, điểm đến và ngày khởi hành trên trang chủ → Chọn chuyến phù hợp → Chọn ghế → Nhập thông tin hành khách → Thanh toán → Nhận vé QR điện tử.',
+      a: 'Nhập điểm đi, điểm đến và ngày khởi hành trên trang chủ → Chọn chuyến phù hợp → Chọn ghế → Nhập thông tin hành khách → Thanh toán → Nhận vé điện tử.',
     },
     {
       q: 'Tôi có thể đặt tối đa bao nhiêu ghế một lần?',
@@ -30,7 +30,7 @@ export default function HelpPage() {
     },
     {
       q: 'Làm thế nào để lên xe?',
-      a: 'Xuất trình mã QR trong mục "Vé của tôi" cho nhân viên check-in tại bến. Mã QR có hiệu lực khi vé ở trạng thái "Đã thanh toán".',
+      a: 'Xuất trình mã trong mục "Vé của tôi" cho nhân viên check-in tại bến. Mã có hiệu lực khi vé ở trạng thái "Đã thanh toán".',
     },
   ];
 
@@ -54,7 +54,7 @@ export default function HelpPage() {
             { title: 'Chọn ghế ngồi', desc: 'Xem sơ đồ xe, chọn vị trí ghế phù hợp với bạn.' },
             { title: 'Nhập thông tin hành khách', desc: 'Điền họ tên và số điện thoại cho từng ghế.' },
             { title: 'Thanh toán', desc: 'Chọn phương thức: ví điện tử, thẻ ngân hàng hoặc tiền mặt tại quầy.' },
-            { title: 'Nhận vé điện tử', desc: 'Vé QR hiển thị ngay trong mục "Vé của tôi" sau khi thanh toán thành công.' },
+            { title: 'Nhận vé điện tử', desc: 'Vé hiển thị ngay trong mục "Vé của tôi" sau khi thanh toán thành công.' },
           ].map(({ title, desc }, i) => (
             <li key={i} className="flex gap-3 items-start">
               <span className="w-7 h-7 rounded-full bg-[#e85d04] text-white text-sm font-black flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>

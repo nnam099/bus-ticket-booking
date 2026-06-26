@@ -68,13 +68,6 @@ function TicketResult({ ticket }) {
         ))}
       </div>
 
-      {ticket.qrCode && ['PAID', 'CHECKED_IN'].includes(ticket.status) && (
-        <div className="mt-6 border-t border-dashed border-gray-200 pt-5 text-center">
-          <p className="text-xs text-gray-500 mb-3">Mã QR lên xe</p>
-          <img src={ticket.qrCode} alt="QR Code" className="mx-auto h-36 w-36 rounded-lg" />
-        </div>
-      )}
-    </div>
   );
 }
 
@@ -305,7 +298,7 @@ function MyTicketsPanel() {
                       ) : (
                         <>
                           <Link to={`/my-tickets/${ticket.id}`} className="btn-primary px-3 py-1.5 text-xs">
-                            {canReview ? '⭐ Đánh giá' : canCancel ? '🎫 QR / Hủy' : 'Xem vé'}
+                            {canReview ? '⭐ Đánh giá' : canCancel ? '🎫 Hủy' : 'Xem vé'}
                           </Link>
                         </>
                       )}

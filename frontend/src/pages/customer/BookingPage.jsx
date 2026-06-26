@@ -26,11 +26,12 @@ export default function BookingPage() {
   useEffect(() => {
     dispatch(resetBooking());
 
-    // Tải thông tin chuyến và đồng thời kiểm tra đơn hàng PENDING
+    // Tải thông tin chuyến, kiểm tra đơn hàng PENDING và ghế đang giữ
     Promise.all([
       tripAPI.getById(tripId),
       userAPI.getMyTickets().catch(() => ({ data: { data: [] } })),
-    ]).then(([tripRes, ticketsRes]) => {
+      userAPI.getMyLockedSeats().catch(() => ({ data: { data: [] } }))
+    ]).then(([tripRes, ticketsRes, lockedRes]) => {
       const tripData = tripRes.data.data;
       setTrip(tripData);
       dispatch(setSelectedTrip(tripData));
@@ -43,9 +44,24 @@ export default function BookingPage() {
       if (pendingTicket && pendingTicket.order?.id) {
         setPendingOrder(pendingTicket.order);
       }
+
+      // Khôi phục ghế đang giữ nếu có
+      const lockedSeats = lockedRes.data.data || [];
+      const myLockedSeats = lockedSeats.filter(s => s.tripId === tripId);
+      if (myLockedSeats.length > 0) {
+        myLockedSeats.forEach(seat => {
+          dispatch({ 
+            type: 'booking/toggleSeat', 
+            payload: { id: seat.id, seatCode: seat.seatLayout.seatCode, price: tripData.basePrice } 
+          });
+        });
+        dispatch(setLockExpiry(myLockedSeats[0].lockExpiresAt));
+        dispatch(setStep(2));
+      }
+
     }).catch(() => setError('Không tìm thấy chuyến xe.'))
       .finally(() => setLoading(false));
-  }, [tripId]);
+  }, [tripId, dispatch]);
 
   useEffect(() => {
     setPassengers(selectedSeats.map((s, i) => ({ name: '', phone: '', seatId: s.id })));

@@ -44,8 +44,43 @@ export default function MyInvoicesPage() {
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    userAPI.getMyInvoices()
-      .then(res => setInvoices(res.data.data))
+    Promise.all([
+      userAPI.getMyInvoices(),
+      userAPI.getMyLockedSeats().catch(() => ({ data: { data: [] } }))
+    ])
+      .then(([invRes, lockedRes]) => {
+        const dbInvoices = invRes.data.data;
+        const lockedSeats = lockedRes.data.data || [];
+        
+        const lockedByTrip = {};
+        lockedSeats.forEach(seat => {
+          if (!lockedByTrip[seat.tripId]) lockedByTrip[seat.tripId] = [];
+          lockedByTrip[seat.tripId].push(seat);
+        });
+        
+        const pseudoInvoices = Object.values(lockedByTrip).map(seats => {
+           const trip = seats[0].trip;
+           const amount = seats.reduce((sum, s) => sum + Number(trip.basePrice || 0), 0);
+           return {
+             id: `locked-${trip.id}`,
+             isLocked: true,
+             tripId: trip.id,
+             status: 'PENDING',
+             totalAmount: amount,
+             createdAt: seats[0].lockedAt,
+             ticketDetails: seats.map(s => ({
+                id: `seat-${s.id}`,
+                tripSeat: s,
+                passengerName: 'Chưa nhập (ghế đang giữ)',
+                price: trip.basePrice,
+                status: 'PENDING'
+             })),
+             payments: []
+           };
+        });
+        
+        setInvoices([...pseudoInvoices, ...dbInvoices]);
+      })
       .catch(() => setError('Không thể tải danh sách hóa đơn. Vui lòng thử lại.'))
       .finally(() => setLoading(false));
   }, []);
@@ -221,11 +256,15 @@ export default function MyInvoicesPage() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap justify-end gap-2">
-                  {canPay && (
+                  {canPay && invoice.isLocked ? (
+                    <Link to={`/booking/${invoice.tripId}`} className="rounded-xl bg-yellow-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-yellow-600">
+                      Tiếp tục đặt vé
+                    </Link>
+                  ) : canPay ? (
                     <Link to={`/my-tickets/order/${invoice.id}/pay`} className="rounded-xl bg-yellow-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-yellow-600">
                       Tiếp tục thanh toán
                     </Link>
-                  )}
+                  ) : null}
                   <Link to="/my-tickets" className="btn-outline px-4 py-2 text-sm">
                     Xem vé của tôi
                   </Link>

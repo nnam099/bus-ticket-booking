@@ -156,13 +156,6 @@ export default function TicketDetailPage() {
             <span className={`badge ${status.className}`}>{status.label}</span>
           </div>
 
-          {ticket.qrCode && ticket.status === 'PAID' && (
-            <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-4 text-center">
-              <p className="mb-3 text-xs font-medium text-gray-500">Xuất trình mã QR này khi lên xe</p>
-              <img src={ticket.qrCode} alt="QR Code" className="mx-auto h-44 w-44 rounded-xl border border-gray-100 bg-white p-2" />
-            </div>
-          )}
-
           <div className="space-y-2">
             {ticket.status === 'PAID' && (
               <div className={`rounded-xl border px-3 py-3 text-sm ${canRefundCancel ? 'border-orange-200 bg-orange-50 text-orange-800' : 'border-red-200 bg-red-50 text-red-700'}`}>
