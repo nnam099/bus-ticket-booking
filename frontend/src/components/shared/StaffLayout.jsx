@@ -138,11 +138,7 @@ export default function StaffLayout() {
           </div>
           
           <div className="flex items-center gap-3">
-            <button className={`p-2 rounded-full transition-colors relative ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
-              <i className="ti ti-bell text-[20px]" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#0a0a0a]" />
-            </button>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white text-sm font-bold shadow-sm ml-1">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
               {user?.fullName?.charAt(0) || 'S'}
             </div>
           </div>
