@@ -11,6 +11,7 @@ import StaffLayout from './components/shared/StaffLayout';
 
 // Public pages
 const HomePage = React.lazy(() => import('./pages/HomePage'));;
+const FindTripPage = React.lazy(() => import('./pages/FindTripPage'));;
 const SearchResultsPage = React.lazy(() => import('./pages/SearchResultsPage'));;
 const TripDetailPage = React.lazy(() => import('./pages/TripDetailPage'));;
 const LookupPage = React.lazy(() => import('./pages/LookupPage'));;
@@ -68,6 +69,7 @@ export default function App() {
         {/* Public */}
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/find-trip" element={<FindTripPage />} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/trips/:id" element={<TripDetailPage />} />
           <Route path="/lookup" element={<LookupPage />} />

@@ -215,7 +215,7 @@ export default function PublicLayout() {
           {/* Nav links */}
           <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
             <Link
-              to="/#search-form"
+              to="/find-trip"
               className="px-4 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800"
             >
               Tìm chuyến
