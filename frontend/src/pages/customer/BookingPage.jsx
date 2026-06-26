@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedTrip, setLockExpiry, setStep, resetBooking } from '../../store/slices/bookingSlice';
-import { tripAPI, bookingAPI } from '../../services/api';
+import { tripAPI, bookingAPI, userAPI } from '../../services/api';
 import SeatMap from '../../components/customer/SeatMap';
 import BookingTimer from '../../components/customer/BookingTimer';
 import { format } from 'date-fns';
@@ -21,12 +21,29 @@ export default function BookingPage() {
   const [locking, setLocking] = useState(false);
   const [error, setError] = useState(null);
   const [passengers, setPassengers] = useState([]);
+  const [pendingOrder, setPendingOrder] = useState(null);
 
   useEffect(() => {
     dispatch(resetBooking());
-    tripAPI.getById(tripId)
-      .then(r => { setTrip(r.data.data); dispatch(setSelectedTrip(r.data.data)); })
-      .catch(() => setError('Không tìm thấy chuyến xe.'))
+
+    // Tải thông tin chuyến và đồng thời kiểm tra đơn hàng PENDING
+    Promise.all([
+      tripAPI.getById(tripId),
+      userAPI.getMyTickets().catch(() => ({ data: { data: [] } })),
+    ]).then(([tripRes, ticketsRes]) => {
+      const tripData = tripRes.data.data;
+      setTrip(tripData);
+      dispatch(setSelectedTrip(tripData));
+
+      // Kiểm tra xem user đã có vé PENDING cho chuyến này chưa
+      const tickets = ticketsRes.data.data || [];
+      const pendingTicket = tickets.find(
+        t => t.status === 'PENDING' && t.tripSeat?.trip?.id === tripId
+      );
+      if (pendingTicket && pendingTicket.order?.id) {
+        setPendingOrder(pendingTicket.order);
+      }
+    }).catch(() => setError('Không tìm thấy chuyến xe.'))
       .finally(() => setLoading(false));
   }, [tripId]);
 
@@ -63,6 +80,38 @@ export default function BookingPage() {
 
   if (loading) return <div className="text-center py-20 text-gray-500 text-lg">Đang tải...</div>;
   if (error && !trip) return <div className="card border-red-200 bg-red-50 text-red-700 text-center py-8">{error}</div>;
+
+  // Nếu user đã có đơn PENDING cho chuyến này, hiển thị banner gợi ý tiếp tục
+  if (pendingOrder) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12">
+        <div className="card border-yellow-200 bg-yellow-50 text-center py-10 space-y-5">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-yellow-100 text-3xl">⏳</div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Bạn đang có đơn đặt chỗ chưa thanh toán</h1>
+            <p className="mt-2 text-sm text-gray-600">
+              Ghế cho chuyến <strong>{trip?.route?.originCity} → {trip?.route?.destinationCity}</strong> đã được giữ.
+              Vui lòng hoàn tất thanh toán để xác nhận chỗ ngồi của bạn.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to={`/my-tickets/order/${pendingOrder.id}/pay`}
+              className="btn-primary px-8 py-3 text-base"
+            >
+              💳 Tiếp tục thanh toán
+            </Link>
+            <Link to="/my-tickets" className="btn-outline px-8 py-3 text-base">
+              Xem vé của tôi
+            </Link>
+          </div>
+          <p className="text-xs text-gray-400">
+            Nếu bạn muốn đặt lại từ đầu, hãy vào "Vé của tôi" và hủy đơn cũ trước.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">

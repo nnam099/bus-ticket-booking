@@ -9,7 +9,7 @@ const statusConfig = {
   PENDING: { label: 'Chờ thanh toán', className: 'bg-yellow-100 text-yellow-700' },
   PAID: { label: 'Đã thanh toán', className: 'bg-green-100 text-green-700' },
   CHECKED_IN: { label: 'Đã lên xe', className: 'bg-emerald-100 text-emerald-700' },
-  COMPLETED: { label: 'Hoàn thành', className: 'bg-blue-100 text-blue-700' },
+  COMPLETED: { label: 'Mua vé thành công', className: 'bg-green-100 text-green-700' },
   CANCELLED: { label: 'Đã hủy', className: 'bg-gray-100 text-gray-500' },
   REFUNDED: { label: 'Đã hoàn tiền', className: 'bg-purple-100 text-purple-700' },
 };

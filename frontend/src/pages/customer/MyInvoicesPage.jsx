@@ -22,7 +22,7 @@ const PAYMENT_STATUS = {
 const TICKET_STATUS = {
   ...INVOICE_STATUS,
   CHECKED_IN: { label: 'Đã lên xe', cls: 'bg-emerald-100 text-emerald-700' },
-  COMPLETED: { label: 'Hoàn thành', cls: 'bg-blue-100 text-blue-700' },
+  COMPLETED: { label: 'Mua vé thành công', cls: 'bg-green-100 text-green-700' },
 };
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;

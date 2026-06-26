@@ -10,7 +10,7 @@ const STATUS_MAP = {
   PENDING: { label: 'Chờ thanh toán', cls: 'bg-yellow-100 text-yellow-700', tone: 'border-yellow-200 bg-yellow-50' },
   PAID: { label: 'Đã thanh toán', cls: 'bg-green-100 text-green-700', tone: 'border-green-200 bg-green-50' },
   CHECKED_IN: { label: 'Đã lên xe', cls: 'bg-emerald-100 text-emerald-700', tone: 'border-emerald-200 bg-emerald-50' },
-  COMPLETED: { label: 'Hoàn thành', cls: 'bg-blue-100 text-blue-700', tone: 'border-blue-200 bg-blue-50' },
+  COMPLETED: { label: 'Mua vé thành công', cls: 'bg-green-100 text-green-700', tone: 'border-green-200 bg-green-50' },
   CANCELLED: { label: 'Đã hủy', cls: 'bg-gray-100 text-gray-500', tone: 'border-gray-200 bg-gray-50' },
   REFUNDED: { label: 'Đã hoàn tiền', cls: 'bg-purple-100 text-purple-700', tone: 'border-purple-200 bg-purple-50' },
 };
