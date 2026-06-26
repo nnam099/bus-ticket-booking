@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import { authAPI } from '../../services/api';
+import { cityOptions, normalizeText } from '../../constants/travel';
+import { format } from 'date-fns';
 import ThemeToggle from './ThemeToggle';
 
 // ── Modal: Giới thiệu BusGo Việt Nam ──────────────────────────────────────────
@@ -161,6 +163,120 @@ function SupportModal({ onClose }) {
   );
 }
 
+// ── NavSearch: Thanh tìm kiếm compact trên navbar ─────────────────────────────
+function CityInput({ value, onChange, placeholder, exclude }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  const filtered = value.trim()
+    ? cityOptions.filter(
+        c => normalizeText(c).includes(normalizeText(value)) && c !== exclude
+      )
+    : cityOptions.filter(c => c !== exclude).slice(0, 8);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <input
+        type="text"
+        value={value}
+        onChange={e => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        placeholder={placeholder}
+        className="w-36 bg-transparent text-sm font-semibold text-[#4a3b32] dark:text-gray-200 placeholder-[#c4a898] dark:placeholder-gray-500 outline-none border-none"
+      />
+      {open && filtered.length > 0 && (
+        <ul className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 z-[200] max-h-52 overflow-y-auto">
+          {filtered.map(city => (
+            <li key={city}>
+              <button
+                type="button"
+                onMouseDown={e => { e.preventDefault(); onChange(city); setOpen(false); }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                {city}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function NavSearch() {
+  const navigate = useNavigate();
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const [origin, setOrigin] = useState('');
+  const [destination, setDestination] = useState('');
+  const [date, setDate] = useState(today);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!origin || !destination || !date) return;
+    navigate(`/search?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&date=${date}`);
+  };
+
+  const handleSwap = () => { setOrigin(destination); setDestination(origin); };
+
+  return (
+    <form
+      onSubmit={handleSearch}
+      className="hidden lg:flex items-center gap-0 bg-white dark:bg-slate-800 border border-[#f0e6d8] dark:border-slate-700 rounded-2xl shadow-sm px-1 py-1"
+    >
+      {/* Origin */}
+      <div className="flex items-center gap-2 px-3 py-1.5">
+        <i className="ti ti-map-pin text-[#e85d04]" style={{ fontSize: 15 }} />
+        <CityInput value={origin} onChange={setOrigin} placeholder="Điểm đi" exclude={destination} />
+      </div>
+
+      {/* Swap */}
+      <button
+        type="button"
+        onClick={handleSwap}
+        className="w-7 h-7 rounded-full bg-orange-50 dark:bg-slate-700 flex items-center justify-center hover:bg-orange-100 transition flex-shrink-0 border border-[#f0e6d8] dark:border-slate-600"
+      >
+        <i className="ti ti-arrows-exchange text-[#e85d04]" style={{ fontSize: 14 }} />
+      </button>
+
+      {/* Destination */}
+      <div className="flex items-center gap-2 px-3 py-1.5">
+        <i className="ti ti-map-pin-filled text-[#e85d04]" style={{ fontSize: 15 }} />
+        <CityInput value={destination} onChange={setDestination} placeholder="Điểm đến" exclude={origin} />
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-[#f0e6d8] dark:bg-slate-600 mx-1 flex-shrink-0" />
+
+      {/* Date */}
+      <div className="flex items-center gap-2 px-3 py-1.5">
+        <i className="ti ti-calendar text-[#e85d04]" style={{ fontSize: 15 }} />
+        <input
+          type="date"
+          value={date}
+          min={today}
+          onChange={e => setDate(e.target.value)}
+          className="bg-transparent text-sm font-semibold text-[#4a3b32] dark:text-gray-200 outline-none border-none w-32 cursor-pointer"
+        />
+      </div>
+
+      {/* Search button */}
+      <button
+        type="submit"
+        className="ml-1 px-4 py-2 rounded-xl bg-[#e85d04] text-white text-sm font-bold hover:opacity-90 transition flex items-center gap-1.5 flex-shrink-0"
+      >
+        <i className="ti ti-search" style={{ fontSize: 14 }} />
+        Tìm
+      </button>
+    </form>
+  );
+}
+
 // ── Main Layout ───────────────────────────────────────────────────────────────
 export default function PublicLayout() {
   const { user } = useSelector(s => s.auth);
@@ -168,7 +284,6 @@ export default function PublicLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [showAbout, setShowAbout] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
 
   // Redirect internal roles away from public pages
@@ -193,75 +308,60 @@ export default function PublicLayout() {
     return '/dashboard';
   };
 
-  // Khi click "Trang chủ" mà đang ở trang chủ → mở modal giới thiệu
-  const handleHomeClick = (e) => {
-    if (location.pathname === '/') {
-      e.preventDefault();
-      setShowAbout(true);
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-[#fdfbf7] dark:bg-slate-900 transition-colors duration-300" style={{ fontFamily: "'Nunito', sans-serif" }}>
       {/* Modals */}
-      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
       {showSupport && <SupportModal onClose={() => setShowSupport(false)} />}
 
       {/* ── Navbar ── */}
       <nav className="sticky top-0 z-50 w-full backdrop-blur-md border-b-[1.5px] border-[#f0e6d8] dark:border-slate-800 bg-[#fdfbf7]/90 dark:bg-slate-900/90 transition-colors duration-300">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 no-underline">
+          <Link to="/" className="flex items-center gap-2 no-underline flex-shrink-0">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[#e85d04]">
               <i className="ti ti-bus text-white" style={{ fontSize: 18 }} />
             </div>
-            <span className="text-xl font-bold text-[#4a3b32] dark:text-gray-100 transition-colors duration-300" style={{ fontFamily: "'Quicksand', sans-serif" }}>
+            <span className="text-xl font-bold text-[#4a3b32] dark:text-gray-100 transition-colors duration-300 hidden xl:block" style={{ fontFamily: "'Quicksand', sans-serif" }}>
               BusGo <span className="text-[#e85d04]">Việt Nam</span>
             </span>
           </Link>
 
-          {/* Nav links */}
-          <div className="hidden md:flex items-center gap-1">
-            <Link
-              to="/"
-              onClick={handleHomeClick}
-              className="px-4 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800"
-            >
-              Trang chủ
-            </Link>
+          {/* Search bar — center */}
+          <div className="flex-1 flex justify-center">
+            <NavSearch />
+          </div>
+
+          {/* Right: links + auth */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Link
               to="/lookup"
-              className="px-4 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800"
+              className="hidden md:block px-3 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800"
             >
               Tra cứu vé
             </Link>
             <button
               onClick={() => setShowSupport(true)}
-              className="px-4 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800 cursor-pointer bg-transparent border-none"
+              className="hidden md:block px-3 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800 cursor-pointer bg-transparent border-none"
             >
               Hỗ trợ
             </button>
-          </div>
-
-          {/* Auth actions */}
-          <div className="flex items-center gap-3">
             <ThemeToggle compact />
             {user ? (
               <>
                 <Link
                   to={getDashboardLink()}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-colors hover:bg-orange-50 dark:hover:bg-slate-800 border-[1.5px] border-[#f0e6d8] dark:border-slate-700 text-[#4a3b32] dark:text-gray-200"
+                  className="flex items-center gap-2 px-3 py-2 rounded-full text-sm font-bold transition-colors hover:bg-orange-50 dark:hover:bg-slate-800 border-[1.5px] border-[#f0e6d8] dark:border-slate-700 text-[#4a3b32] dark:text-gray-200"
                 >
                   <span className="w-7 h-7 rounded-full flex items-center justify-center bg-[#fff0e6] dark:bg-slate-800 text-[#e85d04] text-[14px]">
                     <i className="ti ti-user" />
                   </span>
-                  <span className="max-w-[140px] truncate">
+                  <span className="max-w-[120px] truncate hidden sm:block">
                     {user?.customer?.fullName || user?.busOperator?.companyName || user?.email || 'Tài khoản'}
                   </span>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-orange-50 dark:hover:bg-slate-800 border-[1.5px] border-[#f0e6d8] dark:border-slate-700 text-[#4a3b32] dark:text-gray-200 bg-transparent cursor-pointer"
+                  className="px-4 py-2 rounded-full text-sm font-bold transition-all hover:bg-orange-50 dark:hover:bg-slate-800 border-[1.5px] border-[#f0e6d8] dark:border-slate-700 text-[#4a3b32] dark:text-gray-200 bg-transparent cursor-pointer"
                 >
                   Đăng xuất
                 </button>
@@ -270,13 +370,13 @@ export default function PublicLayout() {
               <>
                 <Link
                   to="/login"
-                  className="px-5 py-2.5 rounded-full text-sm font-bold transition-all hover:bg-orange-50 dark:hover:bg-slate-800 border-[1.5px] border-[#f0e6d8] dark:border-slate-700 text-[#4a3b32] dark:text-gray-200"
+                  className="px-4 py-2 rounded-full text-sm font-bold transition-all hover:bg-orange-50 dark:hover:bg-slate-800 border-[1.5px] border-[#f0e6d8] dark:border-slate-700 text-[#4a3b32] dark:text-gray-200"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="px-5 py-2.5 rounded-full text-sm font-bold text-white transition-all hover:opacity-90 bg-[#e85d04] shadow-[0_4px_16px_rgba(232,93,4,0.35)]"
+                  className="px-4 py-2 rounded-full text-sm font-bold text-white transition-all hover:opacity-90 bg-[#e85d04] shadow-[0_4px_16px_rgba(232,93,4,0.35)]"
                 >
                   Đặt vé ngay
                 </Link>
@@ -285,6 +385,7 @@ export default function PublicLayout() {
           </div>
         </div>
       </nav>
+
 
       {/* ── Main content ── */}
       <main className="flex-1 page-enter">
