@@ -86,12 +86,11 @@ export default function MyInvoicesPage() {
   }, []);
 
   const filteredInvoices = useMemo(() => (
-    filter === 'all' ? invoices : invoices.filter(invoice => invoice.status === filter)
+    filter === 'all' ? invoices.filter(i => i.status !== 'PENDING') : invoices.filter(invoice => invoice.status === filter)
   ), [filter, invoices]);
 
   const counts = useMemo(() => ({
-    all: invoices.length,
-    PENDING: invoices.filter(invoice => invoice.status === 'PENDING').length,
+    all: invoices.filter(i => i.status !== 'PENDING').length,
     PAID: invoices.filter(invoice => invoice.status === 'PAID').length,
     REFUNDED: invoices.filter(invoice => invoice.status === 'REFUNDED').length,
   }), [invoices]);
@@ -133,7 +132,6 @@ export default function MyInvoicesPage() {
       <div className="mb-5 flex flex-wrap gap-2">
         {[
           { key: 'all', label: 'Tất cả' },
-          { key: 'PENDING', label: 'Chờ thanh toán' },
           { key: 'PAID', label: 'Đã thanh toán' },
           { key: 'REFUNDED', label: 'Hoàn tiền' },
         ].map(tab => (
