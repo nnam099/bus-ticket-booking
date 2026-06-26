@@ -11,9 +11,9 @@ const pickDriver = (tripStaffs = []) =>
   tripStaffs.find(item => item.role === 'DRIVER' || item.staff?.role === 'DRIVER') || tripStaffs[0];
 
 const ReviewMeta = ({ label, value, mono = false }) => (
-  <div className="min-w-0 rounded-xl bg-gray-50 dark:bg-slate-800/50 px-4 py-3">
-    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">{label}</p>
-    <p className={`mt-1 min-w-0 break-words text-sm font-bold text-gray-800 dark:text-gray-200 ${mono ? 'font-mono text-xs leading-relaxed tracking-wider' : ''}`}>
+  <div className="min-w-0">
+    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{label}</p>
+    <p className={`mt-0.5 min-w-0 break-words text-sm font-semibold text-gray-900 dark:text-white ${mono ? 'font-mono text-xs' : ''}`}>
       {value || '-'}
     </p>
   </div>
@@ -98,29 +98,29 @@ export default function AdminReviewsPage() {
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="mb-4 flex flex-wrap items-center gap-3">
-                      <span className="font-black text-gray-900 dark:text-white text-lg">{rv.customer?.fullName || 'Khách hàng'}</span>
-                      <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/20 px-2.5 py-1 rounded-lg">
-                        <span className="text-yellow-500 tracking-widest text-sm">{'★'.repeat(rv.rating)}</span>
-                        <span className="text-xs font-bold text-yellow-600 dark:text-yellow-500 ml-1">({rv.rating}/5)</span>
+                      <span className="font-semibold text-gray-900 dark:text-white text-base">{rv.customer?.fullName || 'Khách hàng'}</span>
+                      <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-500/10 px-2 py-0.5 rounded-md">
+                        <span className="text-yellow-500 tracking-widest text-xs">{'★'.repeat(rv.rating)}</span>
+                        <span className="text-xs font-medium text-yellow-700 dark:text-yellow-400 ml-1">({rv.rating}/5)</span>
                       </div>
                       <Badge variant="default">{new Date(rv.createdAt).toLocaleString('vi-VN')}</Badge>
                     </div>
 
                     {rv.comment ? (
-                      <p className="mb-6 break-words rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50/80 dark:bg-slate-800/80 px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 italic">
+                      <p className="mb-6 break-words rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                         “{rv.comment}”
                       </p>
                     ) : (
-                      <p className="mb-6 rounded-xl border border-dashed border-gray-200 dark:border-slate-800 bg-transparent px-5 py-4 text-sm font-medium text-gray-400">Khách không nhập nhận xét.</p>
+                      <p className="mb-6 rounded-md border border-dashed border-gray-200 dark:border-white/10 bg-transparent px-4 py-3 text-sm text-gray-400">Khách không nhập nhận xét.</p>
                     )}
 
-                    <div className="mb-6 rounded-2xl border border-[#e85d04]/20 bg-orange-50/50 dark:bg-[#e85d04]/5 p-4">
+                    <div className="mb-6 rounded-md border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">
                       <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                         <div className="min-w-0">
-                          <p className="break-words text-lg font-black text-[#e85d04]">
+                          <p className="break-words text-sm font-semibold text-gray-900 dark:text-white">
                             {route?.originCity || '-'} → {route?.destinationCity || '-'}
                           </p>
-                          <p className="mt-1.5 text-sm font-semibold text-gray-600 dark:text-gray-400">{departure}</p>
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{departure}</p>
                         </div>
                         <Badge variant="info">{trip?.status || 'Không rõ'}</Badge>
                       </div>

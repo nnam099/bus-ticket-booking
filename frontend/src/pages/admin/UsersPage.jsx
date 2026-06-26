@@ -455,7 +455,7 @@ export default function AdminUsersPage() {
         description="Click nhân viên hoặc nhà xe để xem tuyến/chuyến đang phụ trách." 
       />
 
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-200 dark:border-white/10 pb-4">
         {userTabs.map(tab => (
           <button
             key={tab.key}
@@ -465,9 +465,13 @@ export default function AdminUsersPage() {
               setInvoicePanel(null);
               setRoutePanel(null);
             }}
-            className={`rounded-full px-5 py-2 text-sm font-bold transition-all shadow-sm ${activeTab === tab.key ? 'bg-[#e85d04] text-white shadow-[0_4px_12px_rgba(232,93,4,0.3)]' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:border-[#e85d04] hover:text-[#e85d04]'}`}
+            className={`px-4 py-2 text-sm font-medium transition-colors rounded-md ${
+              activeTab === tab.key 
+                ? 'bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white' 
+                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
+            }`}
           >
-            {tab.label} ({tabCounts[tab.key] || 0})
+            {tab.label} <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] bg-gray-200/50 dark:bg-white/10">{tabCounts[tab.key] || 0}</span>
           </button>
         ))}
       </div>
@@ -491,7 +495,7 @@ export default function AdminUsersPage() {
               >
                 <div className="min-w-0 flex-1">
                   <div className="mb-2 flex flex-wrap items-center gap-3">
-                    <p className="font-black text-gray-900 dark:text-white text-lg">{getDisplayName(u)}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white text-base">{getDisplayName(u)}</p>
                     {roles.map(role => (
                       <Badge key={role} variant="default">{roleLabels[role] || role}</Badge>
                     ))}

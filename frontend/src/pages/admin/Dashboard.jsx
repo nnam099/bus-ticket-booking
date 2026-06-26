@@ -17,7 +17,7 @@ const iconPaths = {
 
 function AdminIcon({ name }) {
   return (
-    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={iconPaths[name]} />
     </svg>
   );
@@ -55,26 +55,19 @@ export default function AdminDashboard() {
     : routes;
 
   const cards = stats ? [
-    { label: 'Người dùng', value: stats.totalUsers, icon: 'users' },
-    { label: 'Nhà xe', value: stats.totalOperators, icon: 'operator' },
-    { label: 'Chuyến trong kỳ', value: stats.totalTrips, icon: 'bus' },
-    { label: 'Vé đã bán', value: stats.totalTickets, icon: 'ticket' },
-    { label: 'Chuyến hôm nay', value: stats.todayTrips, icon: 'calendar' },
-    { label: 'Vé hôm nay', value: stats.todayTickets, icon: 'check' },
+    { label: 'Người dùng', value: stats.totalUsers, icon: 'users', trend: '+12%' },
+    { label: 'Nhà xe', value: stats.totalOperators, icon: 'operator', trend: '+2' },
+    { label: 'Chuyến trong kỳ', value: stats.totalTrips, icon: 'bus', trend: '+5%' },
+    { label: 'Vé đã bán', value: stats.totalTickets, icon: 'ticket', trend: '+18%' },
+    { label: 'Chuyến hôm nay', value: stats.todayTrips, icon: 'calendar', trend: '0%' },
+    { label: 'Vé hôm nay', value: stats.todayTickets, icon: 'check', trend: '+3%' },
   ] : [];
 
-  const quickLinks = [
-    { to: '/admin/operators', icon: 'operator', label: 'Quản lý nhà xe' },
-    { to: '/admin/users', icon: 'users', label: 'Người dùng' },
-    { to: '/admin/reviews', icon: 'review', label: 'Đánh giá' },
-    { to: '/admin/audit', icon: 'audit', label: 'Nhật ký kiểm toán' },
-  ];
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader 
-        title="Tổng quan hệ thống" 
-        description="Lọc vé và chuyến theo ngày, tuyến hoặc nhà xe." 
+        title="Dashboard" 
+        description="Tổng quan hệ thống BusGo Việt Nam" 
       />
 
       <Card>
@@ -122,57 +115,55 @@ export default function AdminDashboard() {
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {cards.map(c => (
-              <Card key={c.label} hover>
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 dark:bg-[#e85d04]/10 text-[#e85d04]">
-                  <AdminIcon name={c.icon} />
+              <Card key={c.label}>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">{c.label}</span>
+                  <div className="text-gray-400 dark:text-gray-500">
+                    <AdminIcon name={c.icon} />
+                  </div>
                 </div>
-                <div className="text-3xl font-black text-gray-900 dark:text-white">{c.value}</div>
-                <div className="mt-1 text-sm font-semibold text-gray-500 dark:text-gray-400">{c.label}</div>
+                <div className="flex items-baseline gap-2">
+                  <div className="text-2xl font-semibold text-gray-900 dark:text-white">{c.value}</div>
+                  {c.trend && (
+                    <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                      {c.trend}
+                    </span>
+                  )}
+                </div>
               </Card>
             ))}
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Card hover className="border-l-4 border-l-red-500 dark:border-l-red-500">
-              <div className="flex items-center justify-between gap-4">
+            <Card className="flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="font-bold text-lg text-gray-900 dark:text-white">Nhà xe chờ duyệt</p>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Cần xử lý để nhà xe có thể vận hành.</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Nhà xe chờ duyệt</p>
+                  <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Cần xử lý để vận hành.</p>
                 </div>
-                <span className="text-4xl font-black text-red-500">{stats.pendingOperators}</span>
+                <div className="h-8 w-8 rounded-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center">
+                  <i className="ti ti-alert-circle text-lg"></i>
+                </div>
               </div>
+              <div className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.pendingOperators}</div>
             </Card>
-            <Card hover className="border-l-4 border-l-green-500 dark:border-l-green-500">
-              <div className="flex items-center justify-between gap-4">
+            <Card className="flex flex-col justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="font-bold text-lg text-gray-900 dark:text-white">Tuyến đang mở</p>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Tổng số tuyến đang hoạt động.</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Tuyến đang mở</p>
+                  <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Tổng số tuyến hoạt động.</p>
                 </div>
-                <span className="text-4xl font-black text-green-500">{stats.activeRoutes}</span>
+                <div className="h-8 w-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <i className="ti ti-check text-lg"></i>
+                </div>
               </div>
+              <div className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.activeRoutes}</div>
             </Card>
           </div>
         </>
       ) : (
         <Loading />
       )}
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {quickLinks.map(item => (
-          <Link
-            key={item.to}
-            to={item.to}
-            className="group outline-none"
-          >
-            <Card hover className="text-center h-full flex flex-col items-center justify-center !p-6 border-transparent group-hover:border-[#e85d04] transition-colors">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 transition-colors group-hover:bg-[#e85d04] group-hover:text-white">
-                <AdminIcon name={item.icon} />
-              </div>
-              <div className="text-sm font-bold text-gray-800 dark:text-gray-200">{item.label}</div>
-            </Card>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

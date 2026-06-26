@@ -43,7 +43,7 @@ export default function AdminAuditPage() {
                 </Td>
                 <Td className="font-bold text-gray-900 dark:text-gray-100">{log.user?.email || log.user?.phone || '—'}</Td>
                 <Td>
-                  <Badge variant="info" className="!bg-blue-50 !text-blue-700 !border-blue-100 dark:!bg-blue-900/20 dark:!text-blue-400">{log.action}</Badge>
+                  <Badge variant="info">{log.action}</Badge>
                 </Td>
                 <Td className="text-gray-600 dark:text-gray-400 font-medium">{log.resource}</Td>
                 <Td className="font-mono text-xs text-gray-400">{log.ipAddress || '—'}</Td>

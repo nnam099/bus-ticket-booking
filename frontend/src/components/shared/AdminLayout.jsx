@@ -1,16 +1,20 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 import ThemeToggle from './ThemeToggle';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useState } from 'react';
 
 export default function AdminLayout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
+  const { user } = useSelector(state => state.auth);
+  const [collapsed, setCollapsed] = useState(false);
+
   const isActive = (path) => location.pathname === path;
 
   const handleLogout = async () => {
@@ -22,73 +26,155 @@ export default function AdminLayout() {
     }
   };
 
-  const links = [
-    { to: '/admin', label: 'Tổng quan', icon: 'ti-layout-dashboard' },
-    { to: '/admin/operators', label: 'Nhà xe', icon: 'ti-building' },
-    { to: '/admin/users', label: 'Người dùng', icon: 'ti-users' },
-    { to: '/admin/reviews', label: 'Đánh giá', icon: 'ti-star' },
-    { to: '/admin/audit', label: 'Nhật ký', icon: 'ti-history' },
-    { to: '/admin/profile', label: 'Hồ sơ cá nhân', icon: 'ti-user' },
+  const navGroups = [
+    {
+      label: 'Tổng quan',
+      items: [
+        { to: '/admin', label: 'Dashboard', icon: 'ti-layout-grid' },
+        { to: '/admin/audit', label: 'Hoạt động', icon: 'ti-activity' },
+      ]
+    },
+    {
+      label: 'Quản lý',
+      items: [
+        { to: '/admin/operators', label: 'Nhà xe', icon: 'ti-building' },
+        { to: '/admin/users', label: 'Người dùng', icon: 'ti-users' },
+        { to: '/admin/reviews', label: 'Đánh giá', icon: 'ti-messages' },
+      ]
+    },
+    {
+      label: 'Cài đặt',
+      items: [
+        { to: '/admin/profile', label: 'Hồ sơ', icon: 'ti-user-circle' },
+      ]
+    }
   ];
 
   return (
-    <div className={`min-h-screen w-full flex ${isDark ? 'bg-slate-900 text-slate-100' : 'bg-[#fdfbf7] text-mocha'}`}>
-      <aside className={`w-64 shrink-0 flex flex-col border-r transition-colors ${isDark ? 'border-slate-800 bg-slate-950 text-slate-300' : 'border-[#f0e6d8] bg-white text-mocha'}`}>
-        <div className={`border-b px-6 py-6 ${isDark ? 'border-slate-800' : 'border-[#f0e6d8]'}`}>
-          <Link to="/" className="flex items-center gap-2 no-underline">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-brand shadow-[0_4px_16px_rgba(232,93,4,0.35)]">
-              <i className="ti ti-bus text-white text-[18px]" />
-            </div>
-            <div className="flex flex-col">
-              <span className={`text-xl font-bold font-quicksand leading-tight ${isDark ? 'text-white' : 'text-[#4a3b32]'}`}>
-                BusGo <span className="text-brand">Việt Nam</span>
-              </span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-brand">Cổng Quản Trị</span>
-            </div>
-          </Link>
+    <div className={`min-h-screen w-full flex ${isDark ? 'bg-[#0a0a0a] text-slate-200' : 'bg-gray-50 text-gray-900'}`}>
+      
+      {/* Sidebar */}
+      <aside 
+        className={`shrink-0 flex flex-col border-r transition-all duration-300 ${
+          collapsed ? 'w-16' : 'w-60'
+        } ${isDark ? 'border-white/10 bg-[#0a0a0a]' : 'border-gray-200 bg-white'}`}
+      >
+        <div className={`h-14 flex items-center px-4 border-b ${isDark ? 'border-white/10' : 'border-gray-200'} ${collapsed ? 'justify-center' : 'justify-between'}`}>
+          {!collapsed && (
+            <Link to="/" className="flex items-center gap-2 font-bold text-sm tracking-wide">
+              <div className="w-6 h-6 rounded bg-black dark:bg-white flex items-center justify-center">
+                <i className="ti ti-bus text-white dark:text-black text-sm" />
+              </div>
+              <span className="text-gray-900 dark:text-white">Admin<span className="text-gray-400 font-normal">Panel</span></span>
+            </Link>
+          )}
+          {collapsed && (
+            <Link to="/">
+              <div className="w-6 h-6 rounded bg-black dark:bg-white flex items-center justify-center">
+                <i className="ti ti-bus text-white dark:text-black text-sm" />
+              </div>
+            </Link>
+          )}
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2">
-          {links.map(l => {
-            const active = isActive(l.to);
-            return (
-              <Link
-                key={l.to}
-                to={l.to}
-                className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
-                  active
-                    ? 'bg-brand text-white shadow-[0_8px_24px_rgba(232,93,4,0.35)]'
-                    : isDark 
-                      ? 'text-slate-400 hover:bg-slate-800 hover:text-white' 
-                      : 'text-mocha-light hover:bg-peach hover:text-brand'
-                }`}
-              >
-                <i className={`ti ${l.icon} text-[20px] ${active ? 'text-white' : ''}`} />
-                {l.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="px-4 mb-4">
-          <ThemeToggle />
+        <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6 custom-scrollbar">
+          {navGroups.map((group, idx) => (
+            <div key={idx}>
+              {!collapsed && (
+                <div className="px-2 mb-2 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
+                  {group.label}
+                </div>
+              )}
+              <div className="space-y-0.5">
+                {group.items.map(item => {
+                  const active = isActive(item.to);
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      className={`flex items-center gap-3 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                        active
+                          ? isDark ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-900'
+                          : isDark ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      } ${collapsed ? 'justify-center' : ''}`}
+                      title={collapsed ? item.label : ''}
+                    >
+                      <i className={`ti ${item.icon} text-lg ${active ? (isDark ? 'text-white' : 'text-gray-900') : 'text-gray-400'}`} />
+                      {!collapsed && <span>{item.label}</span>}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="px-4 mb-6">
+
+        <div className={`p-3 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+          <div className="flex items-center gap-2 mb-2">
+            {!collapsed && <div className="flex-1 px-2 text-xs font-medium text-gray-500 truncate">{user?.email}</div>}
+            <div className={collapsed ? 'mx-auto' : ''}>
+              <ThemeToggle />
+            </div>
+          </div>
           <button
             onClick={handleLogout}
-            className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-2xl transition-all duration-300 ${
-              isDark ? 'text-slate-400 hover:bg-slate-800 hover:text-white' : 'text-mocha-light hover:bg-peach hover:text-brand border-[1.5px] border-transparent hover:border-mocha-accent'
-            }`}
+            className={`w-full flex items-center gap-3 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              isDark ? 'text-gray-400 hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            } ${collapsed ? 'justify-center' : ''}`}
+            title={collapsed ? 'Đăng xuất' : ''}
           >
-            <i className="ti ti-logout text-[20px]" />
-            Đăng xuất
+            <i className="ti ti-logout text-lg text-gray-400" />
+            {!collapsed && <span>Đăng xuất</span>}
           </button>
         </div>
       </aside>
 
-      <main className={`min-w-0 flex-1 p-8 overflow-auto page-enter ${isDark ? 'bg-slate-900' : 'bg-[#fdfbf7]'}`}>
-        <div className="max-w-7xl mx-auto">
-          <Outlet />
+      {/* Main Content */}
+      <main className="min-w-0 flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Top Header */}
+        <header className={`h-14 shrink-0 flex items-center justify-between px-6 border-b transition-colors ${isDark ? 'bg-[#0a0a0a] border-white/10' : 'bg-white border-gray-200'}`}>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setCollapsed(!collapsed)}
+              className={`p-1.5 rounded-md transition-colors ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+            >
+              <i className="ti ti-menu-2 text-xl" />
+            </button>
+            <div className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              Admin / <span className={isDark ? 'text-white' : 'text-gray-900'}>
+                {navGroups.flatMap(g => g.items).find(i => i.to === location.pathname)?.label || 'Page'}
+              </span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className={`relative hidden sm:block ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+              <i className="ti ti-search absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                className={`pl-8 pr-3 py-1.5 text-sm rounded-md border focus:outline-none focus:ring-1 transition-all ${
+                  isDark 
+                    ? 'bg-[#111] border-white/10 focus:border-white/30 focus:ring-white/30 text-white placeholder-gray-500' 
+                    : 'bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-300 text-gray-900 placeholder-gray-400'
+                }`}
+              />
+            </div>
+            <button className={`p-1.5 rounded-md transition-colors relative ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
+              <i className="ti ti-bell text-xl" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white dark:border-[#0a0a0a]" />
+            </button>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+              {user?.fullName?.charAt(0) || 'A'}
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto p-6 md:p-8 page-enter">
+          <div className="max-w-6xl mx-auto space-y-8">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>

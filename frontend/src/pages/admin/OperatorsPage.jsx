@@ -55,31 +55,31 @@ export default function AdminOperatorsPage() {
         description="Xem danh sách toàn bộ nhà xe và duyệt hồ sơ đăng ký mới." 
       />
 
-      <div className="flex gap-4 border-b border-gray-200 dark:border-slate-800 mb-6">
+      <div className="flex gap-6 border-b border-gray-200 dark:border-white/10 mb-6">
         <button
           onClick={() => setTab('list')}
-          className={`pb-3 px-2 text-sm font-bold transition-all border-b-2 ${
+          className={`pb-3 text-sm font-medium transition-all border-b-2 ${
             tab === 'list'
-              ? 'border-[#e85d04] text-[#e85d04]'
-              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+              ? 'border-black text-gray-900 dark:border-white dark:text-white'
+              : 'border-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
           }`}
         >
           Danh sách nhà xe
-          <span className="ml-2 rounded-full bg-gray-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs text-gray-600 dark:text-gray-300">
+          <span className="ml-2 rounded-full bg-gray-100 dark:bg-white/10 px-2 py-0.5 text-xs text-gray-600 dark:text-gray-300">
             {allOps.length}
           </span>
         </button>
         <button
           onClick={() => setTab('pending')}
-          className={`pb-3 px-2 text-sm font-bold transition-all border-b-2 ${
+          className={`pb-3 text-sm font-medium transition-all border-b-2 ${
             tab === 'pending'
-              ? 'border-[#e85d04] text-[#e85d04]'
-              : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+              ? 'border-black text-gray-900 dark:border-white dark:text-white'
+              : 'border-transparent text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
           }`}
         >
           Chờ duyệt
           {pendingCount > 0 && (
-            <span className="ml-2 rounded-full bg-yellow-500 px-2.5 py-0.5 text-xs font-bold text-white">
+            <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
               {pendingCount}
             </span>
           )}

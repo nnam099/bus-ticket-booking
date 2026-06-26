@@ -8,29 +8,33 @@ export default function Button({
   disabled = false,
   fullWidth = false,
   icon,
+  loading = false,
   ...props
 }) {
-  const baseStyles = 'inline-flex items-center justify-center font-bold transition-all duration-200 outline-none select-none whitespace-nowrap cursor-pointer';
+  const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 outline-none select-none whitespace-nowrap cursor-pointer rounded-md';
   
   const variants = {
-    primary: 'bg-[#e85d04] text-white shadow-[0_4px_16px_rgba(232,93,4,0.35)] hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed',
-    outline: 'bg-transparent border-[1.5px] border-[#f0e6d8] dark:border-slate-700 text-[#4a3b32] dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed',
-    ghost: 'bg-transparent text-gray-600 hover:bg-gray-100 dark:hover:bg-slate-800 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed',
-    danger: 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 dark:bg-red-900/30 dark:border-red-800 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed',
+    primary: 'bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm',
+    secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed',
+    outline: 'bg-transparent border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed',
+    ghost: 'bg-transparent text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 dark:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed',
+    danger: 'bg-red-500 text-white hover:bg-red-600 dark:bg-red-500 dark:hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm',
   };
 
   const sizes = {
-    sm: 'px-4 py-2 text-xs rounded-lg',
-    md: 'px-5 py-2.5 text-sm rounded-full',
-    lg: 'px-8 py-3 text-base rounded-full',
+    sm: 'px-3 py-1.5 text-xs',
+    md: 'px-4 py-2 text-sm',
+    lg: 'px-6 py-2.5 text-sm',
+    icon: 'p-2',
   };
 
   const widthClass = fullWidth ? 'w-full' : '';
   const classes = `${baseStyles} ${variants[variant]} ${sizes[size]} ${widthClass} ${className}`;
 
   return (
-    <button className={classes} disabled={disabled} {...props}>
-      {icon && <span className="mr-2 flex items-center">{icon}</span>}
+    <button className={classes} disabled={disabled || loading} {...props}>
+      {loading && <i className="ti ti-loader animate-spin mr-2" />}
+      {!loading && icon && <span className="mr-2 flex items-center">{icon}</span>}
       {children}
     </button>
   );
