@@ -294,7 +294,7 @@ export default function PublicLayout() {
       {/* ── Footer ── */}
       <footer className="pt-16 pb-8 px-6 bg-[#2c1f17] dark:bg-slate-950 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2 mb-4">
@@ -305,7 +305,7 @@ export default function PublicLayout() {
                   BusGo <span style={{ color: '#e85d04' }}>Việt Nam</span>
                 </span>
               </div>
-              <p className="text-sm leading-relaxed mb-6" style={{ color: '#c4a898' }}>
+              <p className="text-sm leading-relaxed" style={{ color: '#c4a898' }}>
                 Hành trình của bạn, sứ mệnh của chúng tôi. Đặt vé xe khách an toàn và tiện lợi nhất Việt Nam 🚌
               </p>
             </div>
@@ -325,10 +325,32 @@ export default function PublicLayout() {
               </ol>
             </div>
 
+            {/* Hỗ trợ */}
+            <div>
+              <h4 className="font-bold mb-4 text-sm uppercase tracking-wide text-white" style={{ fontFamily: "'Quicksand', sans-serif", letterSpacing: '1px' }}>
+                Hỗ trợ
+              </h4>
+              <ul className="flex flex-col gap-3">
+                {[
+                  { label: 'Trung tâm trợ giúp', to: '/help' },
+                  { label: 'Liên hệ chúng tôi', to: '/contact' },
+                  { label: 'Chính sách hoàn tiền', to: '/refund-policy' },
+                  { label: 'Điều khoản sử dụng', to: '/terms' },
+                  { label: 'Chính sách bảo mật', to: '/privacy' },
+                ].map(({ label, to }) => (
+                  <li key={to}>
+                    <Link to={to} className="text-sm transition-colors hover:text-[#e85d04]" style={{ color: '#c4a898' }}>
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Contact */}
             <div>
               <h4 className="font-bold mb-4 text-sm uppercase tracking-wide text-white" style={{ fontFamily: "'Quicksand', sans-serif", letterSpacing: '1px' }}>
-                Liên hệ & Hỗ trợ
+                Liên hệ
               </h4>
               <ul className="flex flex-col gap-3">
                 {[
@@ -343,22 +365,25 @@ export default function PublicLayout() {
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => setShowSupport(true)}
-                className="mt-4 px-4 py-2 rounded-xl text-sm font-bold text-white border border-white/20 hover:bg-white/10 transition bg-transparent cursor-pointer"
-              >
-                Xem hướng dẫn đặt vé →
-              </button>
             </div>
           </div>
 
           {/* Bottom bar */}
           <div className="pt-8 flex items-center justify-between flex-wrap gap-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
             <p className="text-sm" style={{ color: '#9a7d6e' }}>© 2025 BusGo Việt Nam. Tất cả quyền được bảo lưu.</p>
-            <p className="text-sm" style={{ color: '#9a7d6e' }}>Làm với ❤️ tại Việt Nam 🇻🇳</p>
+            <div className="flex flex-wrap gap-4">
+              {[
+                { label: 'Điều khoản', to: '/terms' },
+                { label: 'Bảo mật', to: '/privacy' },
+                { label: 'Hoàn tiền', to: '/refund-policy' },
+              ].map(({ label, to }) => (
+                <Link key={to} to={to} className="text-sm hover:text-[#e85d04] transition-colors" style={{ color: '#9a7d6e' }}>{label}</Link>
+              ))}
+            </div>
           </div>
         </div>
       </footer>
+
     </div>
   );
 }

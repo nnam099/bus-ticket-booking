@@ -17,6 +17,11 @@ const LookupPage = React.lazy(() => import('./pages/LookupPage'));;
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));;
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));;
 const ForgotPasswordPage = React.lazy(() => import('./pages/auth/ForgotPasswordPage'));;
+const HelpPage = React.lazy(() => import('./pages/HelpPage'));;
+const ContactPage = React.lazy(() => import('./pages/ContactPage'));;
+const RefundPolicyPage = React.lazy(() => import('./pages/RefundPolicyPage'));;
+const TermsPage = React.lazy(() => import('./pages/TermsPage'));;
+const PrivacyPage = React.lazy(() => import('./pages/PrivacyPage'));;
 
 // Customer pages
 const CustomerDashboard = React.lazy(() => import('./pages/customer/Dashboard'));;
@@ -69,6 +74,11 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
         </Route>
 
         {/* Customer */}
