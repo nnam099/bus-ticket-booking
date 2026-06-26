@@ -7,7 +7,7 @@ export default function Input({ label, error, className = '', containerClassName
       <div className="relative">
         {icon && (
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
-            {icon}
+            {typeof icon === 'string' ? <i className={`ti ${icon} text-lg`}></i> : icon}
           </div>
         )}
         <input 
