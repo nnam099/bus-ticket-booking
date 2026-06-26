@@ -146,12 +146,12 @@ export default function OperatorLayout() {
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <button className={`p-1.5 rounded-md transition-colors relative ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
-              <i className="ti ti-bell text-xl" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white dark:border-[#0a0a0a]" />
+          <div className="flex items-center gap-3">
+            <button className={`p-2 rounded-full transition-colors relative ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
+              <i className="ti ti-bell text-[20px]" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#0a0a0a]" />
             </button>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white text-sm font-bold shadow-sm ml-1">
               {user?.fullName?.charAt(0) || 'O'}
             </div>
           </div>

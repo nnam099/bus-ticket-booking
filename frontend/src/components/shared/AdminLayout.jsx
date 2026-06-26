@@ -147,24 +147,12 @@ export default function AdminLayout() {
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
-            <div className={`relative hidden sm:block ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              <i className="ti ti-search absolute left-2.5 top-1/2 -translate-y-1/2" />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className={`pl-8 pr-3 py-1.5 text-sm rounded-md border focus:outline-none focus:ring-1 transition-all ${
-                  isDark 
-                    ? 'bg-[#111] border-white/10 focus:border-white/30 focus:ring-white/30 text-white placeholder-gray-500' 
-                    : 'bg-gray-50 border-gray-200 focus:border-gray-300 focus:ring-gray-300 text-gray-900 placeholder-gray-400'
-                }`}
-              />
-            </div>
-            <button className={`p-1.5 rounded-md transition-colors relative ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
-              <i className="ti ti-bell text-xl" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white dark:border-[#0a0a0a]" />
+          <div className="flex items-center gap-3">
+            <button className={`p-2 rounded-full transition-colors relative ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
+              <i className="ti ti-bell text-[20px]" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#0a0a0a]" />
             </button>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold shadow-sm ml-1">
               {user?.fullName?.charAt(0) || 'A'}
             </div>
           </div>
