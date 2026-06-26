@@ -28,12 +28,12 @@ export default function HomePage() {
     const validOrigin = findCity(form.origin);
     const validDest = findCity(form.destination);
 
-    if (!validOrigin || selectedCity.origin !== validOrigin) {
-      setError('Vui lòng chọn Điểm đi hợp lệ từ danh sách gợi ý.');
+    if (!validOrigin) {
+      setError('Vui lòng nhập Điểm đi hợp lệ (ví dụ: Hà Nội, Hồ Chí Minh).');
       return;
     }
-    if (!validDest || selectedCity.destination !== validDest) {
-      setError('Vui lòng chọn Điểm đến hợp lệ từ danh sách gợi ý.');
+    if (!validDest) {
+      setError('Vui lòng nhập Điểm đến hợp lệ (ví dụ: Đà Lạt, Nha Trang).');
       return;
     }
     if (normalizeText(validOrigin) === normalizeText(validDest)) {
