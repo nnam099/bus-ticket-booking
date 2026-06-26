@@ -134,114 +134,6 @@ export default function MyTicketsPage() {
       )}
 
       {reviewableTickets.length > 0 && (
-
-export default function MyTicketsPage() {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const location = useLocation();
-  const success = location.state?.success;
-  const paidOrder = location.state?.order;
-  const { user } = useSelector(s => s.auth);
-
-  useEffect(() => {
-    userAPI.getMyTickets()
-      .then(r => setTickets(r.data.data))
-      .catch(() => setError('Không thể tải danh sách vé. Vui lòng thử lại.'))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const pendingTickets = useMemo(
-    () => tickets.filter(ticket => PENDING_PAYMENT_STATUSES.has(ticket.status)),
-    [tickets]
-  );
-
-  const reviewableTickets = useMemo(
-    () => tickets.filter(ticket => REVIEWABLE_STATUSES.has(ticket.status) && !ticket.review),
-    [tickets]
-  );
-
-  if (loading) {
-    return (
-      <div className="grid gap-4">
-        {[1, 2, 3].map(item => (
-          <div key={item} className="card animate-pulse">
-            <div className="h-5 w-2/3 rounded bg-gray-100" />
-            <div className="mt-4 h-4 w-1/2 rounded bg-gray-100" />
-            <div className="mt-3 h-10 rounded bg-gray-100" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="mx-auto max-w-4xl">
-      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Vé của tôi</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Quản lý mã vé, hủy vé và đánh giá chuyến đã hoàn thành.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {pendingTickets.length > 0 && (
-            <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-700">
-              {pendingTickets.length} vé chờ thanh toán
-            </span>
-          )}
-          {reviewableTickets.length > 0 && (
-            <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-brand">
-              {reviewableTickets.length} vé chờ đánh giá
-            </span>
-          )}
-        </div>
-      </div>
-
-      {error && (
-        <div className="card mb-5 border-red-200 bg-red-50 text-sm font-medium text-red-700">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="card mb-5 border-green-200 bg-green-50 text-green-700">
-          <p className="font-bold">Đặt vé thành công. Vé của bạn đã được xác nhận.</p>
-          {paidOrder && (
-            <div className="mt-3 grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
-              <div className="rounded-lg bg-white/80 px-4 py-3">
-                <span className="text-green-700/70">Mã hóa đơn</span>
-                <p className="break-all font-mono font-black text-gray-800">{formatInvoiceCode(paidOrder)}</p>
-              </div>
-              <div className="rounded-lg bg-white/80 px-4 py-3">
-                <span className="text-green-700/70">Mã vé</span>
-                <p className="break-all font-mono font-black text-gray-800">
-                  {(paidOrder.ticketDetails || []).map((ticket) => formatTicketCode(ticket)).join(', ') || 'Đang cập nhật'}
-                </p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {pendingTickets.length > 0 && (
-        <div className="mb-5 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="font-bold text-gray-900">Bạn có vé chưa thanh toán</p>
-              <p className="text-sm text-gray-600">Hoàn tất thanh toán để xác nhận chỗ ngồi của bạn.</p>
-            </div>
-            <Link
-              to={`/my-tickets/order/${pendingTickets[0].order?.id}/pay`}
-              className="btn-primary px-4 py-2 text-center text-sm bg-yellow-500 hover:bg-yellow-600"
-            >
-              Thanh toán ngay
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {reviewableTickets.length > 0 && (
         <div className="mb-5 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -270,6 +162,42 @@ export default function MyTicketsPage() {
             const route = trip?.route;
             const canReview = REVIEWABLE_STATUSES.has(ticket.status) && !ticket.review;
             const canCancel = ticket.status === 'PAID' && canRefundCancelTicket(ticket);
+
+            return (
+              <div key={ticket.id} className={`card border-l-4 transition-all hover:shadow-md ${badge.tone} flex flex-col sm:flex-row gap-4`}>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-bold text-gray-900">
+                      {route?.originCity} <span className="text-gray-400">→</span> {route?.destinationCity}
+                    </h3>
+                    <span className={`rounded px-2 py-0.5 text-[10px] font-bold tracking-wide ${badge.cls}`}>
+                      {badge.label.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-sm text-gray-600">
+                    <p>{format(new Date(trip?.departureTime || new Date()), 'HH:mm')} — {format(new Date(trip?.departureTime || new Date()), 'EEEE, dd/MM/yyyy', { locale: vi })}</p>
+                    <p className="mt-1 flex flex-wrap gap-2 text-xs">
+                      <span className="font-semibold text-gray-700">Ghế {ticket.tripSeat?.seatLayout?.seatCode}</span>
+                      <span className="text-gray-300">•</span>
+                      <span>{ticket.passengerName}</span>
+                      <span className="text-gray-300">•</span>
+                      <span className="font-mono text-gray-500">{formatTicketCode(ticket)}</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-row items-center justify-between sm:flex-col sm:items-end gap-3 border-t border-gray-100/50 pt-3 sm:border-0 sm:pt-0">
+                  <div className="text-right">
+                    <span className="font-bold text-[#e85d04]">{Number(ticket.price).toLocaleString('vi-VN')}đ</span>
+                  </div>
+                  <Link
+                    to={`/my-tickets/${ticket.id}`}
+                    className={`btn-${canReview ? 'primary' : canCancel ? 'primary' : 'outline'} px-4 py-1.5 text-xs whitespace-nowrap bg-[#e85d04] text-white hover:bg-[#e85d04]/90`}
+                  >
+                    {canReview ? '⭐ Đánh giá' : canCancel ? '🎫 Hủy' : 'Xem vé'}
+                  </Link>
+                </div>
+              </div>
+            );
           })}
         </div>
       )}

@@ -151,9 +151,9 @@ const FILTER_TABS = [
 function matchFilter(ticket, filter) {
   const s = ticket.status;
   if (filter === 'all') return true;
-  if (filter === 'active') return ['PAID', 'CHECKED_IN'].includes(s);
+  if (filter === 'active') return ['CHECKED_IN'].includes(s);
   if (filter === 'pending') return s === 'PENDING';
-  if (filter === 'completed') return s === 'COMPLETED';
+  if (filter === 'completed') return ['PAID', 'COMPLETED'].includes(s);
   if (filter === 'cancelled') return ['CANCELLED', 'REFUNDED'].includes(s);
   return true;
 }

@@ -51,6 +51,16 @@ const lockSeats = async (tripId, seatIds, customerId) => {
   // Dùng Lua script để atomic check-and-set trên Redis
   for (const seatId of seatIds) {
     const lockKey = `seat_lock:${tripId}:${seatId}`;
+    
+    // Kiểm tra xem user hiện tại đã khóa ghế này chưa
+    const existingOwner = await redisClient.get(lockKey);
+    if (existingOwner === customerId) {
+      // Gia hạn lock trong Redis
+      await redisClient.set(lockKey, customerId, { EX: LOCK_MINUTES * 60 });
+      lockResults.push(seatId);
+      continue;
+    }
+
     const acquired = await redisClient.set(lockKey, customerId, {
       EX: LOCK_MINUTES * 60,
       NX: true, // only set if not exists
@@ -59,6 +69,7 @@ const lockSeats = async (tripId, seatIds, customerId) => {
     if (!acquired) {
       // Rollback already locked seats
       for (const lockedId of lockResults) {
+        // Chỉ xóa lock nếu ta vừa tạo ra nó (không xóa lock của người khác)
         await redisClient.del(`seat_lock:${tripId}:${lockedId}`);
       }
       throw new Error(`Ghế ${seatId} đã được người khác chọn. Vui lòng chọn ghế khác.`);
@@ -66,9 +77,16 @@ const lockSeats = async (tripId, seatIds, customerId) => {
     lockResults.push(seatId);
   }
 
-  // Update DB status to PROCESSING only if the seats are still available.
+  // Update DB status to PROCESSING
   const updated = await prisma.tripSeat.updateMany({
-    where: { id: { in: seatIds }, tripId, status: 'AVAILABLE' },
+    where: { 
+      id: { in: seatIds }, 
+      tripId, 
+      OR: [
+        { status: 'AVAILABLE' },
+        { status: 'PROCESSING', lockedBy: customerId }
+      ]
+    },
     data: {
       status: 'PROCESSING',
       lockedAt: new Date(),
