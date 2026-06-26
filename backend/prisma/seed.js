@@ -1299,69 +1299,59 @@ async function main() {
     const allSeatData = [];
     const staffData = [];
 
-    let currentStartTime = new Date(today);
-    currentStartTime.setDate(today.getDate() - pastDays);
-    if (corridor.cycleTimes && corridor.cycleTimes.length > 0) {
-      const [h, m] = corridor.cycleTimes[0].split(':').map(Number);
-      currentStartTime.setHours(h, m, 0, 0);
-    } else {
-      currentStartTime.setHours(6, 0, 0, 0);
-    }
+    let currentDate = new Date(today);
+    currentDate.setDate(today.getDate() - pastDays);
 
-    let isOutward = true;
     const endDate = new Date(today);
     endDate.setDate(today.getDate() + futureDays);
 
-    while (currentStartTime < endDate) {
-      // Sleep until 06:00 if the next departure is between 22:00 and 05:00
-      if (currentStartTime.getHours() >= 22 || currentStartTime.getHours() < 5) {
-        if (currentStartTime.getHours() >= 22) {
-          currentStartTime.setDate(currentStartTime.getDate() + 1);
-        }
-        currentStartTime.setHours(6, 0, 0, 0);
-      }
+    while (currentDate < endDate) {
+      const dateId = formatDateId(currentDate);
+      let isOutward = true;
 
-      const departureTime = new Date(currentStartTime);
-      if (departureTime >= endDate) break;
+      for (const timeStr of (corridor.cycleTimes || ['06:00', '12:00', '18:00'])) {
+        const [h, m] = timeStr.split(':').map(Number);
+        
+        const departureTime = new Date(currentDate);
+        departureTime.setHours(h, m, 0, 0);
+        
+        const estimatedArrival = addMinutes(departureTime, corridor.durationMinutes);
+        const status = departureTime < new Date() ? 'COMPLETED' : 'SCHEDULED';
+        
+        const tripDirection = isOutward ? 'outward' : 'return';
+        const routeId = isOutward ? corridor.outwardId : corridor.returnId;
+        
+        const hourStr = departureTime.getHours().toString().padStart(2, '0');
+        const minStr = departureTime.getMinutes().toString().padStart(2, '0');
+        const tripId = `trip-${corridor.key}-${tripDirection}-${dateId}-${hourStr}${minStr}`;
 
-      const estimatedArrival = addMinutes(departureTime, corridor.durationMinutes);
-      const dateId = formatDateId(departureTime);
-      const status = departureTime < new Date() ? 'COMPLETED' : 'SCHEDULED';
-      
-      const tripDirection = isOutward ? 'outward' : 'return';
-      const routeId = isOutward ? corridor.outwardId : corridor.returnId;
-      
-      const hourStr = departureTime.getHours().toString().padStart(2, '0');
-      const minStr = departureTime.getMinutes().toString().padStart(2, '0');
-      const tripId = `trip-${corridor.key}-${tripDirection}-${dateId}-${hourStr}${minStr}`;
-
-      allTripData.push({
-        id: tripId,
-        routeId: routeId,
-        vehicleId: corridor.vehicle.id,
-        departureTime,
-        estimatedArrival,
-        basePrice: corridor.basePrice,
-        status,
-      });
-
-      for (const layout of layouts) {
-        allSeatData.push({
-          tripId,
-          seatLayoutId: layout.id,
-          status: 'AVAILABLE',
+        allTripData.push({
+          id: tripId,
+          routeId: routeId,
+          vehicleId: corridor.vehicle.id,
+          departureTime,
+          estimatedArrival,
+          basePrice: corridor.basePrice,
+          status,
         });
+
+        for (const layout of layouts) {
+          allSeatData.push({
+            tripId,
+            seatLayoutId: layout.id,
+            status: 'AVAILABLE',
+          });
+        }
+
+        staffData.push({
+          tripId,
+          staffId: corridor.driver.id,
+          role: 'DRIVER'
+        });
+
+        isOutward = !isOutward;
       }
-
-      staffData.push({
-        tripId,
-        staffId: corridor.driver.id,
-        role: 'DRIVER'
-      });
-
-      // Next trip starts after arrival + turnaround time (default 60 mins)
-      currentStartTime = addMinutes(estimatedArrival, corridor.turnaroundMinutes || 60);
-      isOutward = !isOutward;
+      currentDate.setDate(currentDate.getDate() + 1);
     }
 
     const BATCH_SIZE = 500;
