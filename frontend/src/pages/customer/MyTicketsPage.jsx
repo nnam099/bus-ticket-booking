@@ -134,6 +134,114 @@ export default function MyTicketsPage() {
       )}
 
       {reviewableTickets.length > 0 && (
+
+export default function MyTicketsPage() {
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const location = useLocation();
+  const success = location.state?.success;
+  const paidOrder = location.state?.order;
+  const { user } = useSelector(s => s.auth);
+
+  useEffect(() => {
+    userAPI.getMyTickets()
+      .then(r => setTickets(r.data.data))
+      .catch(() => setError('Không thể tải danh sách vé. Vui lòng thử lại.'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const pendingTickets = useMemo(
+    () => tickets.filter(ticket => PENDING_PAYMENT_STATUSES.has(ticket.status)),
+    [tickets]
+  );
+
+  const reviewableTickets = useMemo(
+    () => tickets.filter(ticket => REVIEWABLE_STATUSES.has(ticket.status) && !ticket.review),
+    [tickets]
+  );
+
+  if (loading) {
+    return (
+      <div className="grid gap-4">
+        {[1, 2, 3].map(item => (
+          <div key={item} className="card animate-pulse">
+            <div className="h-5 w-2/3 rounded bg-gray-100" />
+            <div className="mt-4 h-4 w-1/2 rounded bg-gray-100" />
+            <div className="mt-3 h-10 rounded bg-gray-100" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-4xl">
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Vé của tôi</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Quản lý mã vé, QR, hủy vé và đánh giá chuyến đã hoàn thành.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {pendingTickets.length > 0 && (
+            <span className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-700">
+              {pendingTickets.length} vé chờ thanh toán
+            </span>
+          )}
+          {reviewableTickets.length > 0 && (
+            <span className="rounded-full bg-orange-100 px-3 py-1 text-sm font-semibold text-brand">
+              {reviewableTickets.length} vé chờ đánh giá
+            </span>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="card mb-5 border-red-200 bg-red-50 text-sm font-medium text-red-700">
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="card mb-5 border-green-200 bg-green-50 text-green-700">
+          <p className="font-bold">Đặt vé thành công. Vé của bạn đã được xác nhận.</p>
+          {paidOrder && (
+            <div className="mt-3 grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
+              <div className="rounded-lg bg-white/80 px-4 py-3">
+                <span className="text-green-700/70">Mã hóa đơn</span>
+                <p className="break-all font-mono font-black text-gray-800">{formatInvoiceCode(paidOrder)}</p>
+              </div>
+              <div className="rounded-lg bg-white/80 px-4 py-3">
+                <span className="text-green-700/70">Mã vé</span>
+                <p className="break-all font-mono font-black text-gray-800">
+                  {(paidOrder.ticketDetails || []).map((ticket) => formatTicketCode(ticket)).join(', ') || 'Đang cập nhật'}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {pendingTickets.length > 0 && (
+        <div className="mb-5 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-bold text-gray-900">Bạn có vé chưa thanh toán</p>
+              <p className="text-sm text-gray-600">Hoàn tất thanh toán để xác nhận chỗ ngồi của bạn.</p>
+            </div>
+            <Link
+              to={`/my-tickets/order/${pendingTickets[0].order?.id}/pay`}
+              className="btn-primary px-4 py-2 text-center text-sm bg-yellow-500 hover:bg-yellow-600"
+            >
+              Thanh toán ngay
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {reviewableTickets.length > 0 && (
         <div className="mb-5 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -147,94 +255,21 @@ export default function MyTicketsPage() {
         </div>
       )}
 
-      {tickets.length === 0 ? (
+      {tickets.filter(t => t.status !== 'PENDING').length === 0 ? (
         <div className="card text-center py-16 text-gray-500">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-2xl">🎫</div>
-          <p className="font-semibold text-gray-800">Bạn chưa có vé nào</p>
+          <p className="font-semibold text-gray-800">Bạn chưa có vé nào đã thanh toán</p>
           <p className="mt-1 text-sm">Tìm chuyến phù hợp và đặt vé chỉ trong vài bước.</p>
           <Link to="/" className="btn-primary mt-4 inline-block">Đặt vé ngay</Link>
         </div>
       ) : (
         <div className="grid gap-4">
-          {tickets.map(ticket => {
+          {tickets.filter(t => t.status !== 'PENDING').map(ticket => {
             const badge = STATUS_MAP[ticket.status] || { label: ticket.status, cls: 'bg-gray-100 text-gray-500', tone: 'border-gray-200 bg-gray-50' };
             const trip = ticket.tripSeat?.trip;
             const route = trip?.route;
             const canReview = REVIEWABLE_STATUSES.has(ticket.status) && !ticket.review;
-            const isPending = ticket.status === 'PENDING';
             const canCancel = ticket.status === 'PAID' && canRefundCancelTicket(ticket);
-            return (
-              <article key={ticket.id} className={`card border ${badge.tone}`}>
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-2 flex flex-wrap items-center gap-2">
-                      <h2 className="min-w-0 break-words text-lg font-bold text-gray-900">
-                        {route?.originCity || '-'} → {route?.destinationCity || '-'}
-                      </h2>
-                      <span className={`badge ${badge.cls}`}>{badge.label}</span>
-                      {canReview && <span className="badge bg-orange-100 text-brand">Chờ đánh giá</span>}
-                      {isPending && (
-                        <span className="badge bg-yellow-100 text-yellow-700 animate-pulse">⚡ Cần thanh toán</span>
-                      )}
-                    </div>
-                    <p className="text-sm font-medium text-gray-500">
-                      {trip ? format(new Date(trip.departureTime), 'HH:mm - EEEE, dd/MM/yyyy', { locale: vi }) : '-'}
-                    </p>
-                    <div className="mt-3 grid gap-2 text-xs text-gray-500 sm:grid-cols-2">
-                      <p className="min-w-0 rounded-lg bg-white/80 px-3 py-2">
-                        Mã vé: <strong className="break-all font-mono text-gray-800">{formatTicketCode(ticket)}</strong>
-                      </p>
-                      <p className="min-w-0 rounded-lg bg-white/80 px-3 py-2">
-                        Hóa đơn: <strong className="break-all font-mono text-gray-800">{formatInvoiceCode(ticket.order || ticket.orderId)}</strong>
-                      </p>
-                    </div>
-                    <p className="mt-3 text-sm text-gray-600">
-                      Ghế <strong>{ticket.tripSeat?.seatLayout?.seatCode}</strong> · {ticket.passengerName}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col gap-2 lg:w-44 lg:items-end">
-                    <span className="text-xl font-bold text-brand">
-                      {Number(ticket.price).toLocaleString('vi-VN')}đ
-                    </span>
-                    <div className="grid w-full grid-cols-2 gap-2 lg:grid-cols-1">
-                      {isPending ? (
-                        <>
-                          <Link
-                            to={`/my-tickets/order/${ticket.order?.id}/pay`}
-                            className="col-span-2 rounded-xl bg-yellow-500 px-3 py-2 text-center text-sm font-semibold text-white transition hover:bg-yellow-600"
-                          >
-                            💳 Tiếp tục thanh toán
-                          </Link>
-                          <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm col-span-2">
-                            Xem chi tiết
-                          </Link>
-                        </>
-                      ) : (
-                        <>
-                          <Link to={`/my-tickets/${ticket.id}`} className="btn-primary px-3 py-2 text-center text-sm">
-                            Xem vé
-                          </Link>
-                          {canReview ? (
-                            <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm">
-                              Đánh giá
-                            </Link>
-                          ) : canCancel ? (
-                            <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm">
-                              QR / Hủy
-                            </Link>
-                          ) : (
-                            <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-2 text-center text-sm">
-                              Chi tiết
-                            </Link>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </article>
-            );
           })}
         </div>
       )}
