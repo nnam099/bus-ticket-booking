@@ -1299,80 +1299,69 @@ async function main() {
     const allSeatData = [];
     const staffData = [];
 
-    for (let dayOffset = -pastDays; dayOffset < futureDays; dayOffset += 1) {
-      const serviceDate = new Date(today);
-      serviceDate.setDate(today.getDate() + dayOffset);
-      const dateId = formatDateId(serviceDate);
+    let currentStartTime = new Date(today);
+    currentStartTime.setDate(today.getDate() - pastDays);
+    if (corridor.cycleTimes && corridor.cycleTimes.length > 0) {
+      const [h, m] = corridor.cycleTimes[0].split(':').map(Number);
+      currentStartTime.setHours(h, m, 0, 0);
+    } else {
+      currentStartTime.setHours(6, 0, 0, 0);
+    }
 
-      const outwardTimes = ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
-      for (const time of outwardTimes) {
-        const [hour, minute] = time.split(':').map(Number);
-        const departureTime = new Date(serviceDate);
-        departureTime.setHours(hour, minute, 0, 0);
+    let isOutward = true;
+    const endDate = new Date(today);
+    endDate.setDate(today.getDate() + futureDays);
 
-        const estimatedArrival = addMinutes(departureTime, corridor.durationMinutes);
-        const status = departureTime < new Date() ? 'COMPLETED' : 'SCHEDULED';
-
-        const outwardTripId = `trip-${corridor.key}-outward-${dateId}-${time.replace(':', '')}`;
-        allTripData.push({
-          id: outwardTripId,
-          routeId: corridor.outwardId,
-          vehicleId: corridor.vehicle.id,
-          departureTime,
-          estimatedArrival,
-          basePrice: corridor.basePrice,
-          status,
-        });
-        
-        for (const layout of layouts) {
-          allSeatData.push({
-            tripId: outwardTripId,
-            seatLayoutId: layout.id,
-            status: 'AVAILABLE',
-          });
+    while (currentStartTime < endDate) {
+      // Sleep until 06:00 if the next departure is between 22:00 and 05:00
+      if (currentStartTime.getHours() >= 22 || currentStartTime.getHours() < 5) {
+        if (currentStartTime.getHours() >= 22) {
+          currentStartTime.setDate(currentStartTime.getDate() + 1);
         }
+        currentStartTime.setHours(6, 0, 0, 0);
+      }
 
-        staffData.push({
-          tripId: outwardTripId,
-          staffId: corridor.driver.id,
-          role: 'DRIVER'
+      const departureTime = new Date(currentStartTime);
+      if (departureTime >= endDate) break;
+
+      const estimatedArrival = addMinutes(departureTime, corridor.durationMinutes);
+      const dateId = formatDateId(departureTime);
+      const status = departureTime < new Date() ? 'COMPLETED' : 'SCHEDULED';
+      
+      const tripDirection = isOutward ? 'outward' : 'return';
+      const routeId = isOutward ? corridor.outwardId : corridor.returnId;
+      
+      const hourStr = departureTime.getHours().toString().padStart(2, '0');
+      const minStr = departureTime.getMinutes().toString().padStart(2, '0');
+      const tripId = `trip-${corridor.key}-${tripDirection}-${dateId}-${hourStr}${minStr}`;
+
+      allTripData.push({
+        id: tripId,
+        routeId: routeId,
+        vehicleId: corridor.vehicle.id,
+        departureTime,
+        estimatedArrival,
+        basePrice: corridor.basePrice,
+        status,
+      });
+
+      for (const layout of layouts) {
+        allSeatData.push({
+          tripId,
+          seatLayoutId: layout.id,
+          status: 'AVAILABLE',
         });
       }
 
-      const returnTimes = ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00', '21:00', '23:00'];
-      for (const time of returnTimes) {
-        const [hour, minute] = time.split(':').map(Number);
-        const departureTime = new Date(serviceDate);
-        departureTime.setHours(hour, minute, 0, 0);
+      staffData.push({
+        tripId,
+        staffId: corridor.driver.id,
+        role: 'DRIVER'
+      });
 
-        const estimatedArrival = addMinutes(departureTime, corridor.durationMinutes);
-        const status = departureTime < new Date() ? 'COMPLETED' : 'SCHEDULED';
-
-        const returnTripId = `trip-${corridor.key}-return-${dateId}-${time.replace(':', '')}`;
-        allTripData.push({
-          id: returnTripId,
-          routeId: corridor.returnId,
-          vehicleId: corridor.vehicle.id,
-          departureTime,
-          estimatedArrival,
-          basePrice: corridor.basePrice,
-          status,
-        });
-
-        for (const layout of layouts) {
-          allSeatData.push({
-            tripId: returnTripId,
-            seatLayoutId: layout.id,
-            status: 'AVAILABLE',
-          });
-        }
-
-        staffData.push({
-          tripId: returnTripId,
-          staffId: corridor.driver.id,
-          role: 'DRIVER'
-        });
-      }
+      // Next trip starts after arrival + turnaround time (default 60 mins)
+      currentStartTime = addMinutes(estimatedArrival, corridor.turnaroundMinutes || 60);
+      isOutward = !isOutward;
     }
 
     const BATCH_SIZE = 500;
