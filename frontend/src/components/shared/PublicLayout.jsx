@@ -163,120 +163,6 @@ function SupportModal({ onClose }) {
   );
 }
 
-// ── NavSearch: Thanh tìm kiếm compact trên navbar ─────────────────────────────
-function CityInput({ value, onChange, placeholder, exclude }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  const filtered = value.trim()
-    ? cityOptions.filter(
-        c => normalizeText(c).includes(normalizeText(value)) && c !== exclude
-      )
-    : cityOptions.filter(c => c !== exclude).slice(0, 8);
-
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  return (
-    <div className="relative" ref={ref}>
-      <input
-        type="text"
-        value={value}
-        onChange={e => { onChange(e.target.value); setOpen(true); }}
-        onFocus={() => setOpen(true)}
-        placeholder={placeholder}
-        className="w-36 bg-transparent text-sm font-semibold text-[#4a3b32] dark:text-gray-200 placeholder-[#c4a898] dark:placeholder-gray-500 outline-none border-none"
-      />
-      {open && filtered.length > 0 && (
-        <ul className="absolute top-full left-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-gray-100 dark:border-slate-700 z-[200] max-h-52 overflow-y-auto">
-          {filtered.map(city => (
-            <li key={city}>
-              <button
-                type="button"
-                onMouseDown={e => { e.preventDefault(); onChange(city); setOpen(false); }}
-                className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-orange-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                {city}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function NavSearch() {
-  const navigate = useNavigate();
-  const today = format(new Date(), 'yyyy-MM-dd');
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
-  const [date, setDate] = useState(today);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!origin || !destination || !date) return;
-    navigate(`/search?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&date=${date}`);
-  };
-
-  const handleSwap = () => { setOrigin(destination); setDestination(origin); };
-
-  return (
-    <form
-      onSubmit={handleSearch}
-      className="hidden lg:flex items-center gap-0 bg-white dark:bg-slate-800 border border-[#f0e6d8] dark:border-slate-700 rounded-2xl shadow-sm px-1 py-1"
-    >
-      {/* Origin */}
-      <div className="flex items-center gap-2 px-3 py-1.5">
-        <i className="ti ti-map-pin text-[#e85d04]" style={{ fontSize: 15 }} />
-        <CityInput value={origin} onChange={setOrigin} placeholder="Điểm đi" exclude={destination} />
-      </div>
-
-      {/* Swap */}
-      <button
-        type="button"
-        onClick={handleSwap}
-        className="w-7 h-7 rounded-full bg-orange-50 dark:bg-slate-700 flex items-center justify-center hover:bg-orange-100 transition flex-shrink-0 border border-[#f0e6d8] dark:border-slate-600"
-      >
-        <i className="ti ti-arrows-exchange text-[#e85d04]" style={{ fontSize: 14 }} />
-      </button>
-
-      {/* Destination */}
-      <div className="flex items-center gap-2 px-3 py-1.5">
-        <i className="ti ti-map-pin-filled text-[#e85d04]" style={{ fontSize: 15 }} />
-        <CityInput value={destination} onChange={setDestination} placeholder="Điểm đến" exclude={origin} />
-      </div>
-
-      {/* Divider */}
-      <div className="w-px h-6 bg-[#f0e6d8] dark:bg-slate-600 mx-1 flex-shrink-0" />
-
-      {/* Date */}
-      <div className="flex items-center gap-2 px-3 py-1.5">
-        <i className="ti ti-calendar text-[#e85d04]" style={{ fontSize: 15 }} />
-        <input
-          type="date"
-          value={date}
-          min={today}
-          onChange={e => setDate(e.target.value)}
-          className="bg-transparent text-sm font-semibold text-[#4a3b32] dark:text-gray-200 outline-none border-none w-32 cursor-pointer"
-        />
-      </div>
-
-      {/* Search button */}
-      <button
-        type="submit"
-        className="ml-1 px-4 py-2 rounded-xl bg-[#e85d04] text-white text-sm font-bold hover:opacity-90 transition flex items-center gap-1.5 flex-shrink-0"
-      >
-        <i className="ti ti-search" style={{ fontSize: 14 }} />
-        Tìm
-      </button>
-    </form>
-  );
-}
-
 // ── Main Layout ───────────────────────────────────────────────────────────────
 export default function PublicLayout() {
   const { user } = useSelector(s => s.auth);
@@ -326,25 +212,30 @@ export default function PublicLayout() {
             </span>
           </Link>
 
-          {/* Search bar — center */}
-          <div className="flex-1 flex justify-center">
-            <NavSearch />
-          </div>
-
-          {/* Right: links + auth */}
-          <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Nav links */}
+          <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
+            <Link
+              to="/#search-form"
+              className="px-4 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800"
+            >
+              Tìm chuyến
+            </Link>
             <Link
               to="/lookup"
-              className="hidden md:block px-3 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800"
+              className="px-4 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800"
             >
               Tra cứu vé
             </Link>
             <button
               onClick={() => setShowSupport(true)}
-              className="hidden md:block px-3 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800 cursor-pointer bg-transparent border-none"
+              className="px-4 py-2 rounded-full text-sm font-semibold transition-colors text-[#9a7d6e] dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-slate-800 cursor-pointer bg-transparent border-none"
             >
               Hỗ trợ
             </button>
+          </div>
+
+          {/* Right: auth */}
+          <div className="flex items-center gap-2 flex-shrink-0">
             <ThemeToggle compact />
             {user ? (
               <>
