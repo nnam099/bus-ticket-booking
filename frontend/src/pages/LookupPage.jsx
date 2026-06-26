@@ -215,7 +215,7 @@ function MyTicketsPanel() {
             {tab.label}
             {counts[tab.key] > 0 && (
               <span className={`rounded-full px-1.5 py-0.5 text-xs leading-none
-                ${filter === tab.key ? 'bg-white/20 text-white' : 'bg-gray-300 text-gray-600'}`}>
+                ${filter === tab.key ? 'bg-white/20 text-white' : 'bg-gray-500 text-white'}`}>
                 {counts[tab.key]}
               </span>
             )}
