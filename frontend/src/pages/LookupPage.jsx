@@ -67,7 +67,7 @@ function TicketResult({ ticket }) {
           </div>
         ))}
       </div>
-
+    </div>
   );
 }
 
