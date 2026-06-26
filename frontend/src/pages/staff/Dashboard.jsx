@@ -1,8 +1,8 @@
-// staff/Dashboard.jsx
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { staffAPI } from '../../services/api';
 import { format } from 'date-fns';
+import { PageHeader, Card, Input, Button, EmptyState } from '../../components/ui';
 
 const normalizeText = (value) =>
   value
@@ -26,37 +26,45 @@ export default function StaffDashboard() {
     : trips;
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Chuyến xe của tôi</h1>
-          <p className="mt-1 text-sm text-gray-500">{filteredTrips.length} chuyến được hiển thị</p>
-        </div>
-        <div className="w-full md:max-w-sm">
-          <label className="label">Lọc chuyến</label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg">🔎</span>
-            <input
-              className="input pl-10"
-              placeholder="Nhập H, Hồ Chí Minh, Đà Lạt..."
+    <div className="space-y-6">
+      <PageHeader 
+        title="Chuyến xe của tôi" 
+        description={`${filteredTrips.length} chuyến được hiển thị.`}
+        actions={
+          <div className="w-full md:w-64">
+            <Input
+              placeholder="Tìm điểm đến, biển số xe..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              icon="ti-search"
             />
           </div>
-        </div>
-      </div>
+        }
+      />
+
       <div className="space-y-4">
         {filteredTrips.map(trip => (
-          <div key={trip.id} className="card flex items-center justify-between">
+          <Card key={trip.id} hover className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-l-4 border-l-[#e85d04]">
             <div>
-              <p className="font-semibold">{trip.route?.originCity} → {trip.route?.destinationCity}</p>
-              <p className="text-sm text-gray-500">{format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')} • {trip.vehicle?.licensePlate}</p>
+              <p className="font-black text-xl text-gray-900 dark:text-white flex items-center gap-2">
+                {trip.route?.originCity} <i className="ti ti-arrow-right text-[#e85d04]" /> {trip.route?.destinationCity}
+              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+                <span className="flex items-center gap-1.5"><i className="ti ti-calendar text-gray-400" /> {format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')}</span>
+                <span className="flex items-center gap-1.5"><i className="ti ti-bus text-gray-400" /> {trip.vehicle?.licensePlate}</span>
+              </div>
             </div>
-            <Link to={`/staff/trips/${trip.id}/check-in`} className="btn-primary text-sm py-1.5">Soát vé</Link>
-          </div>
+            <Link to={`/staff/trips/${trip.id}/check-in`} className="shrink-0 w-full sm:w-auto">
+              <Button fullWidth icon={<i className="ti ti-qrcode" />}>Soát vé</Button>
+            </Link>
+          </Card>
         ))}
-        {trips.length === 0 && <div className="card text-center py-12 text-gray-500"><p>Không có chuyến nào được phân công.</p></div>}
-        {trips.length > 0 && filteredTrips.length === 0 && <div className="card text-center py-12 text-gray-500"><p>Không tìm thấy chuyến phù hợp.</p></div>}
+        {trips.length === 0 && (
+          <EmptyState title="Không có chuyến nào" description="Hiện tại chưa có chuyến nào được phân công cho bạn." icon="ti-bus" />
+        )}
+        {trips.length > 0 && filteredTrips.length === 0 && (
+          <EmptyState title="Không tìm thấy chuyến" description="Không có chuyến nào khớp với tìm kiếm của bạn." icon="ti-search" />
+        )}
       </div>
     </div>
   );

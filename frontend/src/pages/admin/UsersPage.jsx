@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../../services/api';
+import { PageHeader, Card, Badge, Button, EmptyState, Loading, Table, Thead, Tbody, Tr, Th, Td } from '../../components/ui';
 
 const userTabs = [
   { key: 'ALL', label: 'Tất cả' },
@@ -17,12 +18,12 @@ const roleLabels = {
 };
 
 const ticketStatusClass = {
-  PENDING: 'bg-yellow-100 text-yellow-700',
-  PAID: 'bg-green-100 text-green-700',
-  CHECKED_IN: 'bg-blue-100 text-blue-700',
-  COMPLETED: 'bg-gray-100 text-gray-700',
-  CANCELLED: 'bg-red-100 text-red-600',
-  REFUNDED: 'bg-purple-100 text-purple-700',
+  PENDING: 'warning',
+  PAID: 'success',
+  CHECKED_IN: 'info',
+  COMPLETED: 'default',
+  CANCELLED: 'danger',
+  REFUNDED: 'primary',
 };
 
 const ticketStatusLabels = {
@@ -42,19 +43,19 @@ const paymentStatusLabels = {
 };
 
 const paymentStatusClass = {
-  PENDING: 'bg-yellow-100 text-yellow-700',
-  SUCCESS: 'bg-green-100 text-green-700',
-  FAILED: 'bg-red-100 text-red-600',
-  REFUNDED: 'bg-purple-100 text-purple-700',
+  PENDING: 'warning',
+  SUCCESS: 'success',
+  FAILED: 'danger',
+  REFUNDED: 'primary',
 };
 
 const tripStatusClass = {
-  SCHEDULED: 'bg-blue-100 text-blue-700',
-  BOARDING: 'bg-yellow-100 text-yellow-700',
-  DEPARTED: 'bg-green-100 text-green-700',
-  COMPLETED: 'bg-gray-100 text-gray-700',
-  DELAYED: 'bg-orange-100 text-orange-700',
-  CANCELLED: 'bg-red-100 text-red-600',
+  SCHEDULED: 'info',
+  BOARDING: 'warning',
+  DEPARTED: 'success',
+  COMPLETED: 'default',
+  DELAYED: 'warning',
+  CANCELLED: 'danger',
 };
 
 const tripStatusLabels = {
@@ -188,40 +189,35 @@ export default function AdminUsersPage() {
   };
 
   const renderTicketPanel = () => (
-    <div className="card border border-blue-100 bg-blue-50/20">
-      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+    <Card className="border-blue-100 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-900/10 mt-2" noPadding>
+      <div className="p-5 flex flex-col gap-3 border-b border-gray-100 dark:border-slate-800 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
             Vé đã đặt của {ticketPanel.user?.customer?.fullName || ticketPanel.user?.email || ticketPanel.user?.phone}
           </h2>
-          <p className="text-sm text-gray-500">{ticketPanel.user?.email || ticketPanel.user?.phone}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{ticketPanel.user?.email || ticketPanel.user?.phone}</p>
         </div>
-        <button
-          onClick={() => setTicketPanel(null)}
-          className="self-start rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-50"
-        >
-          Đóng
-        </button>
+        <Button onClick={() => setTicketPanel(null)} variant="outline" size="sm">Đóng</Button>
       </div>
 
       {ticketLoading ? (
-        <div className="py-8 text-center text-gray-500">Đang tải danh sách vé...</div>
+        <Loading />
       ) : ticketPanel.tickets.length === 0 ? (
-        <div className="py-8 text-center text-gray-500">Người dùng này chưa đặt vé nào.</div>
+        <EmptyState title="Chưa đặt vé nào" description="Người dùng này chưa đặt vé nào." />
       ) : (
-        <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-100 text-sm">
-            <thead>
-              <tr className="text-left text-gray-500">
-                <th className="py-2 pr-4 font-medium">Chuyến</th>
-                <th className="py-2 pr-4 font-medium">Khởi hành</th>
-                <th className="py-2 pr-4 font-medium">Ghế</th>
-                <th className="py-2 pr-4 font-medium">Hành khách</th>
-                <th className="py-2 pr-4 font-medium">Thanh toán</th>
-                <th className="py-2 pr-4 font-medium">Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+        <div className="overflow-x-auto">
+          <Table className="border-0 shadow-none rounded-none !bg-transparent">
+            <Thead>
+              <Tr>
+                <Th>Chuyến</Th>
+                <Th>Khởi hành</Th>
+                <Th>Ghế</Th>
+                <Th>Hành khách</Th>
+                <Th>Thanh toán</Th>
+                <Th>Trạng thái</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
               {ticketPanel.tickets.map((ticket) => {
                 const trip = ticket.tripSeat?.trip;
                 const route = trip?.route;
@@ -229,69 +225,64 @@ export default function AdminUsersPage() {
                 const routeName = route ? `${route.originCity} - ${route.destinationCity}` : 'Chưa có tuyến';
 
                 return (
-                  <tr key={ticket.id} className="align-top">
-                    <td className="py-3 pr-4">
-                      <p className="font-medium text-gray-800">{routeName}</p>
-                      <p className="text-xs text-gray-500">
+                  <Tr key={ticket.id}>
+                    <Td>
+                      <p className="font-bold text-gray-900 dark:text-gray-100">{routeName}</p>
+                      <p className="text-xs text-gray-500 mt-1">
                         {route?.operator?.companyName || 'Chưa có nhà xe'} · {trip?.vehicle?.licensePlate || 'Chưa gán xe'}
                       </p>
-                    </td>
-                    <td className="py-3 pr-4 text-gray-700">
-                      <p>{formatDateTime(trip?.departureTime)}</p>
-                      <p className="text-xs text-gray-500">Đến: {formatDateTime(trip?.estimatedArrival)}</p>
-                    </td>
-                    <td className="py-3 pr-4 text-gray-700">
-                      {ticket.tripSeat?.seatLayout?.seatCode || 'Chưa có'}
-                      {ticket.tripSeat?.seatLayout?.floor ? ` / Tầng ${ticket.tripSeat.seatLayout.floor}` : ''}
-                    </td>
-                    <td className="py-3 pr-4 text-gray-700">
-                      <p>{ticket.passengerName}</p>
-                      <p className="text-xs text-gray-500">{ticket.passengerPhone || 'Không có SĐT'}</p>
-                    </td>
-                    <td className="py-3 pr-4 text-gray-700">
-                      <p>{formatCurrency(ticket.price)}</p>
-                      <p className="text-xs text-gray-500">
+                    </Td>
+                    <Td>
+                      <p className="font-medium">{formatDateTime(trip?.departureTime)}</p>
+                      <p className="text-xs text-gray-500 mt-1">Đến: {formatDateTime(trip?.estimatedArrival)}</p>
+                    </Td>
+                    <Td>
+                      <span className="font-bold">{ticket.tripSeat?.seatLayout?.seatCode || 'Chưa có'}</span>
+                      {ticket.tripSeat?.seatLayout?.floor ? <span className="text-xs text-gray-500 ml-1">/ Tầng {ticket.tripSeat.seatLayout.floor}</span> : ''}
+                    </Td>
+                    <Td>
+                      <p className="font-medium">{ticket.passengerName}</p>
+                      <p className="text-xs text-gray-500 mt-1">{ticket.passengerPhone || 'Không có SĐT'}</p>
+                    </Td>
+                    <Td>
+                      <p className="font-bold text-[#e85d04]">{formatCurrency(ticket.price)}</p>
+                      <p className="text-xs text-gray-500 mt-1">
                         {payment ? `${payment.method}${payment.gateway ? ` / ${payment.gateway}` : ''} - ${ticketStatusLabels[payment.status] || payment.status}` : ticketStatusLabels[ticket.order?.status] || ticket.order?.status}
                       </p>
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className={`badge ${ticketStatusClass[ticket.status] || 'bg-gray-100 text-gray-700'}`}>
+                    </Td>
+                    <Td>
+                      <Badge variant={ticketStatusClass[ticket.status] || 'default'}>
                         {ticketStatusLabels[ticket.status] || ticket.status}
-                      </span>
-                    </td>
-                  </tr>
+                      </Badge>
+                    </Td>
+                  </Tr>
                 );
               })}
-            </tbody>
-          </table>
+            </Tbody>
+          </Table>
         </div>
       )}
-    </div>
+    </Card>
   );
 
   const renderInvoicePanel = () => (
-    <div className="card border border-emerald-100 bg-emerald-50/20">
-      <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+    <Card className="border-emerald-100 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-900/10 mt-2" noPadding>
+      <div className="p-5 flex flex-col gap-3 border-b border-gray-100 dark:border-slate-800 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">
             Hóa đơn của {invoicePanel.user?.customer?.fullName || invoicePanel.user?.email || invoicePanel.user?.phone}
           </h2>
-          <p className="text-sm text-gray-500">{invoicePanel.user?.email || invoicePanel.user?.phone}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{invoicePanel.user?.email || invoicePanel.user?.phone}</p>
         </div>
-        <button
-          onClick={() => setInvoicePanel(null)}
-          className="self-start rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-50"
-        >
-          Đóng
-        </button>
+        <Button onClick={() => setInvoicePanel(null)} variant="outline" size="sm">Đóng</Button>
       </div>
 
       {invoiceLoading ? (
-        <div className="py-8 text-center text-gray-500">Đang tải danh sách hóa đơn...</div>
+        <Loading />
       ) : invoicePanel.invoices.length === 0 ? (
-        <div className="py-8 text-center text-gray-500">Người dùng này chưa có hóa đơn nào.</div>
+        <EmptyState title="Chưa có hóa đơn nào" description="Người dùng này chưa có hóa đơn nào." />
       ) : (
-        <div className="mt-4 grid gap-4">
+        <div className="p-5 grid gap-4">
           {invoicePanel.invoices.map((invoice) => {
             const latestPayment = invoice.payments?.[0];
             const firstTicket = invoice.ticketDetails?.[0];
@@ -301,24 +292,24 @@ export default function AdminUsersPage() {
             const ticketCount = invoice.ticketDetails?.length || 0;
 
             return (
-              <article key={invoice.id} className="rounded-2xl border border-gray-100 bg-white p-4">
-                <div className="grid gap-3 lg:grid-cols-[1.3fr_1fr_auto] lg:items-start">
+              <div key={invoice.id} className="rounded-2xl border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
+                <div className="p-4 grid gap-3 lg:grid-cols-[1.3fr_1fr_auto] lg:items-start bg-gray-50/50 dark:bg-slate-800/50 border-b border-gray-100 dark:border-slate-700">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="break-all font-mono text-sm font-black text-gray-900">{invoice.publicCode || invoice.id}</p>
-                      <span className={`badge ${ticketStatusClass[invoice.status] || 'bg-gray-100 text-gray-700'}`}>
+                      <p className="break-all font-mono text-sm font-black text-gray-900 dark:text-gray-100">{invoice.publicCode || invoice.id}</p>
+                      <Badge variant={ticketStatusClass[invoice.status] || 'default'}>
                         {ticketStatusLabels[invoice.status] || invoice.status}
-                      </span>
+                      </Badge>
                     </div>
-                    <p className="mt-2 font-semibold text-gray-800">{routeName}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="mt-2 font-semibold text-gray-800 dark:text-gray-200">{routeName}</p>
+                    <p className="text-xs text-gray-500 mt-1">
                       {route?.operator?.companyName || 'Chưa có nhà xe'} · Tạo: {formatDateTime(invoice.createdAt)}
                     </p>
                   </div>
 
-                  <div className="text-sm text-gray-700">
-                    <p className="font-bold text-brand">{formatCurrency(invoice.totalAmount)}</p>
-                    <p className="mt-1 text-xs text-gray-500">{ticketCount} vé trong hóa đơn</p>
+                  <div className="text-sm">
+                    <p className="font-bold text-[#e85d04] text-lg">{formatCurrency(invoice.totalAmount)}</p>
+                    <p className="mt-1 text-xs font-semibold text-gray-500">{ticketCount} vé trong hóa đơn</p>
                     <p className="mt-1 text-xs text-gray-500">
                       {latestPayment
                         ? `${latestPayment.method}${latestPayment.gateway ? ` / ${latestPayment.gateway}` : ''}`
@@ -327,57 +318,57 @@ export default function AdminUsersPage() {
                   </div>
 
                   <div className="lg:text-right">
-                    <span className={`badge ${paymentStatusClass[latestPayment?.status] || 'bg-gray-100 text-gray-700'}`}>
+                    <Badge variant={paymentStatusClass[latestPayment?.status] || 'default'}>
                       {paymentStatusLabels[latestPayment?.status] || latestPayment?.status || 'Chưa thanh toán'}
-                    </span>
+                    </Badge>
                     {latestPayment?.gatewayTxnId && (
-                      <p className="mt-2 break-all font-mono text-xs text-gray-500">{latestPayment.gatewayTxnId}</p>
+                      <p className="mt-2 break-all font-mono text-[10px] text-gray-400">{latestPayment.gatewayTxnId}</p>
                     )}
                   </div>
                 </div>
 
-                <div className="mt-4 overflow-x-auto rounded-xl border border-gray-100">
-                  <table className="min-w-full divide-y divide-gray-100 text-sm">
-                    <thead className="bg-gray-50 text-left text-gray-500">
-                      <tr>
-                        <th className="px-3 py-2 font-medium">Vé</th>
-                        <th className="px-3 py-2 font-medium">Hành khách</th>
-                        <th className="px-3 py-2 font-medium">Ghế</th>
-                        <th className="px-3 py-2 font-medium">Giá</th>
-                        <th className="px-3 py-2 font-medium">Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
+                <div className="overflow-x-auto">
+                  <Table className="border-0 shadow-none rounded-none !bg-transparent">
+                    <Thead>
+                      <Tr>
+                        <Th>Vé</Th>
+                        <Th>Hành khách</Th>
+                        <Th>Ghế</Th>
+                        <Th>Giá</Th>
+                        <Th>Trạng thái</Th>
+                      </Tr>
+                    </Thead>
+                    <Tbody>
                       {invoice.ticketDetails?.map((ticket) => (
-                        <tr key={ticket.id}>
-                          <td className="px-3 py-2">
-                            <p className="break-all font-mono text-xs font-semibold text-gray-800">{ticket.publicCode || ticket.id}</p>
-                          </td>
-                          <td className="px-3 py-2">
-                            <p className="font-medium text-gray-800">{ticket.passengerName}</p>
+                        <Tr key={ticket.id}>
+                          <Td>
+                            <p className="break-all font-mono text-xs font-bold text-gray-800 dark:text-gray-300">{ticket.publicCode || ticket.id}</p>
+                          </Td>
+                          <Td>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">{ticket.passengerName}</p>
                             <p className="text-xs text-gray-500">{ticket.passengerPhone || 'Không có SĐT'}</p>
-                          </td>
-                          <td className="px-3 py-2 text-gray-700">
-                            {ticket.tripSeat?.seatLayout?.seatCode || '-'}
-                            {ticket.tripSeat?.seatLayout?.floor ? ` / Tầng ${ticket.tripSeat.seatLayout.floor}` : ''}
-                          </td>
-                          <td className="px-3 py-2 font-semibold text-gray-800">{formatCurrency(ticket.price)}</td>
-                          <td className="px-3 py-2">
-                            <span className={`badge ${ticketStatusClass[ticket.status] || 'bg-gray-100 text-gray-700'}`}>
+                          </Td>
+                          <Td>
+                            <span className="font-bold">{ticket.tripSeat?.seatLayout?.seatCode || '-'}</span>
+                            {ticket.tripSeat?.seatLayout?.floor ? <span className="text-xs text-gray-500 ml-1">/ Tầng {ticket.tripSeat.seatLayout.floor}</span> : ''}
+                          </Td>
+                          <Td className="font-bold text-gray-900 dark:text-gray-100">{formatCurrency(ticket.price)}</Td>
+                          <Td>
+                            <Badge variant={ticketStatusClass[ticket.status] || 'default'}>
                               {ticketStatusLabels[ticket.status] || ticket.status}
-                            </span>
-                          </td>
-                        </tr>
+                            </Badge>
+                          </Td>
+                        </Tr>
                       ))}
-                    </tbody>
-                  </table>
+                    </Tbody>
+                  </Table>
                 </div>
-              </article>
+              </div>
             );
           })}
         </div>
       )}
-    </div>
+    </Card>
   );
 
   const renderRoutePanel = () => {
@@ -387,91 +378,84 @@ export default function AdminUsersPage() {
       : `Tuyến/chuyến của ${owner?.staff?.fullName || owner?.email}`;
 
     return (
-      <div className="card border border-orange-100 bg-orange-50/20">
-        <div className="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+      <Card className="border-orange-100 dark:border-[#e85d04]/20 bg-orange-50/50 dark:bg-[#e85d04]/10 mt-2" noPadding>
+        <div className="p-5 flex flex-col gap-3 border-b border-gray-100 dark:border-slate-800 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-gray-800">{title}</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {routePanel.type === 'BUS_OPERATOR'
                 ? `${routePanel.routes?.length || 0} tuyến đang quản lý, bao gồm cả chiều đi và chiều về nếu đã tạo.`
                 : `${routePanel.assignments?.length || 0} chuyến được phân công trên ${routePanel.routes?.length || 0} tuyến.`}
             </p>
           </div>
-          <button
-            onClick={() => setRoutePanel(null)}
-            className="self-start rounded-lg border border-gray-300 px-3 py-1 text-sm text-gray-600 transition hover:bg-gray-50"
-          >
-            Đóng
-          </button>
+          <Button onClick={() => setRoutePanel(null)} variant="outline" size="sm">Đóng</Button>
         </div>
 
         {routeLoading ? (
-          <div className="py-8 text-center text-gray-500">Đang tải tuyến và chuyến...</div>
+          <Loading />
         ) : routePanel.routes.length === 0 ? (
-          <div className="py-8 text-center text-gray-500">Chưa có tuyến hoặc chuyến nào.</div>
+          <EmptyState title="Chưa có tuyến hoặc chuyến nào" description="Không có dữ liệu tuyến hoặc chuyến được tìm thấy." />
         ) : (
-          <div className="mt-4 grid gap-3">
+          <div className="p-5 grid gap-4">
             {routePanel.routes.map((route) => {
               const trips = routePanel.type === 'BUS_OPERATOR'
                 ? route.trips || []
                 : (route.assignments || []).map(item => ({ ...item.trip, assignmentRole: item.role }));
               return (
-                <article key={route.id} className="rounded-2xl border border-gray-100 bg-white p-4">
-                  <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                <div key={route.id} className="rounded-2xl border border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between pb-4 border-b border-gray-100 dark:border-slate-700">
                     <div className="min-w-0">
-                      <p className="break-words font-bold text-gray-900">{route.originCity} → {route.destinationCity}</p>
-                      <p className="mt-1 break-words text-sm text-gray-500">
+                      <p className="break-words font-black text-gray-900 dark:text-white text-lg">{route.originCity} → {route.destinationCity}</p>
+                      <p className="mt-1 break-words text-sm text-gray-500 dark:text-gray-400">
                         {route.originAddress || 'Chưa có điểm đón'} → {route.destinationAddress || 'Chưa có điểm trả'}
                       </p>
-                      <p className="mt-1 text-xs text-gray-400">
+                      <p className="mt-1.5 text-xs font-semibold text-[#e85d04]">
                         Nhà xe: {route.operator?.companyName || routePanel.user?.busOperator?.companyName || routePanel.user?.staff?.operator?.companyName || '-'}
                       </p>
                     </div>
-                    <span className="badge bg-gray-100 text-gray-700">
+                    <Badge variant="default" className="text-sm px-3 py-1.5">
                       {route._count?.trips ?? trips.length} chuyến
-                    </span>
+                    </Badge>
                   </div>
 
-                  <div className="mt-3 grid gap-2">
+                  <div className="mt-4 grid gap-3">
                     {trips.length === 0 ? (
-                      <p className="rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-500">Chưa có chuyến gần đây.</p>
+                      <p className="text-sm font-medium text-gray-500 text-center py-4">Chưa có chuyến gần đây.</p>
                     ) : trips.map((trip) => (
-                      <div key={trip.id} className="grid gap-2 rounded-xl bg-gray-50 px-3 py-2 text-sm lg:grid-cols-[1.5fr_1fr_1fr_auto] lg:items-center">
+                      <div key={trip.id} className="grid gap-3 rounded-xl bg-gray-50/80 dark:bg-slate-900/50 border border-gray-100 dark:border-slate-700 px-4 py-3 text-sm lg:grid-cols-[1.5fr_1fr_1fr_auto] lg:items-center">
                         <div className="min-w-0">
-                          <p className="font-semibold text-gray-800">{formatDateTime(trip.departureTime)}</p>
-                          <p className="text-xs text-gray-500">Đến: {formatDateTime(trip.estimatedArrival)}</p>
+                          <p className="font-bold text-gray-900 dark:text-gray-100">{formatDateTime(trip.departureTime)}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Đến: {formatDateTime(trip.estimatedArrival)}</p>
                         </div>
-                        <p className="text-gray-600">
+                        <p className="font-medium text-gray-700 dark:text-gray-300">
                           {trip.vehicle?.licensePlate || '-'}{trip.vehicle?.vehicleType?.name ? ` · ${trip.vehicle.vehicleType.name}` : ''}
                         </p>
-                        <p className="text-gray-600">
+                        <p className="font-medium text-gray-700 dark:text-gray-300">
                           {routePanel.type === 'STAFF' ? `Vai trò: ${trip.assignmentRole || '-'}` : `Còn ${trip._count?.tripSeats ?? '-'} ghế`}
                         </p>
-                        <span className={`badge ${tripStatusClass[trip.status] || 'bg-gray-100 text-gray-700'}`}>{tripStatusLabels[trip.status] || trip.status}</span>
+                        <Badge variant={tripStatusClass[trip.status] || 'default'}>{tripStatusLabels[trip.status] || trip.status}</Badge>
                       </div>
                     ))}
                   </div>
-                </article>
+                </div>
               );
             })}
           </div>
         )}
-      </div>
+      </Card>
     );
   };
 
-  if (loading) return <div className="text-center py-16 text-gray-500">Đang tải...</div>;
+  if (loading) return <Loading fullScreen />;
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Quản lý người dùng</h1>
-          <p className="mt-1 text-sm text-gray-500">Click nhân viên hoặc nhà xe để xem tuyến/chuyến đang phụ trách.</p>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader 
+        title="Quản lý người dùng" 
+        description="Click nhân viên hoặc nhà xe để xem tuyến/chuyến đang phụ trách." 
+      />
 
-      <div className="mb-5 flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3 mb-6">
         {userTabs.map(tab => (
           <button
             key={tab.key}
@@ -481,15 +465,14 @@ export default function AdminUsersPage() {
               setInvoicePanel(null);
               setRoutePanel(null);
             }}
-            className={`rounded-lg border px-3 py-2 text-sm font-medium transition
-              ${activeTab === tab.key ? 'border-brand bg-brand text-white' : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'}`}
+            className={`rounded-full px-5 py-2 text-sm font-bold transition-all shadow-sm ${activeTab === tab.key ? 'bg-[#e85d04] text-white shadow-[0_4px_12px_rgba(232,93,4,0.3)]' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:border-[#e85d04] hover:text-[#e85d04]'}`}
           >
             {tab.label} ({tabCounts[tab.key] || 0})
           </button>
         ))}
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {filteredUsers.map(u => {
           const roles = getRoles(u);
           const isTicketSelected = ticketPanel?.user?.id === u.id;
@@ -500,80 +483,76 @@ export default function AdminUsersPage() {
           const canViewRoutes = hasRole(u, 'STAFF') || hasRole(u, 'BUS_OPERATOR');
 
           return (
-            <div key={u.id} className="space-y-3">
-              <div
-                role={canViewRoutes ? 'button' : undefined}
-                tabIndex={canViewRoutes ? 0 : undefined}
+            <div key={u.id} className="space-y-4">
+              <Card 
+                hover={canViewRoutes}
+                className={`flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between ${canViewRoutes ? 'cursor-pointer' : ''} ${isRouteSelected ? 'border-[#e85d04] shadow-md' : ''}`}
                 onClick={() => canViewRoutes && handleViewRoutes(u)}
-                onKeyDown={(event) => {
-                  if (canViewRoutes && (event.key === 'Enter' || event.key === ' ')) {
-                    event.preventDefault();
-                    handleViewRoutes(u);
-                  }
-                }}
-                className={`card flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between ${canViewRoutes ? 'cursor-pointer hover:border-brand/40' : ''} ${isRouteSelected ? 'border-brand/60' : ''}`}
               >
-                <div className="min-w-0">
-                  <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-gray-800">{getDisplayName(u)}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex flex-wrap items-center gap-3">
+                    <p className="font-black text-gray-900 dark:text-white text-lg">{getDisplayName(u)}</p>
                     {roles.map(role => (
-                      <span key={role} className="badge bg-gray-100 text-gray-700">{roleLabels[role] || role}</span>
+                      <Badge key={role} variant="default">{roleLabels[role] || role}</Badge>
                     ))}
                   </div>
-                  <p className="text-sm text-gray-600">{u.email || u.phone}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-1">{u.email || u.phone}</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                     {getRoleDescription(u)} · Tạo: {new Date(u.createdAt).toLocaleDateString('vi-VN')}
                   </p>
                   {canViewRoutes && (
-                    <p className="mt-2 text-xs font-semibold text-brand">
+                    <p className="mt-2 text-xs font-bold text-[#e85d04]">
                       {isRouteSelected ? 'Đang xem tuyến/chuyến' : 'Click để xem tuyến/chuyến đi và về'}
                     </p>
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3" onClick={(event) => event.stopPropagation()}>
-                  <span className={`badge ${u.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                <div className="flex flex-wrap items-center gap-3 lg:justify-end" onClick={(event) => event.stopPropagation()}>
+                  <Badge variant={u.isActive ? 'success' : 'danger'}>
                     {u.isActive ? 'Hoạt động' : 'Bị khóa'}
-                  </span>
+                  </Badge>
+                  
                   {canViewTickets && (
-                    <button
+                    <Button
                       onClick={() => handleViewTickets(u)}
                       disabled={ticketLoading && isTicketSelected}
-                      className={`rounded-lg border px-3 py-1 text-sm transition disabled:cursor-not-allowed disabled:opacity-70
-                        ${isTicketSelected ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-blue-300 text-blue-600 hover:bg-blue-50'}`}
+                      variant={isTicketSelected ? 'primary' : 'outline'}
+                      size="sm"
                     >
                       {ticketLoading && isTicketSelected ? 'Đang tải...' : 'Xem vé'}
-                    </button>
+                    </Button>
                   )}
                   {canViewInvoices && (
-                    <button
+                    <Button
                       onClick={() => handleViewInvoices(u)}
                       disabled={invoiceLoading && isInvoiceSelected}
-                      className={`rounded-lg border px-3 py-1 text-sm transition disabled:cursor-not-allowed disabled:opacity-70
-                        ${isInvoiceSelected ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'}`}
+                      variant={isInvoiceSelected ? 'primary' : 'outline'}
+                      size="sm"
                     >
                       {invoiceLoading && isInvoiceSelected ? 'Đang tải...' : 'Xem hóa đơn'}
-                    </button>
+                    </Button>
                   )}
                   {canViewRoutes && (
-                    <button
+                    <Button
                       onClick={() => handleViewRoutes(u)}
                       disabled={routeLoading && isRouteSelected}
-                      className={`rounded-lg border px-3 py-1 text-sm transition disabled:cursor-not-allowed disabled:opacity-70
-                        ${isRouteSelected ? 'border-brand bg-orange-50 text-brand' : 'border-orange-300 text-brand hover:bg-orange-50'}`}
+                      variant={isRouteSelected ? 'primary' : 'outline'}
+                      size="sm"
                     >
                       {routeLoading && isRouteSelected ? 'Đang tải...' : 'Xem tuyến'}
-                    </button>
+                    </Button>
                   )}
                   {!roles.includes('ADMIN') && (
-                    <button onClick={() => handleToggle(u.id)}
-                      className={`rounded-lg border px-3 py-1 text-sm transition
-                        ${u.isActive ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-green-300 text-green-600 hover:bg-green-50'}`}>
+                    <Button 
+                      onClick={() => handleToggle(u.id)}
+                      variant={u.isActive ? 'danger' : 'outline'}
+                      size="sm"
+                    >
                       {u.isActive ? 'Khóa' : 'Mở khóa'}
-                    </button>
+                    </Button>
                   )}
                 </div>
-              </div>
+              </Card>
               {isTicketSelected && renderTicketPanel()}
               {isInvoiceSelected && renderInvoicePanel()}
               {isRouteSelected && renderRoutePanel()}
@@ -581,9 +560,7 @@ export default function AdminUsersPage() {
           );
         })}
         {filteredUsers.length === 0 && (
-          <div className="card text-center py-12 text-gray-500">
-            <p>Không có tài khoản nào trong nhóm này.</p>
-          </div>
+          <EmptyState title="Không có tài khoản nào" description="Không có tài khoản nào trong nhóm này." />
         )}
       </div>
     </div>

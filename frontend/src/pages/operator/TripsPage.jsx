@@ -2,16 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { tripAPI, routeAPI, vehicleAPI } from '../../services/api';
 import { format } from 'date-fns';
+import { PageHeader, Card, Input, Select, Button, Badge, EmptyState, Loading } from '../../components/ui';
 
 const TURNAROUND_MINUTES = 60;
 
 const STATUS_LABELS = {
-  SCHEDULED: { label: 'Lịch trình', cls: 'bg-blue-100 text-blue-700' },
-  BOARDING: { label: 'Đang lên xe', cls: 'bg-yellow-100 text-yellow-700' },
-  DEPARTED: { label: 'Đang chạy', cls: 'bg-green-100 text-green-700' },
-  COMPLETED: { label: 'Hoàn thành', cls: 'bg-gray-100 text-gray-500' },
-  CANCELLED: { label: 'Đã hủy', cls: 'bg-red-100 text-red-600' },
-  DELAYED: { label: 'Trễ giờ', cls: 'bg-orange-100 text-orange-700' },
+  SCHEDULED: { label: 'Lịch trình', cls: 'info' },
+  BOARDING: { label: 'Đang lên xe', cls: 'warning' },
+  DEPARTED: { label: 'Đang chạy', cls: 'success' },
+  COMPLETED: { label: 'Hoàn thành', cls: 'default' },
+  CANCELLED: { label: 'Đã hủy', cls: 'danger' },
+  DELAYED: { label: 'Trễ giờ', cls: 'warning' },
 };
 
 const STATUS_ACTIONS = {
@@ -142,117 +143,124 @@ export default function TripsPage() {
   };
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Quản lý chuyến xe</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Tạo chuyến, kiểm tra lịch xe và chuyển trạng thái để khách có thể đánh giá sau chuyến.
-          </p>
-        </div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-primary py-2">
-          {showForm ? 'Đóng' : '+ Thêm chuyến'}
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader 
+        title="Quản lý chuyến xe" 
+        description="Tạo chuyến, kiểm tra lịch xe và chuyển trạng thái để khách có thể đánh giá sau chuyến."
+        actions={
+          <Button onClick={() => setShowForm(!showForm)} variant={showForm ? 'outline' : 'primary'} icon={<i className={`ti ${showForm ? 'ti-x' : 'ti-plus'}`} />}>
+            {showForm ? 'Đóng' : 'Thêm chuyến'}
+          </Button>
+        }
+      />
 
-      {error && <div className="card mb-4 border-red-200 bg-red-50 text-sm font-medium text-red-700">{error}</div>}
+      {error && <Card className="border-red-200 bg-red-50 text-red-700">{error}</Card>}
 
-      <div className="card mb-6">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <input
+      <Card>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <Input
             type="date"
-            className="input"
             value={filters.date}
             onChange={e => setFilters({ ...filters, date: e.target.value })}
           />
-          <select className="input" value={filters.routeId} onChange={e => setFilters({ ...filters, routeId: e.target.value })}>
-            <option value="">Tất cả tuyến</option>
-            {routes.map(route => (
-              <option key={route.id} value={route.id}>{route.originCity} → {route.destinationCity}</option>
-            ))}
-          </select>
-          <select className="input" value={filters.vehicleId} onChange={e => setFilters({ ...filters, vehicleId: e.target.value })}>
-            <option value="">Tất cả xe</option>
-            {vehicles.map(vehicle => (
-              <option key={vehicle.id} value={vehicle.id}>{vehicle.licensePlate} - {vehicle.vehicleType?.name}</option>
-            ))}
-          </select>
-          <select className="input" value={filters.status} onChange={e => setFilters({ ...filters, status: e.target.value })}>
-            <option value="">Tất cả trạng thái</option>
-            {Object.entries(STATUS_LABELS).map(([value, item]) => (
-              <option key={value} value={value}>{item.label}</option>
-            ))}
-          </select>
+          <Select 
+            value={filters.routeId} 
+            onChange={e => setFilters({ ...filters, routeId: e.target.value })}
+            options={[
+              { value: '', label: 'Tất cả tuyến' },
+              ...routes.map(route => ({ value: route.id, label: `${route.originCity} → ${route.destinationCity}` }))
+            ]}
+          />
+          <Select 
+            value={filters.vehicleId} 
+            onChange={e => setFilters({ ...filters, vehicleId: e.target.value })}
+            options={[
+              { value: '', label: 'Tất cả xe' },
+              ...vehicles.map(vehicle => ({ value: vehicle.id, label: `${vehicle.licensePlate} - ${vehicle.vehicleType?.name}` }))
+            ]}
+          />
+          <Select 
+            value={filters.status} 
+            onChange={e => setFilters({ ...filters, status: e.target.value })}
+            options={[
+              { value: '', label: 'Tất cả trạng thái' },
+              ...Object.entries(STATUS_LABELS).map(([value, item]) => ({ value, label: item.label }))
+            ]}
+          />
         </div>
-      </div>
+      </Card>
 
       {showForm && (
-        <div className="card mb-6">
-          <h2 className="mb-4 font-semibold text-gray-800">Tạo chuyến xe mới</h2>
-          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <div>
-              <label className="label">Tuyến xe</label>
-              <select className="input" value={form.routeId} onChange={e => setForm({ ...form, routeId: e.target.value })} required>
-                <option value="">Chọn tuyến xe</option>
-                {routes.map(r => <option key={r.id} value={r.id}>{r.originCity} → {r.destinationCity}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label">Xe</label>
-              <select className="input" value={form.vehicleId} onChange={e => setForm({ ...form, vehicleId: e.target.value })} required>
-                <option value="">Chọn xe</option>
-                {vehicles.map(v => <option key={v.id} value={v.id}>{v.licensePlate} - {v.vehicleType?.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="label">Giờ khởi hành</label>
-              <input type="datetime-local" className="input" value={form.departureTime} onChange={e => setForm({ ...form, departureTime: e.target.value })} required />
-            </div>
-            <div>
-              <label className="label">Giờ đến dự kiến</label>
-              <input type="datetime-local" className="input" value={form.estimatedArrival} onChange={e => setForm({ ...form, estimatedArrival: e.target.value })} required />
-            </div>
-            <div>
-              <label className="label">Giá vé (đ)</label>
-              <input type="number" className="input" placeholder="150000" min="1000" value={form.basePrice} onChange={e => setForm({ ...form, basePrice: e.target.value })} required />
-            </div>
-            <div className="flex items-end">
-              <button type="submit" disabled={submitting || Boolean(formConflict)} className="btn-primary w-full py-2">
+        <Card className="border-[#e85d04]/20 bg-orange-50/50 dark:bg-[#e85d04]/10 page-enter">
+          <h2 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">Tạo chuyến xe mới</h2>
+          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Select 
+              label="Tuyến xe" 
+              value={form.routeId} 
+              onChange={e => setForm({ ...form, routeId: e.target.value })} 
+              required
+              options={[
+                { value: '', label: 'Chọn tuyến xe' },
+                ...routes.map(r => ({ value: r.id, label: `${r.originCity} → ${r.destinationCity}` }))
+              ]}
+            />
+            <Select 
+              label="Xe" 
+              value={form.vehicleId} 
+              onChange={e => setForm({ ...form, vehicleId: e.target.value })} 
+              required
+              options={[
+                { value: '', label: 'Chọn xe' },
+                ...vehicles.map(v => ({ value: v.id, label: `${v.licensePlate} - ${v.vehicleType?.name}` }))
+              ]}
+            />
+            <Input 
+              type="datetime-local" 
+              label="Giờ khởi hành" 
+              value={form.departureTime} 
+              onChange={e => setForm({ ...form, departureTime: e.target.value })} 
+              required 
+            />
+            <Input 
+              type="datetime-local" 
+              label="Giờ đến dự kiến" 
+              value={form.estimatedArrival} 
+              onChange={e => setForm({ ...form, estimatedArrival: e.target.value })} 
+              required 
+            />
+            <Input 
+              type="number" 
+              label="Giá vé (đ)" 
+              placeholder="150000" 
+              min="1000" 
+              value={form.basePrice} 
+              onChange={e => setForm({ ...form, basePrice: e.target.value })} 
+              required 
+            />
+            <div className="flex items-end mt-2 md:mt-0">
+              <Button type="submit" disabled={submitting || Boolean(formConflict)} fullWidth>
                 {submitting ? 'Đang tạo...' : 'Tạo chuyến xe'}
-              </button>
+              </Button>
             </div>
             {formConflict && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 md:col-span-2">
-                {formConflict.message}
+              <div className="rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 px-4 py-3 text-sm font-bold text-red-700 dark:text-red-400 md:col-span-2 flex items-center gap-2">
+                <i className="ti ti-alert-triangle" /> {formConflict.message}
               </div>
             )}
           </form>
-        </div>
+        </Card>
       )}
 
       {loading ? (
-        <div className="grid gap-3">
-          {[1, 2, 3].map(item => (
-            <div key={item} className="card animate-pulse">
-              <div className="h-5 w-2/3 rounded bg-gray-100" />
-              <div className="mt-3 h-4 w-1/2 rounded bg-gray-100" />
-            </div>
-          ))}
-        </div>
+        <Loading />
       ) : trips.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="font-semibold text-gray-800">Chưa có chuyến xe nào</p>
-          <p className="mt-1 text-sm text-gray-500">Hãy thêm chuyến đầu tiên để mở bán vé.</p>
-        </div>
+        <EmptyState title="Chưa có chuyến xe nào" description="Hãy thêm chuyến đầu tiên để mở bán vé." icon="ti-calendar-event" />
       ) : filteredTrips.length === 0 ? (
-        <div className="card text-center py-12">
-          <p className="font-semibold text-gray-800">Không có chuyến phù hợp</p>
-          <p className="mt-1 text-sm text-gray-500">Thử đổi bộ lọc hoặc xóa điều kiện tìm kiếm.</p>
-        </div>
+        <EmptyState title="Không có chuyến phù hợp" description="Thử đổi bộ lọc hoặc xóa điều kiện tìm kiếm." icon="ti-search" />
       ) : (
-        <div className="grid gap-3">
+        <div className="grid gap-4">
           {filteredTrips.map(trip => {
-            const badge = STATUS_LABELS[trip.status] || { label: trip.status, cls: 'bg-gray-100 text-gray-500' };
+            const badge = STATUS_LABELS[trip.status] || { label: trip.status, cls: 'default' };
             const conflict = tripHasConflict(trip, trips);
             const nextSameVehicle = trips
               .filter(item => item.id !== trip.id && item.vehicleId === trip.vehicleId)
@@ -260,57 +268,62 @@ export default function TripsPage() {
               .find(item => new Date(item.departureTime) > new Date(trip.departureTime));
             const nextGap = nextSameVehicle ? Math.round(getGapMinutes(trip, nextSameVehicle)) : null;
             const actions = STATUS_ACTIONS[trip.status] || [];
+            
             return (
-              <article key={trip.id} className={`card ${conflict ? 'border-red-200' : ''}`}>
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="break-words font-semibold text-gray-800">
-                        {trip.route?.originCity} → {trip.route?.destinationCity}
-                      </p>
-                      <span className={`badge ${badge.cls}`}>{badge.label}</span>
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')} · {trip.vehicle?.licensePlate} · Còn {trip._count?.tripSeats ?? 0} ghế
+              <Card key={trip.id} hover className={`flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-l-4 ${conflict ? 'border-red-500' : 'border-[#e85d04]'}`}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="break-words font-black text-xl text-gray-900 dark:text-white">
+                      {trip.route?.originCity} <i className="ti ti-arrow-right text-[#e85d04] mx-1" /> {trip.route?.destinationCity}
                     </p>
-                    {nextGap !== null && nextGap >= 0 && nextGap < TURNAROUND_MINUTES && (
-                      <p className="mt-1 text-xs font-semibold text-orange-600">
-                        Xe chỉ nghỉ {nextGap} phút trước chuyến kế tiếp.
-                      </p>
-                    )}
-                    {conflict && (
-                      <p className="mt-1 text-xs font-semibold text-red-600">
-                        Cảnh báo: lịch xe đang chồng thời gian hoặc thiếu thời gian quay đầu.
-                      </p>
-                    )}
+                    <Badge variant={badge.cls}>{badge.label}</Badge>
+                  </div>
+                  
+                  <div className="mt-3 flex flex-wrap gap-4 text-sm font-medium text-gray-600 dark:text-gray-400">
+                    <span className="flex items-center gap-1.5"><i className="ti ti-calendar text-gray-400" /> {format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')}</span>
+                    <span className="flex items-center gap-1.5"><i className="ti ti-bus text-gray-400" /> {trip.vehicle?.licensePlate}</span>
+                    <span className="flex items-center gap-1.5"><i className="ti ti-armchair text-[#e85d04]" /> Còn {trip._count?.tripSeats ?? 0} ghế</span>
                   </div>
 
-                  <div className="flex flex-col gap-2 lg:items-end">
-                    <span className="font-semibold text-brand">{Number(trip.basePrice).toLocaleString('vi-VN')}đ</span>
-                    <div className="flex flex-wrap justify-start gap-2 lg:justify-end">
-                      <Link to={`/operator/trips/${trip.id}/check-in`} className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-                        Soát vé
-                      </Link>
-                      {actions.map(action => (
-                        <button
+                  {nextGap !== null && nextGap >= 0 && nextGap < TURNAROUND_MINUTES && (
+                    <p className="mt-3 text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center gap-2 bg-orange-50 dark:bg-orange-900/20 px-3 py-2 rounded-lg inline-flex">
+                      <i className="ti ti-clock" /> Xe chỉ nghỉ {nextGap} phút trước chuyến kế tiếp.
+                    </p>
+                  )}
+                  {conflict && (
+                    <p className="mt-3 text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-2 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-lg inline-flex">
+                      <i className="ti ti-alert-triangle" /> Cảnh báo: lịch xe đang chồng thời gian hoặc thiếu thời gian quay đầu.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-3 lg:items-end border-t lg:border-t-0 pt-3 lg:pt-0 border-gray-100 dark:border-slate-800">
+                  <span className="font-black text-2xl text-[#e85d04]">{Number(trip.basePrice).toLocaleString('vi-VN')}đ</span>
+                  
+                  <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end mt-1">
+                    <Link to={`/operator/trips/${trip.id}/check-in`}>
+                      <Button variant="outline" size="sm" icon={<i className="ti ti-qrcode" />}>Soát vé</Button>
+                    </Link>
+                    
+                    {actions.map(action => {
+                      const isDanger = action.status === 'CANCELLED';
+                      const isPrimary = action.status === 'COMPLETED';
+                      
+                      return (
+                        <Button
                           key={action.status}
                           onClick={() => handleStatusChange(trip, action.status)}
                           disabled={updatingTripId === trip.id}
-                          className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                            action.status === 'COMPLETED'
-                              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                              : action.status === 'CANCELLED'
-                                ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
+                          variant={isDanger ? 'danger' : isPrimary ? 'primary' : 'outline'}
+                          size="sm"
                         >
                           {updatingTripId === trip.id ? 'Đang cập nhật...' : action.label}
-                        </button>
-                      ))}
-                    </div>
+                        </Button>
+                      );
+                    })}
                   </div>
                 </div>
-              </article>
+              </Card>
             );
           })}
         </div>

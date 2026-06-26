@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { routeAPI } from '../../services/api';
+import { PageHeader, Card, Input, Button, Badge, EmptyState, Loading } from '../../components/ui';
 
 export default function RoutesPage() {
   const [routes, setRoutes] = useState([]);
@@ -31,74 +32,64 @@ export default function RoutesPage() {
   };
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Quản lý tuyến xe</h1>
-          <p className="mt-1 text-sm text-gray-500">Tuyến xe là nền tảng để tạo chuyến và mở bán vé.</p>
-        </div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-primary py-2">
-          {showForm ? 'Đóng' : '+ Thêm tuyến'}
-        </button>
-      </div>
+    <div className="space-y-6">
+      <PageHeader 
+        title="Quản lý tuyến xe" 
+        description="Tuyến xe là nền tảng để tạo chuyến và mở bán vé."
+        actions={
+          <Button onClick={() => setShowForm(!showForm)} variant={showForm ? 'outline' : 'primary'} icon={<i className={`ti ${showForm ? 'ti-x' : 'ti-plus'}`} />}>
+            {showForm ? 'Đóng' : 'Thêm tuyến'}
+          </Button>
+        }
+      />
 
-      {error && <div className="card mb-4 border-red-200 bg-red-50 text-sm font-medium text-red-700">{error}</div>}
+      {error && <Card className="border-red-200 bg-red-50 text-red-700">{error}</Card>}
 
       {showForm && (
-        <div className="card mb-6">
-          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <div>
-              <label className="label">Điểm đi</label>
-              <input className="input" value={form.originCity} onChange={e => setForm({ ...form, originCity: e.target.value })} required />
-            </div>
-            <div>
-              <label className="label">Điểm đến</label>
-              <input className="input" value={form.destinationCity} onChange={e => setForm({ ...form, destinationCity: e.target.value })} required />
-            </div>
-            <div>
-              <label className="label">Địa chỉ đón</label>
-              <input className="input" value={form.originAddress} onChange={e => setForm({ ...form, originAddress: e.target.value })} />
-            </div>
-            <div>
-              <label className="label">Địa chỉ trả</label>
-              <input className="input" value={form.destinationAddress} onChange={e => setForm({ ...form, destinationAddress: e.target.value })} />
-            </div>
-            <div className="flex gap-2 md:col-span-2">
-              <button type="submit" className="btn-primary py-2">Tạo tuyến</button>
-              <button type="button" onClick={() => setShowForm(false)} className="btn-outline py-2">Hủy</button>
+        <Card className="border-[#e85d04]/20 bg-orange-50/50 dark:bg-[#e85d04]/10 page-enter">
+          <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Input label="Điểm đi" value={form.originCity} onChange={e => setForm({ ...form, originCity: e.target.value })} required />
+            <Input label="Điểm đến" value={form.destinationCity} onChange={e => setForm({ ...form, destinationCity: e.target.value })} required />
+            <Input label="Địa chỉ đón" value={form.originAddress} onChange={e => setForm({ ...form, originAddress: e.target.value })} />
+            <Input label="Địa chỉ trả" value={form.destinationAddress} onChange={e => setForm({ ...form, destinationAddress: e.target.value })} />
+            
+            <div className="flex gap-3 md:col-span-2 pt-2 border-t border-gray-200 dark:border-slate-700">
+              <Button type="submit">Tạo tuyến</Button>
+              <Button type="button" variant="ghost" onClick={() => setShowForm(false)}>Hủy</Button>
             </div>
           </form>
-        </div>
+        </Card>
       )}
 
       {loading ? (
-        <div className="grid gap-3">
-          {[1, 2, 3].map(item => (
-            <div key={item} className="card animate-pulse">
-              <div className="h-5 w-52 rounded bg-gray-100" />
-              <div className="mt-3 h-4 w-72 rounded bg-gray-100" />
-            </div>
-          ))}
-        </div>
+        <Loading />
       ) : routes.length === 0 ? (
-        <div className="card text-center py-14">
-          <p className="font-semibold text-gray-800">Chưa có tuyến xe nào</p>
-          <p className="mt-1 text-sm text-gray-500">Thêm tuyến đầu tiên để bắt đầu tạo chuyến.</p>
-        </div>
+        <EmptyState title="Chưa có tuyến xe nào" description="Thêm tuyến đầu tiên để bắt đầu tạo chuyến." icon="ti-map-pin" />
       ) : (
-        <div className="grid gap-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {routes.map(r => (
-            <article key={r.id} className="card">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Card key={r.id} hover className="flex flex-col h-full border-l-4 border-l-[#e85d04]">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between flex-1">
                 <div className="min-w-0">
-                  <p className="break-words font-semibold text-gray-800">{r.originCity} → {r.destinationCity}</p>
-                  <p className="mt-1 break-words text-sm text-gray-500">{r.originAddress || '-'} → {r.destinationAddress || '-'}</p>
+                  <p className="break-words font-black text-xl text-gray-900 dark:text-white flex items-center gap-2">
+                    {r.originCity} <i className="ti ti-arrow-right text-[#e85d04]" /> {r.destinationCity}
+                  </p>
+                  <div className="mt-3 space-y-2">
+                    <p className="break-words text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                      <i className="ti ti-map-pin text-gray-400" /> {r.originAddress || 'Chưa có điểm đón'}
+                    </p>
+                    <p className="break-words text-sm font-medium text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                      <i className="ti ti-flag text-gray-400" /> {r.destinationAddress || 'Chưa có điểm trả'}
+                    </p>
+                  </div>
                 </div>
-                <span className={`badge ${r.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {r.isActive ? 'Hoạt động' : 'Ngừng'}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <Badge variant={r.isActive ? 'success' : 'default'}>
+                    {r.isActive ? 'Hoạt động' : 'Ngừng'}
+                  </Badge>
+                </div>
               </div>
-            </article>
+            </Card>
           ))}
         </div>
       )}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, clearError } from '../../store/slices/authSlice';
+import { Card, Input, Button } from '../../components/ui';
 
 export default function LoginPage() {
   const dispatch = useDispatch();
@@ -19,7 +20,7 @@ export default function LoginPage() {
       else if (roles.includes('STAFF')) navigate('/staff', { replace: true });
       else navigate('/dashboard', { replace: true });
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -28,55 +29,61 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md page-enter">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🚌</div>
-          <h1 className="text-2xl font-bold text-gray-800">Đăng nhập BusTicket</h1>
-          <p className="text-gray-500 text-sm mt-1">Chào mừng trở lại!</p>
+          <div className="text-5xl mb-3 inline-block bg-orange-100 dark:bg-orange-900/30 p-4 rounded-full shadow-inner">🚌</div>
+          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Đăng nhập BusTicket</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">Chào mừng bạn quay trở lại!</p>
         </div>
 
-        <div className="card">
+        <Card className="border-[#e85d04]/20 shadow-lg shadow-orange-900/5">
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="label">Email hoặc số điện thoại</label>
-              <input className="input" type="text" placeholder="email@example.com"
-                value={form.identifier}
-                onChange={e => setForm({ ...form, identifier: e.target.value })}
-                required />
-            </div>
-            <div>
-              <label className="label">Mật khẩu</label>
-              <input className="input" type="password" placeholder="••••••••"
-                value={form.password}
-                onChange={e => setForm({ ...form, password: e.target.value })}
-                required />
-            </div>
+            <Input 
+              label="Email hoặc số điện thoại" 
+              type="text" 
+              placeholder="email@example.com"
+              value={form.identifier}
+              onChange={e => setForm({ ...form, identifier: e.target.value })}
+              required 
+              icon="ti-user"
+            />
+            <Input 
+              label="Mật khẩu" 
+              type="password" 
+              placeholder="••••••••"
+              value={form.password}
+              onChange={e => setForm({ ...form, password: e.target.value })}
+              required 
+              icon="ti-lock"
+            />
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                {error}
+              <div className="text-sm font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-xl px-4 py-3 flex items-center gap-2">
+                <i className="ti ti-alert-circle" /> {error}
               </div>
             )}
 
-            <button type="submit" disabled={loading} className="btn-primary w-full py-3">
-              {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
-            </button>
+            <div className="pt-2">
+              <Button type="submit" disabled={loading} fullWidth size="lg" className="text-lg">
+                {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              </Button>
+            </div>
           </form>
 
-          <div className="text-center mt-4 text-sm text-gray-500 space-y-2">
+          <div className="text-center mt-6 text-sm font-medium text-gray-600 dark:text-gray-400 space-y-3 pt-6 border-t border-gray-100 dark:border-slate-800">
             <div>
-              <Link to="/forgot-password" className="text-brand hover:underline">
+              <Link to="/forgot-password" className="text-[#e85d04] hover:text-[#d05303] transition-colors hover:underline">
                 Quên mật khẩu?
               </Link>
             </div>
             <div>
               Chưa có tài khoản?{' '}
-              <Link to="/register" className="text-brand font-semibold hover:underline">
+              <Link to="/register" className="text-[#e85d04] font-bold hover:text-[#d05303] transition-colors hover:underline">
                 Đăng ký ngay
               </Link>
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

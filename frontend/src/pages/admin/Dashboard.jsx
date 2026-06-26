@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { adminAPI, operatorAPI, routeAPI } from '../../services/api';
+import { PageHeader, Card, Select, Input, Loading } from '../../components/ui';
 
 const iconPaths = {
   users: 'M17 20h5v-2a4 4 0 0 0-5.4-3.75M9 20H4v-2a4 4 0 0 1 5.4-3.75M15 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm6 3a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
@@ -16,7 +17,7 @@ const iconPaths = {
 
 function AdminIcon({ name }) {
   return (
-    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d={iconPaths[name]} />
     </svg>
   );
@@ -71,105 +72,89 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tổng quan hệ thống</h1>
-          <p className="mt-1 text-sm text-gray-500">Lọc vé và chuyến theo ngày, tuyến hoặc nhà xe.</p>
-        </div>
+      <PageHeader 
+        title="Tổng quan hệ thống" 
+        description="Lọc vé và chuyến theo ngày, tuyến hoặc nhà xe." 
+      />
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <select
-            className="input bg-white border-gray-200"
+      <Card>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <Select
             value={filters.period}
             onChange={e => setFilters({ ...filters, period: e.target.value, dateFrom: '', dateTo: '' })}
-          >
-            <option value="day">Hôm nay</option>
-            <option value="month">Tháng này</option>
-            <option value="year">Năm nay</option>
-          </select>
-          <input
+            options={[
+              { value: 'day', label: 'Hôm nay' },
+              { value: 'month', label: 'Tháng này' },
+              { value: 'year', label: 'Năm nay' }
+            ]}
+          />
+          <Input
             type="date"
-            className="input bg-white border-gray-200"
             value={filters.dateFrom}
             onChange={e => setFilters({ ...filters, dateFrom: e.target.value })}
           />
-          <input
+          <Input
             type="date"
-            className="input bg-white border-gray-200"
             min={filters.dateFrom || undefined}
             value={filters.dateTo}
             onChange={e => setFilters({ ...filters, dateTo: e.target.value })}
           />
-          <select
-            className="input bg-white border-gray-200"
+          <Select
             value={filters.operatorId}
             onChange={e => setFilters({ ...filters, operatorId: e.target.value, routeId: '' })}
-          >
-            <option value="">Tất cả nhà xe</option>
-            {operators.map(operator => (
-              <option key={operator.id} value={operator.id}>{operator.companyName}</option>
-            ))}
-          </select>
-          <select
-            className="input bg-white border-gray-200"
+            options={[
+              { value: '', label: 'Tất cả nhà xe' },
+              ...operators.map(op => ({ value: op.id, label: op.companyName }))
+            ]}
+          />
+          <Select
             value={filters.routeId}
             onChange={e => setFilters({ ...filters, routeId: e.target.value })}
-          >
-            <option value="">Tất cả tuyến</option>
-            {filteredRoutes.map(route => (
-              <option key={route.id} value={route.id}>
-                {route.originCity} {'->'} {route.destinationCity}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: '', label: 'Tất cả tuyến' },
+              ...filteredRoutes.map(route => ({ value: route.id, label: `${route.originCity} -> ${route.destinationCity}` }))
+            ]}
+          />
         </div>
-      </div>
+      </Card>
 
       {stats ? (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {cards.map(c => (
-              <div key={c.label} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
+              <Card key={c.label} hover>
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 dark:bg-[#e85d04]/10 text-[#e85d04]">
                   <AdminIcon name={c.icon} />
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{c.value}</div>
-                <div className="mt-1 text-sm font-medium text-gray-500">{c.label}</div>
-              </div>
+                <div className="text-3xl font-black text-gray-900 dark:text-white">{c.value}</div>
+                <div className="mt-1 text-sm font-semibold text-gray-500 dark:text-gray-400">{c.label}</div>
+              </Card>
             ))}
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            <Card hover className="border-l-4 border-l-red-500 dark:border-l-red-500">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-semibold text-gray-900">Nhà xe chờ duyệt</p>
-                  <p className="mt-1 text-sm text-gray-500">Cần xử lý để nhà xe có thể vận hành.</p>
+                  <p className="font-bold text-lg text-gray-900 dark:text-white">Nhà xe chờ duyệt</p>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Cần xử lý để nhà xe có thể vận hành.</p>
                 </div>
-                <span className="text-3xl font-black text-red-600">{stats.pendingOperators}</span>
+                <span className="text-4xl font-black text-red-500">{stats.pendingOperators}</span>
               </div>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+            </Card>
+            <Card hover className="border-l-4 border-l-green-500 dark:border-l-green-500">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="font-semibold text-gray-900">Tuyến đang mở</p>
-                  <p className="mt-1 text-sm text-gray-500">Tổng số tuyến đang hoạt động trong hệ thống.</p>
+                  <p className="font-bold text-lg text-gray-900 dark:text-white">Tuyến đang mở</p>
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Tổng số tuyến đang hoạt động.</p>
                 </div>
-                <span className="text-3xl font-black text-red-600">{stats.activeRoutes}</span>
+                <span className="text-4xl font-black text-green-500">{stats.activeRoutes}</span>
               </div>
-            </div>
+            </Card>
           </div>
         </>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map(i => (
-            <div key={i} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="mb-5 h-11 w-11 animate-pulse rounded-xl bg-gray-100" />
-              <div className="h-7 w-16 animate-pulse rounded bg-gray-100" />
-              <div className="mt-3 h-4 w-28 animate-pulse rounded bg-gray-100" />
-            </div>
-          ))}
-        </div>
+        <Loading />
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -177,12 +162,14 @@ export default function AdminDashboard() {
           <Link
             key={item.to}
             to={item.to}
-            className="group rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm transition hover:border-red-200 hover:shadow-md"
+            className="group outline-none"
           >
-            <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gray-100 text-gray-600 transition group-hover:bg-red-50 group-hover:text-red-600">
-              <AdminIcon name={item.icon} />
-            </div>
-            <div className="text-sm font-semibold text-gray-700">{item.label}</div>
+            <Card hover className="text-center h-full flex flex-col items-center justify-center !p-6 border-transparent group-hover:border-[#e85d04] transition-colors">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 transition-colors group-hover:bg-[#e85d04] group-hover:text-white">
+                <AdminIcon name={item.icon} />
+              </div>
+              <div className="text-sm font-bold text-gray-800 dark:text-gray-200">{item.label}</div>
+            </Card>
           </Link>
         ))}
       </div>

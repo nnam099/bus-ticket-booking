@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { adminAPI } from '../../services/api';
 import { formatInvoiceCode, formatTicketCode } from '../../utils/codes';
+import { PageHeader, Card, Badge, Button, EmptyState, Loading } from '../../components/ui';
 
 const formatMoney = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
 
@@ -10,9 +11,9 @@ const pickDriver = (tripStaffs = []) =>
   tripStaffs.find(item => item.role === 'DRIVER' || item.staff?.role === 'DRIVER') || tripStaffs[0];
 
 const ReviewMeta = ({ label, value, mono = false }) => (
-  <div className="min-w-0 rounded-xl bg-gray-50 px-3 py-2">
-    <p className="text-xs font-medium text-gray-500">{label}</p>
-    <p className={`mt-1 min-w-0 break-words text-sm font-semibold text-gray-800 ${mono ? 'font-mono text-xs leading-relaxed' : ''}`}>
+  <div className="min-w-0 rounded-xl bg-gray-50 dark:bg-slate-800/50 px-4 py-3">
+    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">{label}</p>
+    <p className={`mt-1 min-w-0 break-words text-sm font-bold text-gray-800 dark:text-gray-200 ${mono ? 'font-mono text-xs leading-relaxed tracking-wider' : ''}`}>
       {value || '-'}
     </p>
   </div>
@@ -57,43 +58,28 @@ export default function AdminReviewsPage() {
   };
 
   return (
-    <div>
-      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Kiểm duyệt đánh giá</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Xem đủ chuyến xe, tài xế, vé và nội dung trước khi duyệt công khai.
-          </p>
-        </div>
-        {!loading && (
-          <div className="flex gap-2 text-sm">
-            <span className="rounded-xl bg-gray-100 px-3 py-2 font-semibold text-gray-700">{stats.total} chờ duyệt</span>
-            <span className="rounded-xl bg-yellow-100 px-3 py-2 font-semibold text-yellow-700">{stats.avg || 0}/5 trung bình</span>
-          </div>
-        )}
-      </div>
+    <div className="space-y-6">
+      <PageHeader 
+        title="Kiểm duyệt đánh giá" 
+        description="Xem đủ chuyến xe, tài xế, vé và nội dung trước khi duyệt công khai." 
+        actions={
+          !loading && (
+            <div className="flex gap-3">
+              <Badge variant="default" className="text-sm px-4 py-2">{stats.total} chờ duyệt</Badge>
+              <Badge variant="warning" className="text-sm px-4 py-2">{stats.avg || 0}/5 trung bình</Badge>
+            </div>
+          )
+        }
+      />
 
-      {error && <div className="card mb-4 border-red-200 bg-red-50 text-sm font-medium text-red-700">{error}</div>}
+      {error && <Card className="border-red-200 bg-red-50 text-red-700">{error}</Card>}
 
       {loading ? (
-        <div className="grid gap-4">
-          {[1, 2, 3].map(item => (
-            <div key={item} className="card animate-pulse">
-              <div className="h-5 w-48 rounded bg-gray-100" />
-              <div className="mt-3 h-20 rounded bg-gray-100" />
-              <div className="mt-3 grid gap-2 md:grid-cols-4">
-                {[1, 2, 3, 4].map(block => <div key={block} className="h-14 rounded bg-gray-100" />)}
-              </div>
-            </div>
-          ))}
-        </div>
+        <Loading />
       ) : reviews.length === 0 ? (
-        <div className="card text-center py-14">
-          <p className="font-semibold text-gray-800">Không có đánh giá nào cần duyệt</p>
-          <p className="mt-1 text-sm text-gray-500">Các đánh giá mới từ khách hàng sẽ xuất hiện tại đây.</p>
-        </div>
+        <EmptyState title="Không có đánh giá nào cần duyệt" description="Các đánh giá mới từ khách hàng sẽ xuất hiện tại đây." icon="ti-star" />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {reviews.map(rv => {
             const ticket = rv.ticketDetail;
             const trip = ticket?.tripSeat?.trip;
@@ -108,37 +94,39 @@ export default function AdminReviewsPage() {
               : '-';
 
             return (
-              <article key={rv.id} className="card">
-                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              <Card key={rv.id} hover>
+                <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="mb-3 flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-gray-800">{rv.customer?.fullName || 'Khách hàng'}</span>
-                      <span className="text-yellow-500">{'★'.repeat(rv.rating)}</span>
-                      <span className="text-xs text-gray-400">({rv.rating}/5)</span>
-                      <span className="badge bg-gray-100 text-gray-600">{new Date(rv.createdAt).toLocaleString('vi-VN')}</span>
+                    <div className="mb-4 flex flex-wrap items-center gap-3">
+                      <span className="font-black text-gray-900 dark:text-white text-lg">{rv.customer?.fullName || 'Khách hàng'}</span>
+                      <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/20 px-2.5 py-1 rounded-lg">
+                        <span className="text-yellow-500 tracking-widest text-sm">{'★'.repeat(rv.rating)}</span>
+                        <span className="text-xs font-bold text-yellow-600 dark:text-yellow-500 ml-1">({rv.rating}/5)</span>
+                      </div>
+                      <Badge variant="default">{new Date(rv.createdAt).toLocaleString('vi-VN')}</Badge>
                     </div>
 
                     {rv.comment ? (
-                      <p className="mb-4 break-words rounded-xl bg-gray-50 px-3 py-3 text-sm text-gray-700">
+                      <p className="mb-6 break-words rounded-xl border border-gray-100 dark:border-slate-800 bg-gray-50/80 dark:bg-slate-800/80 px-5 py-4 text-sm font-medium text-gray-700 dark:text-gray-300 italic">
                         “{rv.comment}”
                       </p>
                     ) : (
-                      <p className="mb-4 rounded-xl bg-gray-50 px-3 py-3 text-sm text-gray-400">Khách không nhập nhận xét.</p>
+                      <p className="mb-6 rounded-xl border border-dashed border-gray-200 dark:border-slate-800 bg-transparent px-5 py-4 text-sm font-medium text-gray-400">Khách không nhập nhận xét.</p>
                     )}
 
-                    <div className="mb-4 rounded-2xl border border-gray-100 bg-white/70 p-3">
+                    <div className="mb-6 rounded-2xl border border-[#e85d04]/20 bg-orange-50/50 dark:bg-[#e85d04]/5 p-4">
                       <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                         <div className="min-w-0">
-                          <p className="break-words text-base font-bold text-gray-900">
+                          <p className="break-words text-lg font-black text-[#e85d04]">
                             {route?.originCity || '-'} → {route?.destinationCity || '-'}
                           </p>
-                          <p className="mt-1 text-sm text-gray-500">{departure}</p>
+                          <p className="mt-1.5 text-sm font-semibold text-gray-600 dark:text-gray-400">{departure}</p>
                         </div>
-                        <span className="badge bg-blue-100 text-blue-700">{trip?.status || 'Không rõ'}</span>
+                        <Badge variant="info">{trip?.status || 'Không rõ'}</Badge>
                       </div>
                     </div>
 
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                       <ReviewMeta label="Nhà xe" value={route?.operator?.companyName} />
                       <ReviewMeta label="Hotline nhà xe" value={route?.operator?.hotline} />
                       <ReviewMeta label="Tài xế" value={driver ? `${driver.fullName}${driver.phone ? ` · ${driver.phone}` : ''}` : 'Chưa phân công'} />
@@ -152,18 +140,16 @@ export default function AdminReviewsPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 xl:w-40 xl:shrink-0 xl:grid-cols-1">
-                    <button onClick={() => handleApprove(rv.id)}
-                      className="rounded-lg bg-green-100 px-3 py-2 text-sm font-semibold text-green-700 transition hover:bg-green-200">
-                      Duyệt
-                    </button>
-                    <button onClick={() => handleReject(rv.id)}
-                      className="rounded-lg bg-red-100 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-200">
-                      Từ chối
-                    </button>
+                  <div className="flex flex-col gap-3 xl:w-48 xl:shrink-0 pt-2 border-t xl:border-t-0 xl:border-l border-gray-100 dark:border-slate-800 xl:pl-6">
+                    <Button fullWidth onClick={() => handleApprove(rv.id)} variant="primary" className="!bg-green-500 hover:!bg-green-600 !shadow-[0_4px_16px_rgba(34,197,94,0.35)] border-none">
+                      Duyệt đánh giá
+                    </Button>
+                    <Button fullWidth onClick={() => handleReject(rv.id)} variant="danger">
+                      Từ chối & Xóa
+                    </Button>
                   </div>
                 </div>
-              </article>
+              </Card>
             );
           })}
         </div>

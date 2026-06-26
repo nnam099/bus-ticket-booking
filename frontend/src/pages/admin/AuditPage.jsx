@@ -1,6 +1,6 @@
-// AdminAuditPage.jsx
 import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/api';
+import { PageHeader, Table, Thead, Tbody, Tr, Th, Td, Badge, EmptyState, Loading } from '../../components/ui';
 
 export default function AdminAuditPage() {
   const [logs, setLogs] = useState([]);
@@ -13,42 +13,45 @@ export default function AdminAuditPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="text-center py-16 text-gray-500">Đang tải...</div>;
-
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Nhật ký kiểm toán</h1>
-      <div className="card overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-gray-100 text-left text-gray-500">
-              <th className="pb-3 pr-4 font-medium">Thời gian</th>
-              <th className="pb-3 pr-4 font-medium">Người dùng</th>
-              <th className="pb-3 pr-4 font-medium">Hành động</th>
-              <th className="pb-3 pr-4 font-medium">Tài nguyên</th>
-              <th className="pb-3 font-medium">IP</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
+    <div className="space-y-6">
+      <PageHeader 
+        title="Nhật ký kiểm toán" 
+        description="Theo dõi hoạt động của hệ thống." 
+      />
+      
+      {loading ? (
+        <Loading />
+      ) : logs.length === 0 ? (
+        <EmptyState title="Không có nhật ký nào" description="Hệ thống chưa ghi nhận hoạt động nào." icon="ti-history" />
+      ) : (
+        <Table>
+          <Thead>
+            <Tr>
+              <Th>Thời gian</Th>
+              <Th>Người dùng</Th>
+              <Th>Hành động</Th>
+              <Th>Tài nguyên</Th>
+              <Th>IP</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
             {logs.map(log => (
-              <tr key={log.id} className="hover:bg-gray-50">
-                <td className="py-2.5 pr-4 text-gray-500 whitespace-nowrap">
+              <Tr key={log.id}>
+                <Td className="whitespace-nowrap font-medium text-gray-500">
                   {new Date(log.createdAt).toLocaleString('vi-VN')}
-                </td>
-                <td className="py-2.5 pr-4">{log.user?.email || log.user?.phone || '—'}</td>
-                <td className="py-2.5 pr-4">
-                  <span className="badge bg-blue-50 text-blue-700">{log.action}</span>
-                </td>
-                <td className="py-2.5 pr-4 text-gray-600">{log.resource}</td>
-                <td className="py-2.5 text-gray-400 text-xs">{log.ipAddress || '—'}</td>
-              </tr>
+                </Td>
+                <Td className="font-bold text-gray-900 dark:text-gray-100">{log.user?.email || log.user?.phone || '—'}</Td>
+                <Td>
+                  <Badge variant="info" className="!bg-blue-50 !text-blue-700 !border-blue-100 dark:!bg-blue-900/20 dark:!text-blue-400">{log.action}</Badge>
+                </Td>
+                <Td className="text-gray-600 dark:text-gray-400 font-medium">{log.resource}</Td>
+                <Td className="font-mono text-xs text-gray-400">{log.ipAddress || '—'}</Td>
+              </Tr>
             ))}
-          </tbody>
-        </table>
-        {logs.length === 0 && (
-          <div className="text-center py-12 text-gray-500">Không có log nào.</div>
-        )}
-      </div>
+          </Tbody>
+        </Table>
+      )}
     </div>
   );
 }
