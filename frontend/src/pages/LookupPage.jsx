@@ -291,9 +291,6 @@ function MyTicketsPanel() {
                           >
                             💳 Thanh toán
                           </Link>
-                          <Link to={`/my-tickets/${ticket.id}`} className="btn-outline px-3 py-1.5 text-xs">
-                            Chi tiết
-                          </Link>
                         </>
                       ) : (
                         <>
