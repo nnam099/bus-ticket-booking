@@ -85,9 +85,22 @@ export default function SeatMap({ tripSeats, tripId }) {
               {/* Bus Shell (Horizontal) */}
               <div className="relative flex flex-row items-stretch rounded-[2.5rem] bg-white px-3 py-5 shadow-[0_8px_30px_rgba(74,59,50,0.08)] border border-orange-100/50 dark:bg-slate-900/95 dark:border-slate-800 dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
                 
-                {/* Rear of bus (Left side) */}
-                <div className="flex flex-col items-center justify-center w-12 mr-2 rounded-l-[1.5rem] border-r border-gray-100 bg-gray-50/50 dark:bg-slate-800/50 dark:border-slate-700/50">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-slate-500" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Khoang sau</span>
+                {/* Front of bus (Left side) */}
+                <div className="relative flex flex-col items-center justify-between w-20 mr-4 rounded-l-[2rem] border-r border-gray-100 bg-gray-50/50 py-4 dark:bg-slate-800/50 dark:border-slate-700/50">
+                  <div className="w-6 h-3/4 rounded-l-3xl rounded-r-xl border border-sky-100 bg-gradient-to-l from-sky-50 to-white shadow-inner dark:border-sky-900/20 dark:from-slate-800 dark:to-slate-900/80 absolute left-2 top-1/2 -translate-y-1/2" />
+                  
+                  {/* Cửa lên at the top (Right side of bus in VN) */}
+                  <div className="z-10 rounded-lg border border-brand/20 bg-orange-50/80 px-1.5 py-2.5 text-[10px] font-black uppercase text-brand shadow-sm backdrop-blur-sm dark:bg-brand/10 dark:border-brand/30" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                    Cửa lên
+                  </div>
+
+                  {/* Tài xế at the bottom (Left side of bus in VN) */}
+                  <div className="flex flex-col items-center gap-2 z-10 mb-2">
+                    <div className="h-6 w-6 rounded-full border-2 border-gray-300 shadow-sm bg-white dark:bg-slate-800 dark:border-slate-600 flex items-center justify-center">
+                      <div className="h-2 w-2 rounded-full bg-gray-300 dark:bg-slate-600" />
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-500 dark:text-slate-400" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tài xế</span>
+                  </div>
                 </div>
 
                 {/* Seat Grid */}
@@ -137,20 +150,9 @@ export default function SeatMap({ tripSeats, tripId }) {
                   <div className="absolute left-8 right-0 top-1/2 -translate-y-1/2 h-8 border-y-2 border-dashed border-gray-200/60 dark:border-slate-700/40 pointer-events-none rounded-full" />
                 </div>
 
-                {/* Front of bus (Right side) */}
-                <div className="relative flex flex-col items-center justify-between w-20 ml-4 rounded-r-[2rem] border-l border-gray-100 bg-gray-50/50 py-4 dark:bg-slate-800/50 dark:border-slate-700/50">
-                  <div className="w-6 h-3/4 rounded-r-3xl rounded-l-xl border border-sky-100 bg-gradient-to-r from-sky-50 to-white shadow-inner dark:border-sky-900/20 dark:from-slate-800 dark:to-slate-900/80 absolute right-2 top-1/2 -translate-y-1/2" />
-                  
-                  <div className="flex flex-col items-center gap-2 z-10 mt-2">
-                    <div className="h-6 w-6 rounded-full border-2 border-gray-300 shadow-sm bg-white dark:bg-slate-800 dark:border-slate-600 flex items-center justify-center">
-                      <div className="h-2 w-2 rounded-full bg-gray-300 dark:bg-slate-600" />
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-500 dark:text-slate-400" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tài xế</span>
-                  </div>
-
-                  <div className="z-10 rounded-lg border border-brand/20 bg-orange-50/80 px-1.5 py-2.5 text-[10px] font-black uppercase text-brand shadow-sm backdrop-blur-sm dark:bg-brand/10 dark:border-brand/30" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                    Cửa lên
-                  </div>
+                {/* Rear of bus (Right side) */}
+                <div className="flex flex-col items-center justify-center w-12 ml-2 rounded-r-[1.5rem] border-l border-gray-100 bg-gray-50/50 dark:bg-slate-800/50 dark:border-slate-700/50">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-slate-500" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Khoang sau</span>
                 </div>
 
               </div>

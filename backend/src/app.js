@@ -25,6 +25,9 @@ const reviewRoutes = require('./routes/review.routes');
 const adminRoutes = require('./routes/admin.routes');
 const staffRoutes = require('./routes/staff.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const dispatchRoutes = require('./routes/dispatch.routes');
+const scheduleRoutes = require('./routes/schedule.routes');
+const incidentRoutes = require('./routes/incident.routes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -90,6 +93,9 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/dispatch', dispatchRoutes);
+app.use('/api/schedules', scheduleRoutes);
+app.use('/api/incidents', incidentRoutes);
 
 // 404
 app.use((req, res) => {

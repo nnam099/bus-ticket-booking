@@ -131,15 +131,39 @@ const login = async (req, res, next) => {
       include: { userRoles: { include: { role: true } }, customer: true, busOperator: true, staff: true },
     });
 
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      return res.status(401).json({ success: false, message: 'Email/SDT hoac mat khau khong dung.' });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Email/SDT hoặc mật khẩu không đúng.' });
     }
+    
     if (!user.isActive) {
-      return res.status(403).json({ success: false, message: 'Tai khoan da bi khoa. Vui long lien he ho tro.' });
+      return res.status(403).json({ success: false, message: 'Tài khoản đã bị khóa. Vui lòng liên hệ Admin để được hỗ trợ.' });
     }
 
+    if (!(await bcrypt.compare(password, user.passwordHash))) {
+      const attemptsKey = `login_attempts:${user.id}`;
+      const attempts = await redisClient.incr(attemptsKey);
+      
+      if (attempts === 1) {
+        await redisClient.expire(attemptsKey, 60 * 60); // Hết hạn sau 1 giờ
+      }
+      
+      if (attempts >= 5) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { isActive: false }
+        });
+        await redisClient.del(attemptsKey);
+        
+        return res.status(403).json({ success: false, message: 'Tài khoản của bạn đã bị tạm khóa do nhập sai mật khẩu 5 lần. Vui lòng nhờ Admin mở khóa.' });
+      }
+
+      return res.status(401).json({ success: false, message: `Email/SDT hoặc mật khẩu không đúng. Bạn còn ${5 - attempts} lần thử.` });
+    }
+
+    await redisClient.del(`login_attempts:${user.id}`);
+
     res.cookie('token', generateToken(user), cookieOptions());
-    res.json({ success: true, message: 'Dang nhap thanh cong!', data: { user: formatUser(user) } });
+    res.json({ success: true, message: 'Đăng nhập thành công!', data: { user: formatUser(user) } });
   } catch (err) {
     next(err);
   }
