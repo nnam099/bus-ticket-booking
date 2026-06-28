@@ -6,7 +6,7 @@ import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 
 export default function ProfilePage() {
-  const [form, setForm] = useState({ fullName: '', phone: '' });
+  const [form, setForm] = useState({ fullName: '', phone: '', companyName: '', hotline: '', licenseNumber: '', address: '' });
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '' });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -15,8 +15,15 @@ export default function ProfilePage() {
   useEffect(() => {
     userAPI.getMe().then(r => {
       const u = r.data.data;
-      const name = u.customer?.fullName || u.staff?.fullName || u.busOperator?.companyName || u.admin?.fullName || u.email || '';
-      setForm({ fullName: name, phone: u.phone || '' });
+      const name = u.customer?.fullName || u.staff?.fullName || u.admin?.fullName || '';
+      setForm({ 
+        fullName: name, 
+        phone: u.phone || '',
+        companyName: u.busOperator?.companyName || '',
+        hotline: u.busOperator?.hotline || '',
+        licenseNumber: u.busOperator?.licenseNumber || '',
+        address: u.busOperator?.address || ''
+      });
       setUserExt(u);
     });
   }, []);
@@ -82,14 +89,44 @@ export default function ProfilePage() {
         <Card>
           <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-5">Thông tin cá nhân</h2>
           <form onSubmit={handleUpdate} className="space-y-4">
+            {userExt?.busOperator ? (
+              <>
+                <Input 
+                  label="Tên nhà xe / Công ty"
+                  value={form.companyName} 
+                  onChange={e => setForm({ ...form, companyName: e.target.value })} 
+                  placeholder="Nhập tên công ty"
+                />
+                <Input 
+                  label="Hotline đặt vé"
+                  value={form.hotline} 
+                  onChange={e => setForm({ ...form, hotline: e.target.value })} 
+                  placeholder="Nhập hotline"
+                />
+                <Input 
+                  label="Mã số kinh doanh"
+                  value={form.licenseNumber} 
+                  onChange={e => setForm({ ...form, licenseNumber: e.target.value })} 
+                  placeholder="Nhập mã số KD"
+                />
+                <Input 
+                  label="Địa chỉ văn phòng"
+                  value={form.address} 
+                  onChange={e => setForm({ ...form, address: e.target.value })} 
+                  placeholder="Nhập địa chỉ"
+                />
+              </>
+            ) : (
+              <Input 
+                label="Họ tên"
+                value={form.fullName} 
+                onChange={e => setForm({ ...form, fullName: e.target.value })} 
+                placeholder="Nhập họ tên"
+              />
+            )}
+            
             <Input 
-              label="Họ tên"
-              value={form.fullName} 
-              onChange={e => setForm({ ...form, fullName: e.target.value })} 
-              placeholder="Nhập họ tên"
-            />
-            <Input 
-              label="Số điện thoại"
+              label={userExt?.busOperator ? 'SĐT quản lý' : 'Số điện thoại'}
               value={form.phone} 
               onChange={e => setForm({ ...form, phone: e.target.value })} 
               placeholder="Nhập số điện thoại"

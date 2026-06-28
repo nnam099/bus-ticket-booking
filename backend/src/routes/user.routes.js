@@ -11,36 +11,86 @@ router.get('/me', authenticate, async (req, res) => {
   res.json({ success: true, data: user });
 });
 
-router.put('/me', authenticate, authorize('CUSTOMER'), async (req, res, next) => {
+router.put('/me', authenticate, async (req, res, next) => {
   try {
-    const { fullName, dateOfBirth, avatarUrl, phone } = req.body;
-    if (!req.user.customer?.id) {
-      return res.status(403).json({ success: false, message: 'Chi khach hang moi co the cap nhat ho so ca nhan.' });
-    }
-    if (fullName !== undefined && (!String(fullName).trim() || String(fullName).length > 100)) {
-      return res.status(400).json({ success: false, message: 'Ho ten khong hop le.' });
-    }
+    const { fullName, dateOfBirth, avatarUrl, phone, companyName, hotline, licenseNumber, address } = req.body;
+    
+    const isCustomer = !!req.user.customer?.id;
+    const isOperator = !!req.user.busOperator?.id;
+    const isStaff = !!req.user.staff?.id;
+    const isAdmin = !!req.user.admin?.id;
+
     if (phone !== undefined && phone !== '' && typeof phone !== 'string') {
       return res.status(400).json({ success: false, message: 'So dien thoai khong hop le.' });
     }
-    const parsedDateOfBirth = dateOfBirth ? new Date(dateOfBirth) : undefined;
-    if (dateOfBirth && Number.isNaN(parsedDateOfBirth.getTime())) {
-      return res.status(400).json({ success: false, message: 'Ngay sinh khong hop le.' });
+
+    const transactions = [];
+
+    if (phone !== undefined) {
+      transactions.push(
+        prisma.user.update({
+          where: { id: req.user.id },
+          data: { phone: phone === '' ? null : phone },
+        })
+      );
     }
-    await prisma.$transaction([
-      prisma.customer.update({
-        where: { userId: req.user.id },
-        data: { fullName, dateOfBirth: parsedDateOfBirth, avatarUrl },
-      }),
-      prisma.user.update({
-        where: { id: req.user.id },
-        data: { phone: phone === '' ? null : phone },
-      }),
-    ]);
+
+    if (isCustomer) {
+      if (fullName !== undefined && (!String(fullName).trim() || String(fullName).length > 100)) {
+        return res.status(400).json({ success: false, message: 'Ho ten khong hop le.' });
+      }
+      const parsedDateOfBirth = dateOfBirth ? new Date(dateOfBirth) : undefined;
+      transactions.push(
+        prisma.customer.update({
+          where: { userId: req.user.id },
+          data: { fullName, dateOfBirth: parsedDateOfBirth, avatarUrl },
+        })
+      );
+    } else if (isOperator) {
+      if (companyName !== undefined && (!String(companyName).trim() || String(companyName).length > 100)) {
+        return res.status(400).json({ success: false, message: 'Ten cong ty khong hop le.' });
+      }
+      transactions.push(
+        prisma.busOperator.update({
+          where: { userId: req.user.id },
+          data: { companyName, hotline, licenseNumber, address },
+        })
+      );
+    } else if (isStaff) {
+      if (fullName !== undefined && (!String(fullName).trim() || String(fullName).length > 100)) {
+        return res.status(400).json({ success: false, message: 'Ho ten khong hop le.' });
+      }
+      transactions.push(
+        prisma.staff.update({
+          where: { userId: req.user.id },
+          data: { fullName },
+        })
+      );
+    } else if (isAdmin) {
+      if (fullName !== undefined && (!String(fullName).trim() || String(fullName).length > 100)) {
+        return res.status(400).json({ success: false, message: 'Ho ten khong hop le.' });
+      }
+      transactions.push(
+        prisma.admin.update({
+          where: { userId: req.user.id },
+          data: { fullName },
+        })
+      );
+    }
+
+    await prisma.$transaction(transactions);
+
     const updated = await prisma.user.findUnique({
       where: { id: req.user.id },
-      include: { customer: true, userRoles: { include: { role: true } } },
+      include: { 
+        customer: true, 
+        busOperator: true,
+        staff: true,
+        admin: true,
+        userRoles: { include: { role: true } } 
+      },
     });
+
     const data = { ...updated };
     delete data.passwordHash;
     res.json({ success: true, message: 'Cap nhat thong tin thanh cong.', data });
