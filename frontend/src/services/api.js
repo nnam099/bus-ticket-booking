@@ -162,6 +162,7 @@ export const adminAPI = {
 
 // Staff API
 export const staffAPI = {
+  getDashboard: () => api.get('/staff/dashboard'),
   getAssignedTrips: () => api.get('/staff/trips/assigned'),
   getPassengers: (tripId) => api.get(`/staff/trips/${tripId}/passengers`),
 };

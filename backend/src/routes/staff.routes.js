@@ -88,4 +88,53 @@ router.get('/trips/:tripId/passengers', authenticate, authorize('STAFF', 'BUS_OP
   } catch (err) { next(err); }
 });
 
+// GET /api/staff/dashboard
+router.get('/dashboard', authenticate, authorize('STAFF'), async (req, res, next) => {
+  try {
+    const staffId = req.user.staff?.id;
+    if (!staffId) return res.status(403).json({ success: false, message: 'Invalid staff.' });
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfToday = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
+
+    const [totalTrips, todayTrips, upcomingTrips] = await Promise.all([
+      prisma.trip.count({
+        where: { tripStaffs: { some: { staffId } } },
+      }),
+      prisma.trip.findMany({
+        where: {
+          tripStaffs: { some: { staffId } },
+          departureTime: { gte: startOfToday, lt: endOfToday },
+        },
+        include: { route: true, vehicle: true },
+        orderBy: { departureTime: 'asc' },
+      }),
+      prisma.trip.findMany({
+        where: {
+          tripStaffs: { some: { staffId } },
+          departureTime: { gte: now },
+        },
+        include: { route: true, vehicle: true },
+        orderBy: { departureTime: 'asc' },
+        take: 5,
+      })
+    ]);
+
+    const notifications = [
+      { id: 1, title: 'Lưu ý vận hành', content: 'Vui lòng có mặt tại bến xe trước giờ khởi hành 30 phút.', date: new Date().toISOString() },
+    ];
+
+    res.json({
+      success: true,
+      data: {
+        stats: { totalTrips, workingHours: totalTrips * 8 },
+        todayTrips,
+        upcomingTrips,
+        notifications,
+      }
+    });
+  } catch (err) { next(err); }
+});
+
 module.exports = router;
