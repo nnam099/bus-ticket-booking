@@ -28,15 +28,19 @@ const findUserByIdentifier = async ({ identifier, email, phone }) => {
 };
 
 const incrementOtpAttempt = async (userId, purpose) => {
-  const attemptsKey = `otp_attempts:${userId}:${purpose}`;
-  const attempts = await redisClient.incr(attemptsKey);
-  if (attempts === 1) await redisClient.expire(attemptsKey, OTP_TTL_SECONDS);
-  return attempts;
+  try {
+    const attemptsKey = `otp_attempts:${userId}:${purpose}`;
+    const attempts = await redisClient.incr(attemptsKey);
+    if (attempts === 1) await redisClient.expire(attemptsKey, OTP_TTL_SECONDS);
+    return attempts;
+  } catch (e) { return 0; }
 };
 
 const ensureOtpAttemptsAllowed = async (userId, purpose) => {
-  const attempts = Number(await redisClient.get(`otp_attempts:${userId}:${purpose}`) || 0);
-  return attempts < MAX_OTP_ATTEMPTS;
+  try {
+    const attempts = Number(await redisClient.get(`otp_attempts:${userId}:${purpose}`) || 0);
+    return attempts < MAX_OTP_ATTEMPTS;
+  } catch (e) { return true; }
 };
 
 const consumeOtp = async ({ userId, purpose, code }) => {
@@ -54,7 +58,19 @@ const consumeOtp = async ({ userId, purpose, code }) => {
     throw error;
   }
 
-  const cached = await redisClient.get(`otp:${userId}:${purpose}`);
+  let cached = null;
+  try {
+    cached = await redisClient.get(`otp:${userId}:${purpose}`);
+  } catch (e) {}
+
+  if (!cached) {
+    const dbOtp = await prisma.otpCode.findFirst({
+      where: { userId, purpose, usedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' }
+    });
+    if (dbOtp) cached = dbOtp.code;
+  }
+
   const submittedHash = hashOtp(userId, purpose, code);
   if (!cached || !timingSafeEqualString(cached, submittedHash)) {
     await incrementOtpAttempt(userId, purpose);
@@ -64,8 +80,11 @@ const consumeOtp = async ({ userId, purpose, code }) => {
     throw error;
   }
 
-  await redisClient.del(`otp:${userId}:${purpose}`);
-  await redisClient.del(`otp_attempts:${userId}:${purpose}`);
+  try {
+    await redisClient.del(`otp:${userId}:${purpose}`);
+    await redisClient.del(`otp_attempts:${userId}:${purpose}`);
+  } catch (e) {}
+
   await prisma.otpCode.updateMany({
     where: { userId, purpose, code: submittedHash, usedAt: null, expiresAt: { gt: new Date() } },
     data: { usedAt: new Date() },
@@ -80,8 +99,11 @@ const issueOtp = async ({ user, identifier, purpose }) => {
   await prisma.otpCode.create({
     data: { userId: user.id, code: codeHash, purpose, expiresAt },
   });
-  await redisClient.setEx(`otp:${user.id}:${purpose}`, OTP_TTL_SECONDS, codeHash);
-  await redisClient.del(`otp_attempts:${user.id}:${purpose}`);
+  
+  try {
+    await redisClient.setEx(`otp:${user.id}:${purpose}`, OTP_TTL_SECONDS, codeHash);
+    await redisClient.del(`otp_attempts:${user.id}:${purpose}`);
+  } catch (e) {}
 
   if (user.email && (!identifier || identifier === user.email)) {
     await sendOtpEmail(user.email, code, purpose);
@@ -234,7 +256,34 @@ const verifyOtp = async (req, res, next) => {
     const user = userId ? { id: userId } : await findUserByIdentifier({ identifier });
     if (!user) return res.status(400).json({ success: false, message: 'Invalid or expired OTP.' });
 
-    await consumeOtp({ userId: user.id, purpose, code });
+    if (!otpPurposes.includes(purpose)) {
+      return res.status(400).json({ success: false, message: 'Muc dich OTP khong hop le.' });
+    }
+
+    if (!(await ensureOtpAttemptsAllowed(user.id, purpose))) {
+      return res.status(429).json({ success: false, message: 'Ban da nhap sai OTP qua nhieu lan. Vui long yeu cau ma moi.' });
+    }
+
+    let cached = null;
+    try {
+      cached = await redisClient.get(`otp:${user.id}:${purpose}`);
+    } catch (e) {}
+
+    if (!cached) {
+      const dbOtp = await prisma.otpCode.findFirst({
+        where: { userId: user.id, purpose, usedAt: null, expiresAt: { gt: new Date() } },
+        orderBy: { createdAt: 'desc' }
+      });
+      if (dbOtp) cached = dbOtp.code;
+    }
+
+    const submittedHash = hashOtp(user.id, purpose, code);
+    
+    if (!cached || !timingSafeEqualString(cached, submittedHash)) {
+      await incrementOtpAttempt(user.id, purpose);
+      return res.status(400).json({ success: false, message: 'Ma OTP khong hop le hoac da het han.' });
+    }
+
     res.json({ success: true, message: 'Xac thuc OTP thanh cong.' });
   } catch (err) {
     next(err);

@@ -21,6 +21,8 @@ const sendOtpEmail = async (to, code, purpose) => {
 
   const label = purposeLabels[purpose] || 'xác thực';
 
+  logger.info(`Mã OTP cho ${to} (${label}): ${code}`);
+
   await transporter.sendMail({
     from: `"Đặt Vé Xe Khách" <${process.env.EMAIL_FROM}>`,
     to,

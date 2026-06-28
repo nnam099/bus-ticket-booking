@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate, authorize } = require('../middlewares/auth.middleware');
+const { authenticate, authorize, invalidateUserCache } = require('../middlewares/auth.middleware');
 const bcrypt = require('bcryptjs');
 const prisma = require('../config/prisma');
 const { decryptOrderTickets, decryptTickets } = require('../utils/privacy');
@@ -18,7 +18,6 @@ router.put('/me', authenticate, async (req, res, next) => {
     const isCustomer = !!req.user.customer?.id;
     const isOperator = !!req.user.busOperator?.id;
     const isStaff = !!req.user.staff?.id;
-    const isAdmin = !!req.user.admin?.id;
 
     if (phone !== undefined && phone !== '' && typeof phone !== 'string') {
       return res.status(400).json({ success: false, message: 'So dien thoai khong hop le.' });
@@ -81,19 +80,10 @@ router.put('/me', authenticate, async (req, res, next) => {
           data: { fullName, address },
         })
       );
-    } else if (isAdmin) {
-      if (fullName !== undefined && (!String(fullName).trim() || String(fullName).length > 100)) {
-        return res.status(400).json({ success: false, message: 'Ho ten khong hop le.' });
-      }
-      transactions.push(
-        prisma.admin.update({
-          where: { userId: req.user.id },
-          data: { fullName },
-        })
-      );
     }
 
     await prisma.$transaction(transactions);
+    await invalidateUserCache(req.user.id);
 
     const updated = await prisma.user.findUnique({
       where: { id: req.user.id },
@@ -101,7 +91,6 @@ router.put('/me', authenticate, async (req, res, next) => {
         customer: true, 
         busOperator: true,
         staff: true,
-        admin: true,
         userRoles: { include: { role: true } } 
       },
     });
