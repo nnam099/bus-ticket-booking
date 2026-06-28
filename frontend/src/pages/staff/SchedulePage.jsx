@@ -64,7 +64,7 @@ export default function SchedulePage() {
                           {trip.route.originCity} <i className="ti ti-arrow-right text-gray-400" /> {trip.route.destinationCity}
                         </h3>
                         <p className="text-sm text-gray-500 mt-1 flex items-center gap-4">
-                          <span><i className="ti ti-clock" /> {format(new Date(trip.departureTime), 'HH:mm')} - {format(new Date(trip.estimatedArrival), 'HH:mm')}</span>
+                          <span><i className="ti ti-clock" /> {format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')} - {format(new Date(trip.estimatedArrival), 'HH:mm dd/MM/yyyy')}</span>
                         </p>
                       </div>
                     </div>

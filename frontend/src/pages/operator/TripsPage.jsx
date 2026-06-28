@@ -304,7 +304,7 @@ export default function TripsPage() {
                   </div>
                   
                   <div className="mt-3 flex flex-wrap gap-4 text-sm font-medium text-gray-600 dark:text-gray-400">
-                    <span className="flex items-center gap-1.5"><i className="ti ti-calendar text-gray-400" /> {format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')}</span>
+                    <span className="flex items-center gap-1.5"><i className="ti ti-calendar text-gray-400" /> {format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')} - {format(new Date(trip.estimatedArrival), 'HH:mm dd/MM/yyyy')}</span>
                     <span className="flex items-center gap-1.5"><i className="ti ti-bus text-gray-400" /> {trip.vehicle?.licensePlate}</span>
                     <span className="flex items-center gap-1.5"><i className="ti ti-armchair text-[#e85d04]" /> Còn {trip._count?.tripSeats ?? 0} ghế</span>
                   </div>

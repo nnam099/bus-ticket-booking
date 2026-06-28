@@ -166,23 +166,29 @@ export default function SearchResultsPage() {
                 {/* Timeline */}
                 <div className="flex items-center justify-between relative">
                   <div className="text-center z-10 bg-white pr-4">
-                    <div className="text-3xl font-black text-gray-800">
-                      {format(new Date(trip.departureTime), 'HH:mm')}
+                      <div className="text-3xl font-black text-gray-800">
+                        {format(new Date(trip.departureTime), 'HH:mm')}
+                      </div>
+                      <div className="text-xs text-brand mt-1 font-bold">
+                        {format(new Date(trip.departureTime), 'dd/MM/yyyy')}
+                      </div>
+                      <div className="font-semibold text-gray-500 mt-1">{trip.route?.originCity}</div>
                     </div>
-                    <div className="font-semibold text-gray-500 mt-1">{trip.route?.originCity}</div>
-                  </div>
-                  
-                  {/* Decorative line */}
-                  <div className="flex-1 flex items-center justify-center relative">
-                    <div className="w-full border-t-2 border-dashed border-gray-300 absolute top-1/2"></div>
-                    <div className="w-4 h-4 rounded-full bg-brand/20 z-10 border-2 border-brand animate-pulse"></div>
-                  </div>
-                  
-                  <div className="text-center z-10 bg-white pl-4">
-                    <div className="text-3xl font-black text-gray-800">
-                      {format(new Date(trip.estimatedArrival), 'HH:mm')}
+                    
+                    {/* Decorative line */}
+                    <div className="flex-1 flex items-center justify-center relative">
+                      <div className="w-full border-t-2 border-dashed border-gray-300 absolute top-1/2"></div>
+                      <div className="w-4 h-4 rounded-full bg-brand/20 z-10 border-2 border-brand animate-pulse"></div>
                     </div>
-                    <div className="font-semibold text-gray-500 mt-1">{trip.route?.destinationCity}</div>
+                    
+                    <div className="text-center z-10 bg-white pl-4">
+                      <div className="text-3xl font-black text-gray-800">
+                        {format(new Date(trip.estimatedArrival), 'HH:mm')}
+                      </div>
+                      <div className="text-xs text-brand mt-1 font-bold">
+                        {format(new Date(trip.estimatedArrival), 'dd/MM/yyyy')}
+                      </div>
+                      <div className="font-semibold text-gray-500 mt-1">{trip.route?.destinationCity}</div>
                   </div>
                 </div>
               </div>
