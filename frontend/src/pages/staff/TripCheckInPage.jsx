@@ -253,17 +253,35 @@ export default function TripCheckInPage() {
 
           <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-gray-200/50 dark:border-slate-800/50">
             {STATUS_ACTIONS.map(action => {
-              const isPrimary = action.value === 'COMPLETED';
+              const currentStatus = tripStatus || trip?.status;
+              const allowedTransitions = {
+                SCHEDULED: ['BOARDING', 'DELAYED', 'CANCELLED'],
+                DELAYED: ['BOARDING', 'CANCELLED'],
+                BOARDING: ['DEPARTED', 'CANCELLED'],
+                DEPARTED: ['COMPLETED'],
+                COMPLETED: [],
+                CANCELLED: [],
+              };
+              
+              const isAllowed = !currentStatus || (allowedTransitions[currentStatus] || []).includes(action.value);
+              const isCurrent = currentStatus === action.value;
+              const isPast = ['COMPLETED', 'CANCELLED'].includes(currentStatus) && !isCurrent;
+              
+              if (!isAllowed && !isCurrent) return null; // Hide completely invalid future states
+
+              const isPrimary = action.value === 'COMPLETED' || action.value === 'DEPARTED';
               const isDanger = action.value === 'CANCELLED';
+
               return (
                 <Button
                   key={action.value}
-                  disabled={updating}
+                  disabled={updating || !isAllowed || isCurrent || isPast}
                   onClick={() => handleUpdateStatus(action.value)}
-                  variant={isPrimary ? 'primary' : isDanger ? 'danger' : 'outline'}
+                  variant={isCurrent ? 'primary' : isPrimary ? 'primary' : isDanger ? 'danger' : 'outline'}
                   size="sm"
+                  className={isCurrent ? 'opacity-100 ring-2 ring-offset-1 ring-blue-500 cursor-not-allowed' : ''}
                 >
-                  {action.label}
+                  {isCurrent ? <span className="flex items-center gap-1.5"><i className="ti ti-check" /> {action.label}</span> : action.label}
                 </Button>
               );
             })}
