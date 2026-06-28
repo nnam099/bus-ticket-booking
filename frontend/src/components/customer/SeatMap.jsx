@@ -46,13 +46,11 @@ export default function SeatMap({ tripSeats, tripId }) {
   const floors = [...new Set(seats.map(s => s.seatLayout.floor))].sort((a, b) => a - b);
 
   const renderSeat = (seat) => {
-    if (!seat) return <div className="h-11 w-11" />;
-
     return (
       <button
         key={seat.id}
         onClick={() => handleClick(seat)}
-        className={`w-11 h-11 rounded-[12px] flex items-center justify-center text-xs font-bold cursor-pointer transition-all duration-300 border-[1.5px] select-none outline-none ${getSeatClass(seat)}`}
+        className={`w-full h-full rounded-[10px] flex items-center justify-center text-xs font-bold cursor-pointer transition-all duration-300 border-[1.5px] select-none outline-none ${getSeatClass(seat)}`}
         title={`Ghế ${seat.seatLayout.seatCode}`}
         disabled={seat.status === 'BOOKED' || seat.status === 'UNAVAILABLE' || (seat.status === 'PROCESSING' && !selectedSeats.some(s => s.id === seat.id))}
       >
@@ -71,88 +69,92 @@ export default function SeatMap({ tripSeats, tripId }) {
         const leftCols = Array.from({ length: aisleAfter }, (_, index) => index + 1);
         const rightCols = Array.from({ length: maxCol - aisleAfter }, (_, index) => aisleAfter + index + 1);
         
-        // Horizontal mapping: Grid columns = Label + Seat Rows
-        const gridTemplateColumns = `1.5rem repeat(${rows.length}, 2.75rem)`;
+        // Vertical mapping: Grid columns = Seats + Aisle
+        const gridTemplateColumns = `repeat(${rows.length + 1}, minmax(0, 1fr))`;
 
         return (
-          <section key={floor} className="max-w-full overflow-x-auto pb-4">
-            <div className="min-w-fit mx-auto p-1">
+          <section key={floor} className="w-full max-w-sm mx-auto pb-6">
+            <div className="w-full">
               <div className="mb-4 flex items-center justify-between text-sm font-bold text-gray-700 dark:text-slate-300 px-2">
                 <span className="text-gray-800 dark:text-slate-100">{floors.length > 1 ? `Tầng ${floor}` : 'Sơ đồ xe'}</span>
                 <span className="rounded-full bg-orange-50 text-brand px-3 py-1 text-xs border border-orange-100 shadow-sm dark:bg-brand/10 dark:border-brand/20">{floorSeats.length} ghế</span>
               </div>
 
-              {/* Bus Shell (Horizontal) */}
-              <div className="relative flex flex-row items-stretch rounded-[2.5rem] bg-white px-3 py-5 shadow-[0_8px_30px_rgba(74,59,50,0.08)] border border-orange-100/50 dark:bg-slate-900/95 dark:border-slate-800 dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+              {/* Bus Shell (Vertical) */}
+              <div className="relative flex flex-col rounded-[2.5rem] bg-white p-4 shadow-[0_8px_30px_rgba(74,59,50,0.08)] border border-orange-100/50 dark:bg-slate-900/95 dark:border-slate-800 dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
                 
-                {/* Front of bus (Left side) */}
-                <div className="relative flex flex-col items-center justify-between w-20 mr-4 rounded-l-[2rem] border-r border-gray-100 bg-gray-50/50 py-4 dark:bg-slate-800/50 dark:border-slate-700/50">
-                  <div className="w-6 h-3/4 rounded-l-3xl rounded-r-xl border border-sky-100 bg-gradient-to-l from-sky-50 to-white shadow-inner dark:border-sky-900/20 dark:from-slate-800 dark:to-slate-900/80 absolute left-2 top-1/2 -translate-y-1/2" />
+                {/* Front of bus (Top side) */}
+                <div className="relative flex items-center justify-between w-full h-16 mb-6 rounded-t-[2rem] border-b border-gray-100 bg-gray-50/50 px-4 dark:bg-slate-800/50 dark:border-slate-700/50">
+                  <div className="h-4 w-3/4 rounded-t-2xl rounded-b-xl border border-sky-100 bg-gradient-to-t from-sky-50 to-white shadow-inner dark:border-sky-900/20 dark:from-slate-800 dark:to-slate-900/80 absolute top-2 left-1/2 -translate-x-1/2" />
                   
-                  {/* Cửa lên at the top (Right side of bus in VN) */}
-                  <div className="z-10 rounded-lg border border-brand/20 bg-orange-50/80 px-1.5 py-2.5 text-[10px] font-black uppercase text-brand shadow-sm backdrop-blur-sm dark:bg-brand/10 dark:border-brand/30" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                    Cửa lên
+                  {/* Tài xế (Left side of bus front) */}
+                  <div className="flex flex-col items-center gap-1 z-10">
+                    <div className="h-7 w-7 rounded-full border-2 border-gray-300 shadow-sm bg-white dark:bg-slate-800 dark:border-slate-600 flex items-center justify-center">
+                      <div className="h-2.5 w-2.5 rounded-full bg-gray-300 dark:bg-slate-600" />
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tài xế</span>
                   </div>
 
-                  {/* Tài xế at the bottom (Left side of bus in VN) */}
-                  <div className="flex flex-col items-center gap-2 z-10 mb-2">
-                    <div className="h-6 w-6 rounded-full border-2 border-gray-300 shadow-sm bg-white dark:bg-slate-800 dark:border-slate-600 flex items-center justify-center">
-                      <div className="h-2 w-2 rounded-full bg-gray-300 dark:bg-slate-600" />
-                    </div>
-                    <span className="text-[10px] font-bold text-gray-500 dark:text-slate-400" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Tài xế</span>
+                  {/* Cửa lên (Right side of bus front) */}
+                  <div className="z-10 rounded-lg border border-brand/20 bg-orange-50/80 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-brand shadow-sm backdrop-blur-sm dark:bg-brand/10 dark:border-brand/30">
+                    Cửa lên
                   </div>
                 </div>
 
                 {/* Seat Grid */}
-                <div className="relative grid gap-x-2.5 gap-y-2 p-1" style={{ gridTemplateColumns }}>
-                  
-                  {/* Left Cols (Top side of horizontal bus) */}
-                  {leftCols.map(col => (
-                    <div key={`col-${col}`} className="contents">
-                      <div className="flex items-center justify-center text-[10px] font-bold text-gray-400 dark:text-slate-500">
-                        {floorSeats.find(seat => seat.seatLayout.col === col)?.seatLayout.seatCode?.replace(/\d+$/, '')}
-                      </div>
-                      {rows.map(row => (
-                        <div key={`${row}-${col}`} className="flex items-center justify-center relative z-10">
-                          {renderSeat(floorSeats.find(s => s.seatLayout.row === row && s.seatLayout.col === col))}
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-
-                  {/* Aisle */}
+                <div className="relative grid gap-x-2 gap-y-4 p-1" style={{ gridTemplateColumns }}>
+                  {/* Column Headers (A, Lối đi, B) */}
                   <div className="contents">
-                    <div className="flex items-center justify-center text-[9px] font-bold uppercase tracking-widest text-gray-300 dark:text-slate-600">
+                    {rows.slice(0, Math.ceil(rows.length / 2)).map(row => (
+                      <div key={`header-${row}`} className="flex justify-center text-[11px] font-black text-gray-400 dark:text-slate-500">
+                        {floorSeats.find(s => s.seatLayout.row === row)?.seatLayout.seatCode?.replace(/\d+$/, '') || ''}
+                      </div>
+                    ))}
+                    <div className="flex justify-center text-[10px] font-bold uppercase tracking-widest text-gray-300 dark:text-slate-600">
                       Lối đi
                     </div>
-                    {rows.map(row => (
-                      <div key={`aisle-${row}`} className="flex items-center justify-center relative z-10">
-                        <span className="text-[11px] font-bold text-gray-300 dark:text-slate-600">{row}</span>
+                    {rows.slice(Math.ceil(rows.length / 2)).map(row => (
+                      <div key={`header-${row}`} className="flex justify-center text-[11px] font-black text-gray-400 dark:text-slate-500">
+                        {floorSeats.find(s => s.seatLayout.row === row)?.seatLayout.seatCode?.replace(/\d+$/, '') || ''}
                       </div>
                     ))}
                   </div>
 
-                  {/* Right Cols (Bottom side of horizontal bus) */}
-                  {rightCols.map(col => (
+                  {/* Seats by Row (Col 1, 2, 3...) */}
+                  {Array.from({ length: maxCol }, (_, i) => i + 1).map(col => (
                     <div key={`col-${col}`} className="contents">
-                      <div className="flex items-center justify-center text-[10px] font-bold text-gray-400 dark:text-slate-500">
-                        {floorSeats.find(seat => seat.seatLayout.col === col)?.seatLayout.seatCode?.replace(/\d+$/, '')}
+                      {/* Left side seats */}
+                      {rows.slice(0, Math.ceil(rows.length / 2)).map(row => (
+                        <div key={`${row}-${col}`} className="flex justify-center relative z-10 w-full max-w-[48px] mx-auto">
+                          <div className="w-full aspect-square">
+                            {renderSeat(floorSeats.find(s => s.seatLayout.row === row && s.seatLayout.col === col))}
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Aisle space */}
+                      <div className="flex items-center justify-center text-[11px] font-bold text-gray-300 dark:text-slate-600 select-none">
+                        {col}
                       </div>
-                      {rows.map(row => (
-                        <div key={`${row}-${col}`} className="flex items-center justify-center relative z-10">
-                          {renderSeat(floorSeats.find(s => s.seatLayout.row === row && s.seatLayout.col === col))}
+
+                      {/* Right side seats */}
+                      {rows.slice(Math.ceil(rows.length / 2)).map(row => (
+                        <div key={`${row}-${col}`} className="flex justify-center relative z-10 w-full max-w-[48px] mx-auto">
+                          <div className="w-full aspect-square">
+                            {renderSeat(floorSeats.find(s => s.seatLayout.row === row && s.seatLayout.col === col))}
+                          </div>
                         </div>
                       ))}
                     </div>
                   ))}
 
-                  {/* Aisle dashed line overlay */}
-                  <div className="absolute left-8 right-0 top-1/2 -translate-y-1/2 h-8 border-y-2 border-dashed border-gray-200/60 dark:border-slate-700/40 pointer-events-none rounded-full" />
+                  {/* Aisle dashed line overlay (Vertical) */}
+                  <div className="absolute top-10 bottom-4 left-1/2 -translate-x-1/2 w-8 border-x-2 border-dashed border-gray-200/60 dark:border-slate-700/40 pointer-events-none rounded-full" />
                 </div>
 
-                {/* Rear of bus (Right side) */}
-                <div className="flex flex-col items-center justify-center w-12 ml-2 rounded-r-[1.5rem] border-l border-gray-100 bg-gray-50/50 dark:bg-slate-800/50 dark:border-slate-700/50">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-slate-500" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Khoang sau</span>
+                {/* Rear of bus (Bottom side) */}
+                <div className="flex items-center justify-center w-full h-8 mt-6 rounded-b-[1.5rem] border-t border-gray-100 bg-gray-50/50 dark:bg-slate-800/50 dark:border-slate-700/50">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">Khoang sau</span>
                 </div>
 
               </div>
