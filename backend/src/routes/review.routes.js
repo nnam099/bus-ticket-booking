@@ -43,7 +43,7 @@ router.get('/latest', async (req, res, next) => {
     const reviews = await prisma.review.findMany({
       where: { isApproved: true },
       include: { 
-        customer: { select: { fullName: true, avatarUrl: true, address: true } },
+        customer: { select: { fullName: true, avatarUrl: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: limit,

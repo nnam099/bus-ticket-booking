@@ -106,7 +106,7 @@ const issueOtp = async ({ user, identifier, purpose }) => {
   } catch (e) {}
 
   if (user.email && (!identifier || identifier === user.email)) {
-    await sendOtpEmail(user.email, code, purpose);
+    sendOtpEmail(user.email, code, purpose);
   }
 };
 
