@@ -69,8 +69,8 @@ export default function SeatMap({ tripSeats, tripId }) {
         const leftCols = Array.from({ length: aisleAfter }, (_, index) => index + 1);
         const rightCols = Array.from({ length: maxCol - aisleAfter }, (_, index) => aisleAfter + index + 1);
         
-        // Vertical mapping: Grid columns = Seats + Aisle
-        const gridTemplateColumns = `repeat(${rows.length + 1}, minmax(0, 1fr))`;
+        // Vertical mapping: Columns = maxCol + 1 (for aisle)
+        const gridTemplateColumns = `repeat(${maxCol + 1}, minmax(0, 1fr))`;
 
         return (
           <section key={floor} className="w-full max-w-sm mx-auto pb-6">
@@ -102,29 +102,33 @@ export default function SeatMap({ tripSeats, tripId }) {
                 </div>
 
                 {/* Seat Grid */}
-                <div className="relative grid gap-x-2 gap-y-4 p-1" style={{ gridTemplateColumns }}>
+                <div className="relative grid gap-x-3 gap-y-4 p-1" style={{ gridTemplateColumns }}>
+                  
                   {/* Column Headers (A, Lối đi, B) */}
                   <div className="contents">
-                    {rows.slice(0, Math.ceil(rows.length / 2)).map(row => (
-                      <div key={`header-${row}`} className="flex justify-center text-[11px] font-black text-gray-400 dark:text-slate-500">
-                        {floorSeats.find(s => s.seatLayout.row === row)?.seatLayout.seatCode?.replace(/\d+$/, '') || ''}
+                    {Array.from({ length: Math.ceil(maxCol / 2) }, (_, i) => i + 1).map(col => (
+                      <div key={`header-col-${col}`} className="flex justify-center text-[12px] font-black text-gray-400 dark:text-slate-500">
+                        {floorSeats.find(s => s.seatLayout.col === col)?.seatLayout.seatCode?.replace(/\d+$/, '') || ''}
                       </div>
                     ))}
+                    
                     <div className="flex justify-center text-[10px] font-bold uppercase tracking-widest text-gray-300 dark:text-slate-600">
                       Lối đi
                     </div>
-                    {rows.slice(Math.ceil(rows.length / 2)).map(row => (
-                      <div key={`header-${row}`} className="flex justify-center text-[11px] font-black text-gray-400 dark:text-slate-500">
-                        {floorSeats.find(s => s.seatLayout.row === row)?.seatLayout.seatCode?.replace(/\d+$/, '') || ''}
+                    
+                    {Array.from({ length: Math.floor(maxCol / 2) }, (_, i) => i + Math.ceil(maxCol / 2) + 1).map(col => (
+                      <div key={`header-col-${col}`} className="flex justify-center text-[12px] font-black text-gray-400 dark:text-slate-500">
+                        {floorSeats.find(s => s.seatLayout.col === col)?.seatLayout.seatCode?.replace(/\d+$/, '') || ''}
                       </div>
                     ))}
                   </div>
 
-                  {/* Seats by Row (Col 1, 2, 3...) */}
-                  {Array.from({ length: maxCol }, (_, i) => i + 1).map(col => (
-                    <div key={`col-${col}`} className="contents">
-                      {/* Left side seats */}
-                      {rows.slice(0, Math.ceil(rows.length / 2)).map(row => (
+                  {/* Seats by Row (1, 2, 3...) */}
+                  {rows.map(row => (
+                    <div key={`row-${row}`} className="contents">
+                      
+                      {/* Left side cols */}
+                      {Array.from({ length: Math.ceil(maxCol / 2) }, (_, i) => i + 1).map(col => (
                         <div key={`${row}-${col}`} className="flex justify-center relative z-10 w-full max-w-[48px] mx-auto">
                           <div className="w-full aspect-square">
                             {renderSeat(floorSeats.find(s => s.seatLayout.row === row && s.seatLayout.col === col))}
@@ -134,22 +138,23 @@ export default function SeatMap({ tripSeats, tripId }) {
                       
                       {/* Aisle space */}
                       <div className="flex items-center justify-center text-[11px] font-bold text-gray-300 dark:text-slate-600 select-none">
-                        {col}
+                        {row}
                       </div>
 
-                      {/* Right side seats */}
-                      {rows.slice(Math.ceil(rows.length / 2)).map(row => (
+                      {/* Right side cols */}
+                      {Array.from({ length: Math.floor(maxCol / 2) }, (_, i) => i + Math.ceil(maxCol / 2) + 1).map(col => (
                         <div key={`${row}-${col}`} className="flex justify-center relative z-10 w-full max-w-[48px] mx-auto">
                           <div className="w-full aspect-square">
                             {renderSeat(floorSeats.find(s => s.seatLayout.row === row && s.seatLayout.col === col))}
                           </div>
                         </div>
                       ))}
+                      
                     </div>
                   ))}
 
                   {/* Aisle dashed line overlay (Vertical) */}
-                  <div className="absolute top-10 bottom-4 left-1/2 -translate-x-1/2 w-8 border-x-2 border-dashed border-gray-200/60 dark:border-slate-700/40 pointer-events-none rounded-full" />
+                  <div className="absolute top-8 bottom-4 left-1/2 -translate-x-1/2 w-6 border-x-2 border-dashed border-gray-200/60 dark:border-slate-700/40 pointer-events-none rounded-full" />
                 </div>
 
                 {/* Rear of bus (Bottom side) */}
