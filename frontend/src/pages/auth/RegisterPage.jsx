@@ -31,49 +31,84 @@ export default function RegisterPage() {
     if (user && role === 'CUSTOMER') navigate('/dashboard', { replace: true }); 
   }, [user, navigate, role]);
 
-  const validateForm = () => {
-    const errors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    // Vietnam phone format: 03, 05, 07, 08, 09 followed by 8 digits
-    const phoneRegex = /^(0)(3|5|7|8|9)[0-9]{8}$/;
-    const numberRegex = /^[0-9]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^(0)(3|5|7|8|9)[0-9]{8}$/;
 
-    // Validate based on role
-    if (role === 'CUSTOMER') {
-      if (!form.fullName.trim()) errors.fullName = 'Họ và tên không được để trống';
-      else if (form.fullName.length > 50) errors.fullName = 'Họ và tên không vượt quá 50 ký tự';
-    } else {
-      if (!form.companyName.trim()) errors.companyName = 'Tên nhà xe không được để trống';
-      else if (form.companyName.length > 100) errors.companyName = 'Tên nhà xe không vượt quá 100 ký tự';
-
-      if (!form.hotline.trim()) errors.hotline = 'Hotline không được để trống';
-      else if (!numberRegex.test(form.hotline)) errors.hotline = 'Hotline chỉ bao gồm chữ số';
-      else if (form.hotline.length < 8 || form.hotline.length > 12) errors.hotline = 'Hotline phải từ 8-12 chữ số';
-
-      if (!form.licenseNumber.trim()) errors.licenseNumber = 'Mã số kinh doanh không được để trống';
-      else if (!numberRegex.test(form.licenseNumber)) errors.licenseNumber = 'Mã số kinh doanh chỉ bao gồm chữ số';
-      else if (form.licenseNumber.length < 10 || form.licenseNumber.length > 15) errors.licenseNumber = 'Mã số kinh doanh từ 10-15 chữ số';
-
-      if (!form.address.trim()) errors.address = 'Địa chỉ không được để trống';
-      else if (form.address.length > 200) errors.address = 'Địa chỉ không vượt quá 200 ký tự';
+  const validateField = (name, value) => {
+    let errorMsg = null;
+    
+    switch (name) {
+      case 'fullName':
+        if (role === 'CUSTOMER') {
+          if (!value.trim()) errorMsg = 'Họ và tên không được để trống';
+          else if (value.length > 50) errorMsg = 'Họ và tên không vượt quá 50 ký tự';
+        }
+        break;
+      case 'companyName':
+        if (role === 'OPERATOR') {
+          if (!value.trim()) errorMsg = 'Tên nhà xe không được để trống';
+          else if (value.length > 100) errorMsg = 'Tên nhà xe không vượt quá 100 ký tự';
+        }
+        break;
+      case 'hotline':
+        if (role === 'OPERATOR') {
+          if (!value.trim()) errorMsg = 'Hotline không được để trống';
+          else if (value.length < 8 || value.length > 12) errorMsg = 'Hotline phải từ 8-12 chữ số';
+        }
+        break;
+      case 'licenseNumber':
+        if (role === 'OPERATOR') {
+          if (!value.trim()) errorMsg = 'Mã số kinh doanh không được để trống';
+          else if (value.length < 10 || value.length > 15) errorMsg = 'Mã số kinh doanh từ 10-15 chữ số';
+        }
+        break;
+      case 'address':
+        if (role === 'OPERATOR') {
+          if (!value.trim()) errorMsg = 'Địa chỉ không được để trống';
+          else if (value.length > 200) errorMsg = 'Địa chỉ không vượt quá 200 ký tự';
+        }
+        break;
+      case 'email':
+        if (!value.trim()) errorMsg = 'Email không được để trống';
+        else if (!emailRegex.test(value)) errorMsg = 'Email không đúng định dạng';
+        else if (value.length > 100) errorMsg = 'Email không vượt quá 100 ký tự';
+        break;
+      case 'phone':
+        if (!value.trim()) errorMsg = 'Số điện thoại không được để trống';
+        else if (!phoneRegex.test(value)) errorMsg = 'SĐT không hợp lệ (đầu 03, 05, 07, 08, 09)';
+        break;
+      case 'password':
+        if (!value) errorMsg = 'Mật khẩu không được để trống';
+        else if (value.length < 6) errorMsg = 'Mật khẩu phải có ít nhất 6 ký tự';
+        else if (value.length > 50) errorMsg = 'Mật khẩu không vượt quá 50 ký tự';
+        break;
+      case 'confirmPassword':
+        if (value !== form.password) errorMsg = 'Mật khẩu xác nhận không khớp';
+        break;
+      default:
+        break;
     }
+    
+    setFieldErrors(prev => ({ ...prev, [name]: errorMsg }));
+    return !errorMsg;
+  };
 
-    // Common fields
-    if (!form.email.trim()) errors.email = 'Email không được để trống';
-    else if (!emailRegex.test(form.email)) errors.email = 'Email không đúng định dạng';
-    else if (form.email.length > 100) errors.email = 'Email không vượt quá 100 ký tự';
+  const handleBlur = (e) => {
+    validateField(e.target.name, e.target.value);
+  };
 
-    if (!form.phone.trim()) errors.phone = 'Số điện thoại không được để trống';
-    else if (!phoneRegex.test(form.phone)) errors.phone = 'SĐT không hợp lệ (đầu số 03, 05, 07, 08, 09)';
-
-    if (!form.password) errors.password = 'Mật khẩu không được để trống';
-    else if (form.password.length < 6) errors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-    else if (form.password.length > 50) errors.password = 'Mật khẩu không vượt quá 50 ký tự';
-
-    if (form.password !== form.confirmPassword) errors.confirmPassword = 'Mật khẩu xác nhận không khớp';
-
-    setFieldErrors(errors);
-    return Object.keys(errors).length === 0;
+  const validateForm = () => {
+    const fieldsToValidate = role === 'CUSTOMER' 
+      ? ['fullName', 'email', 'phone', 'password', 'confirmPassword']
+      : ['companyName', 'licenseNumber', 'hotline', 'address', 'email', 'phone', 'password', 'confirmPassword'];
+      
+    let isValid = true;
+    fieldsToValidate.forEach(field => {
+      if (!validateField(field, form[field])) {
+        isValid = false;
+      }
+    });
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
@@ -111,6 +146,13 @@ export default function RegisterPage() {
 
   const displayError = localError || error;
 
+  // Helper function to allow only numbers
+  const handleNumberChange = (e, fieldName) => {
+    const val = e.target.value.replace(/[^0-9]/g, '');
+    setForm({ ...form, [fieldName]: val });
+    if (fieldErrors[fieldName]) setFieldErrors({ ...fieldErrors, [fieldName]: null });
+  };
+
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md page-enter">
@@ -128,6 +170,7 @@ export default function RegisterPage() {
 
         <div className="flex gap-4 mb-6">
           <button
+            type="button"
             onClick={() => { setRole('CUSTOMER'); setLocalError(null); setFieldErrors({}); setOperatorSuccess(false); dispatch(clearError()); }}
             className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
               role === 'CUSTOMER'
@@ -138,6 +181,7 @@ export default function RegisterPage() {
             Hành khách
           </button>
           <button
+            type="button"
             onClick={() => { setRole('OPERATOR'); setLocalError(null); setFieldErrors({}); dispatch(clearError()); }}
             className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${
               role === 'OPERATOR'
@@ -168,9 +212,11 @@ export default function RegisterPage() {
               {role === 'CUSTOMER' && (
                 <Input 
                   label="Họ và tên" 
+                  name="fullName"
                   placeholder="Nguyễn Văn A"
                   value={form.fullName} 
                   onChange={e => { setForm({ ...form, fullName: e.target.value }); setFieldErrors({ ...fieldErrors, fullName: null }); }} 
+                  onBlur={handleBlur}
                   maxLength={50}
                   error={fieldErrors.fullName}
                   icon="ti-id-badge"
@@ -181,9 +227,11 @@ export default function RegisterPage() {
                 <>
                   <Input 
                     label="Tên nhà xe / Công ty" 
+                    name="companyName"
                     placeholder="VD: Nhà xe Hoàng Long"
                     value={form.companyName} 
                     onChange={e => { setForm({ ...form, companyName: e.target.value }); setFieldErrors({ ...fieldErrors, companyName: null }); }} 
+                    onBlur={handleBlur}
                     maxLength={100}
                     error={fieldErrors.companyName}
                     icon="ti-building"
@@ -191,18 +239,22 @@ export default function RegisterPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input 
                       label="Hotline đặt vé" 
+                      name="hotline"
                       placeholder="1900xxxx"
                       value={form.hotline} 
-                      onChange={e => { setForm({ ...form, hotline: e.target.value }); setFieldErrors({ ...fieldErrors, hotline: null }); }} 
+                      onChange={e => handleNumberChange(e, 'hotline')} 
+                      onBlur={handleBlur}
                       maxLength={12}
                       error={fieldErrors.hotline}
                       icon="ti-headset"
                     />
                     <Input 
                       label="Mã số kinh doanh" 
+                      name="licenseNumber"
                       placeholder="VD: 0101234567"
                       value={form.licenseNumber} 
-                      onChange={e => { setForm({ ...form, licenseNumber: e.target.value }); setFieldErrors({ ...fieldErrors, licenseNumber: null }); }} 
+                      onChange={e => handleNumberChange(e, 'licenseNumber')} 
+                      onBlur={handleBlur}
                       maxLength={15}
                       error={fieldErrors.licenseNumber}
                       icon="ti-file-certificate"
@@ -210,9 +262,11 @@ export default function RegisterPage() {
                   </div>
                   <Input 
                     label="Địa chỉ văn phòng chính" 
+                    name="address"
                     placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"
                     value={form.address} 
                     onChange={e => { setForm({ ...form, address: e.target.value }); setFieldErrors({ ...fieldErrors, address: null }); }} 
+                    onBlur={handleBlur}
                     maxLength={200}
                     error={fieldErrors.address}
                     icon="ti-map-pin"
@@ -223,19 +277,23 @@ export default function RegisterPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input 
                   label={role === 'OPERATOR' ? 'Email quản lý' : 'Email'}
+                  name="email"
                   type="email" 
                   placeholder="email@example.com"
                   value={form.email} 
                   onChange={e => { setForm({ ...form, email: e.target.value }); setFieldErrors({ ...fieldErrors, email: null }); }} 
+                  onBlur={handleBlur}
                   maxLength={100}
                   error={fieldErrors.email}
                   icon="ti-mail"
                 />
                 <Input 
                   label={role === 'OPERATOR' ? 'SĐT quản lý' : 'Số điện thoại'} 
+                  name="phone"
                   placeholder="0901234567"
                   value={form.phone} 
-                  onChange={e => { setForm({ ...form, phone: e.target.value }); setFieldErrors({ ...fieldErrors, phone: null }); }} 
+                  onChange={e => handleNumberChange(e, 'phone')} 
+                  onBlur={handleBlur}
                   maxLength={10}
                   error={fieldErrors.phone}
                   icon="ti-phone"
@@ -244,20 +302,24 @@ export default function RegisterPage() {
 
               <Input 
                 label="Mật khẩu" 
+                name="password"
                 type="password" 
                 placeholder="Ít nhất 6 ký tự"
                 value={form.password} 
                 onChange={e => { setForm({ ...form, password: e.target.value }); setFieldErrors({ ...fieldErrors, password: null }); }} 
+                onBlur={handleBlur}
                 maxLength={50}
                 error={fieldErrors.password}
                 icon="ti-lock"
               />
               <Input 
                 label="Xác nhận mật khẩu" 
+                name="confirmPassword"
                 type="password" 
                 placeholder="Nhập lại mật khẩu"
                 value={form.confirmPassword} 
                 onChange={e => { setForm({ ...form, confirmPassword: e.target.value }); setFieldErrors({ ...fieldErrors, confirmPassword: null }); }} 
+                onBlur={handleBlur}
                 maxLength={50}
                 error={fieldErrors.confirmPassword}
                 icon="ti-lock-check"
