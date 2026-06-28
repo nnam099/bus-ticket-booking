@@ -37,7 +37,9 @@ export const register = createAsyncThunk('auth/register', async (data, { rejectW
     const res = await authAPI.register(data);
     return res.data.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.message || 'Đăng ký thất bại');
+    const data = err.response?.data;
+    const msg = data?.errors?.length > 0 ? data.errors[0].msg : data?.message;
+    return rejectWithValue(msg || 'Đăng ký thất bại');
   }
 });
 
@@ -46,7 +48,9 @@ export const registerOperator = createAsyncThunk('auth/registerOperator', async 
     const res = await authAPI.registerOperator(data);
     return res.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.message || 'Đăng ký đối tác thất bại');
+    const data = err.response?.data;
+    const msg = data?.errors?.length > 0 ? data.errors[0].msg : data?.message;
+    return rejectWithValue(msg || 'Đăng ký đối tác thất bại');
   }
 });
 
