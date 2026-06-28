@@ -65,6 +65,13 @@ router.get('/trips/:tripId/passengers', authenticate, authorize('STAFF', 'BUS_OP
         include: {
           route: true,
           vehicle: { include: { vehicleType: true } },
+          tripStaffs: {
+            include: {
+              staff: {
+                include: { user: { select: { fullName: true, phone: true } } }
+              }
+            }
+          }
         },
       }),
       prisma.ticketDetail.findMany({

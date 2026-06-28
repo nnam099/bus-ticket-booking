@@ -4,10 +4,10 @@ import { staffAPI, ticketAPI, tripAPI } from '../../services/api';
 import { PageHeader, Card, Button, Badge, Loading, EmptyState } from '../../components/ui';
 
 const STATUS_ACTIONS = [
-  { value: 'BOARDING', label: 'Mở lên xe' },
-  { value: 'DEPARTED', label: 'Khởi hành' },
-  { value: 'COMPLETED', label: 'Hoàn thành chuyến' },
-  { value: 'DELAYED', label: 'Báo trễ' },
+  { value: 'BOARDING', label: 'Bắt đầu đón khách' },
+  { value: 'DEPARTED', label: 'Bắt đầu chuyến' },
+  { value: 'DELAYED', label: 'Đang di chuyển' }, // Map DELAYED to "Đang di chuyển" or just use local state? Actually the user said "Đang di chuyển" as an action.
+  { value: 'COMPLETED', label: 'Đã đến điểm (Kết thúc)' },
   { value: 'CANCELLED', label: 'Hủy chuyến' },
 ];
 
@@ -209,13 +209,43 @@ export default function TripCheckInPage() {
               <strong className="text-[#e85d04]">{checkedIn}/{soldSeats}</strong> hành khách đã lên xe. Bấm vào ghế có khách để xác nhận.
             </p>
             {trip && (
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                <span className="bg-gray-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                  {trip.route?.originCity} <i className="ti ti-arrow-right text-gray-400" /> {trip.route?.destinationCity}
-                </span>
-                <span className="bg-gray-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                  <i className="ti ti-bus text-gray-400" /> {trip.vehicle?.licensePlate || 'Chưa gán xe'}
-                </span>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 p-4 rounded-xl">
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <i className="ti ti-map-pin text-emerald-500 mt-0.5" />
+                    <div>
+                      <span className="text-xs text-gray-500 block">Điểm đón ({trip.route?.originCity})</span>
+                      <span className="font-semibold">{trip.route?.originAddress}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <i className="ti ti-map-pin text-rose-500 mt-0.5" />
+                    <div>
+                      <span className="text-xs text-gray-500 block">Điểm trả ({trip.route?.destinationCity})</span>
+                      <span className="font-semibold">{trip.route?.destinationAddress}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <i className="ti ti-bus text-blue-500 mt-0.5" />
+                    <div>
+                      <span className="text-xs text-gray-500 block">Xe được giao</span>
+                      <span className="font-semibold">{trip.vehicle?.licensePlate} ({trip.vehicle?.vehicleType?.name})</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <i className="ti ti-users text-amber-500 mt-0.5" />
+                    <div>
+                      <span className="text-xs text-gray-500 block">Nhân viên đi cùng</span>
+                      <span className="font-semibold">
+                        {trip.tripStaffs?.length 
+                          ? trip.tripStaffs.map(ts => `${ts.staff.user.fullName}`).join(', ')
+                          : 'Chưa có thông tin'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             {tripStatus && <Badge variant="primary" className="mt-3">Trạng thái mới: {tripStatus}</Badge>}
