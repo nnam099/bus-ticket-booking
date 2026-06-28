@@ -67,9 +67,7 @@ router.get('/trips/:tripId/passengers', authenticate, authorize('STAFF', 'BUS_OP
           vehicle: { include: { vehicleType: true } },
           tripStaffs: {
             include: {
-              staff: {
-                include: { user: { select: { fullName: true, phone: true } } }
-              }
+              staff: true
             }
           }
         },

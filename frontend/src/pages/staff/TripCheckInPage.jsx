@@ -240,7 +240,7 @@ export default function TripCheckInPage() {
                       <span className="text-xs text-gray-500 block">Nhân viên đi cùng</span>
                       <span className="font-semibold">
                         {trip.tripStaffs?.length 
-                          ? trip.tripStaffs.map(ts => `${ts.staff.user.fullName}`).join(', ')
+                          ? trip.tripStaffs.map(ts => ts.staff?.fullName || 'Không rõ').join(', ')
                           : 'Chưa có thông tin'}
                       </span>
                     </div>
