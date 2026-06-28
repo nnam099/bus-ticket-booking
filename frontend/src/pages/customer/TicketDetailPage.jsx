@@ -108,7 +108,7 @@ export default function TicketDetailPage() {
   const canReview = ticket.status === 'COMPLETED' && !reviewed;
   const cancellationDeadline = getCancellationDeadline(trip?.departureTime);
   const departureText = trip
-    ? format(new Date(trip.departureTime), 'HH:mm - EEEE, dd/MM/yyyy', { locale: vi })
+    ? `${format(new Date(trip.departureTime), 'HH:mm dd/MM/yyyy')} - ${format(new Date(trip.estimatedArrival), 'HH:mm dd/MM/yyyy')}`
     : '-';
   const cancellationDeadlineText = cancellationDeadline
     ? format(cancellationDeadline, 'HH:mm - dd/MM/yyyy', { locale: vi })

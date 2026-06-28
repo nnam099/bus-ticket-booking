@@ -192,7 +192,7 @@ export default function MyTicketsPage() {
                     </span>
                   </div>
                   <div className="mt-2 text-sm text-gray-600">
-                    <p>{format(new Date(trip?.departureTime || new Date()), 'HH:mm')} — {format(new Date(trip?.departureTime || new Date()), 'EEEE, dd/MM/yyyy', { locale: vi })}</p>
+                    <p>{format(new Date(trip?.departureTime || new Date()), 'HH:mm dd/MM/yyyy')} — {format(new Date(trip?.estimatedArrival || new Date()), 'HH:mm dd/MM/yyyy')}</p>
                     <p className="mt-1 flex flex-wrap gap-2 text-xs">
                       <span className="font-semibold text-gray-700">Ghế {ticket.tripSeat?.seatLayout?.seatCode}</span>
                       <span className="text-gray-300">•</span>
