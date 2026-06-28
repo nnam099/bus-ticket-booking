@@ -13,6 +13,9 @@ router.get('/:id', tripController.getTripById);
 // POST /api/trips - Tạo chuyến xe mới (BUS_OPERATOR only)
 router.post('/', authenticate, authorize('BUS_OPERATOR'), requireApprovedOperator, tripController.createTrip);
 
+// PUT /api/trips/:id - Chỉnh sửa thông tin chuyến xe
+router.put('/:id', authenticate, authorize('BUS_OPERATOR'), requireApprovedOperator, tripController.updateTrip);
+
 // PATCH /api/trips/:id/status - Cập nhật trạng thái chuyến (Staff/Driver)
 router.patch('/:id/status', authenticate, authorize('STAFF', 'BUS_OPERATOR'), tripController.updateTripStatus);
 

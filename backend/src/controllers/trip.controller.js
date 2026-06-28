@@ -282,4 +282,66 @@ const updateTripStatus = async (req, res, next) => {
   }
 };
 
-module.exports = { searchTrips, getTripById, listOperatorTrips, createTrip, updateTripStatus };
+const updateTrip = async (req, res, next) => {
+  try {
+    const { routeId, vehicleId, departureTime, estimatedArrival, basePrice } = req.body;
+    const operatorId = req.user.busOperator?.id;
+    const departure = new Date(departureTime);
+    const arrival = new Date(estimatedArrival);
+    const parsedPrice = Number(basePrice);
+
+    if (Number.isNaN(departure.getTime()) || Number.isNaN(arrival.getTime())) {
+      return res.status(400).json({ success: false, message: 'Thời gian chuyến xe không hợp lệ.' });
+    }
+    if (departure <= new Date()) {
+      return res.status(400).json({ success: false, message: 'Giờ khởi hành phải ở tương lai.' });
+    }
+    if (arrival <= departure) {
+      return res.status(400).json({ success: false, message: 'Giờ đến dự kiến phải sau giờ khởi hành.' });
+    }
+    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+      return res.status(400).json({ success: false, message: 'Giá vé phải lớn hơn 0.' });
+    }
+
+    const managedTrip = await prisma.trip.findFirst({
+      where: { id: req.params.id, vehicle: { operatorId } },
+    });
+    if (!managedTrip) return res.status(403).json({ success: false, message: 'Không tìm thấy chuyến xe hoặc không có quyền.' });
+    if (!['SCHEDULED', 'DELAYED'].includes(managedTrip.status)) {
+      return res.status(400).json({ success: false, message: 'Chỉ có thể chỉnh sửa các chuyến chưa chạy.' });
+    }
+
+    const vehicle = await prisma.vehicle.findFirst({ where: { id: vehicleId, operatorId, isActive: true } });
+    if (!vehicle) return res.status(403).json({ success: false, message: 'Xe không thuộc nhà xe của bạn.' });
+
+    const updatedTrip = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${vehicleId}))`;
+      const lockedOverlap = await tx.trip.findFirst({
+        where: {
+          id: { not: req.params.id },
+          vehicleId,
+          status: { not: 'CANCELLED' },
+          departureTime: { lt: new Date(arrival.getTime() + TURNAROUND_MINUTES * 60 * 1000) },
+          estimatedArrival: { gt: new Date(departure.getTime() - TURNAROUND_MINUTES * 60 * 1000) },
+        },
+        select: { id: true },
+      });
+      if (lockedOverlap) {
+        const error = new Error(`Xe da co chuyen khac trong khung gio nay hoac chua du ${TURNAROUND_MINUTES} phut quay dau.`);
+        error.statusCode = 409;
+        throw error;
+      }
+
+      return tx.trip.update({
+        where: { id: req.params.id },
+        data: { routeId, vehicleId, departureTime: departure, estimatedArrival: arrival, basePrice: parsedPrice },
+      });
+    });
+
+    res.json({ success: true, data: updatedTrip });
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { searchTrips, getTripById, listOperatorTrips, createTrip, updateTripStatus, updateTrip };

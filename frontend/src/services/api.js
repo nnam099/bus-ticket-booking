@@ -76,6 +76,7 @@ export const tripAPI = {
   getById: (id) => api.get(`/trips/${id}`),
   getMine: () => api.get('/trips/operator/me'),
   create: (data) => api.post('/trips', data),
+  update: (id, data) => api.put(`/trips/${id}`, data),
   updateStatus: (id, data) => api.patch(`/trips/${id}/status`, data),
 };
 

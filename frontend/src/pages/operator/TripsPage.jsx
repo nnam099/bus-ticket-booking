@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { tripAPI, routeAPI, vehicleAPI } from '../../services/api';
 import { format } from 'date-fns';
-import { PageHeader, Card, Input, Select, Button, Badge, EmptyState, Loading } from '../../components/ui';
+import { PageHeader, Card, Input, Select, Button, Badge, EmptyState, Loading, Modal } from '../../components/ui';
 
 const TURNAROUND_MINUTES = 60;
 
@@ -75,6 +75,16 @@ export default function TripsPage() {
   const [updatingTripId, setUpdatingTripId] = useState(null);
   const [error, setError] = useState('');
 
+  const [editTrip, setEditTrip] = useState(null);
+  const [editForm, setEditForm] = useState({ routeId: '', vehicleId: '', departureTime: '', estimatedArrival: '', basePrice: '' });
+
+  const formatForInput = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const pad = n => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   const loadTrips = async () => {
     setError('');
     try {
@@ -119,6 +129,20 @@ export default function TripsPage() {
       loadTrips();
     } catch (err) {
       alert(err.response?.data?.message || 'Tạo chuyến xe thất bại.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await tripAPI.update(editTrip.id, editForm);
+      setEditTrip(null);
+      loadTrips();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Cập nhật chuyến xe thất bại.');
     } finally {
       setSubmitting(false);
     }
@@ -301,6 +325,25 @@ export default function TripsPage() {
                   <span className="font-black text-2xl text-[#e85d04]">{Number(trip.basePrice).toLocaleString('vi-VN')}đ</span>
                   
                   <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end mt-1">
+                    {['SCHEDULED', 'DELAYED'].includes(trip.status) && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        icon={<i className="ti ti-edit" />}
+                        onClick={() => {
+                          setEditForm({
+                            routeId: trip.routeId,
+                            vehicleId: trip.vehicleId,
+                            departureTime: formatForInput(trip.departureTime),
+                            estimatedArrival: formatForInput(trip.estimatedArrival),
+                            basePrice: trip.basePrice
+                          });
+                          setEditTrip(trip);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                    )}
                     <Link to={`/operator/trips/${trip.id}/check-in`}>
                       <Button variant="outline" size="sm" icon={<i className="ti ti-ticket" />}>Soát vé</Button>
                     </Link>
@@ -327,6 +370,62 @@ export default function TripsPage() {
             );
           })}
         </div>
+      )}
+
+      {editTrip && (
+        <Modal isOpen={!!editTrip} onClose={() => setEditTrip(null)} title="Chỉnh sửa chuyến xe">
+          <form onSubmit={handleEditSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Select 
+              label="Tuyến xe" 
+              value={editForm.routeId} 
+              onChange={e => setEditForm({ ...editForm, routeId: e.target.value })} 
+              required
+              options={[
+                { value: '', label: 'Chọn tuyến xe' },
+                ...routes.map(r => ({ value: r.id, label: `${r.originCity} → ${r.destinationCity}` }))
+              ]}
+            />
+            <Select 
+              label="Xe" 
+              value={editForm.vehicleId} 
+              onChange={e => setEditForm({ ...editForm, vehicleId: e.target.value })} 
+              required
+              options={[
+                { value: '', label: 'Chọn xe' },
+                ...vehicles.map(v => ({ value: v.id, label: `${v.licensePlate} - ${v.vehicleType?.name}` }))
+              ]}
+            />
+            <Input 
+              type="datetime-local" 
+              label="Giờ khởi hành" 
+              value={editForm.departureTime} 
+              onChange={e => setEditForm({ ...editForm, departureTime: e.target.value })} 
+              required 
+            />
+            <Input 
+              type="datetime-local" 
+              label="Giờ đến dự kiến" 
+              value={editForm.estimatedArrival} 
+              onChange={e => setEditForm({ ...editForm, estimatedArrival: e.target.value })} 
+              required 
+            />
+            <Input 
+              type="number" 
+              label="Giá vé (đ)" 
+              placeholder="150000" 
+              min="1000" 
+              value={editForm.basePrice} 
+              onChange={e => setEditForm({ ...editForm, basePrice: e.target.value })} 
+              required 
+            />
+            <div className="flex items-end mt-2 md:mt-0 justify-end md:col-span-2 gap-3">
+              <Button type="button" variant="secondary" onClick={() => setEditTrip(null)}>Hủy</Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Đang lưu...' : 'Lưu thay đổi'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );
