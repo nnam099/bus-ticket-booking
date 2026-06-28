@@ -53,6 +53,23 @@ export default function MyTicketsPage() {
     [tickets]
   );
 
+  const displayedTickets = useMemo(() => {
+    const list = [...tickets.filter(t => t.status !== 'PENDING')];
+    list.sort((a, b) => {
+      const aReviewable = REVIEWABLE_STATUSES.has(a.status) && !a.review;
+      const bReviewable = REVIEWABLE_STATUSES.has(b.status) && !b.review;
+      if (aReviewable && !bReviewable) return -1;
+      if (!aReviewable && bReviewable) return 1;
+      
+      // Secondary sort: if both completed but one is reviewed, reviewed goes to bottom?
+      if (a.status === 'COMPLETED' && b.status !== 'COMPLETED') return -1;
+      if (a.status !== 'COMPLETED' && b.status === 'COMPLETED') return 1;
+
+      return 0;
+    });
+    return list;
+  }, [tickets]);
+
   if (loading) {
     return (
       <div className="grid gap-4">
@@ -147,7 +164,7 @@ export default function MyTicketsPage() {
         </div>
       )}
 
-      {tickets.filter(t => t.status !== 'PENDING').length === 0 ? (
+      {displayedTickets.length === 0 ? (
         <div className="card text-center py-16 text-gray-500">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-2xl">🎫</div>
           <p className="font-semibold text-gray-800">Bạn chưa có vé nào đã thanh toán</p>
@@ -156,7 +173,7 @@ export default function MyTicketsPage() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {tickets.filter(t => t.status !== 'PENDING').map(ticket => {
+          {displayedTickets.map(ticket => {
             const badge = STATUS_MAP[ticket.status] || { label: ticket.status, cls: 'bg-gray-100 text-gray-500', tone: 'border-gray-200 bg-gray-50' };
             const trip = ticket.tripSeat?.trip;
             const route = trip?.route;
