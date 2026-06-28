@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PageHeader, Card, Button, Input, Modal, Badge, Loading } from '../../components/ui';
 import { operatorAPI } from '../../services/api';
-import toast from 'react-hot-toast';
 
 export default function StaffManagementPage() {
   const [staffs, setStaffs] = useState([]);
@@ -20,7 +19,7 @@ export default function StaffManagementPage() {
       const res = await operatorAPI.getStaffs();
       setStaffs(res.data.data);
     } catch (err) {
-      toast.error('Không thể tải danh sách nhân viên');
+      alert('Không thể tải danh sách nhân viên');
     } finally {
       setLoading(false);
     }
@@ -34,12 +33,12 @@ export default function StaffManagementPage() {
     e.preventDefault();
     try {
       await operatorAPI.createStaff(formData);
-      toast.success('Thêm nhân viên thành công!');
+      alert('Thêm nhân viên thành công!');
       setShowAddModal(false);
       setFormData({ fullName: '', email: '', phone: '', role: 'DRIVER', licenseNo: '', address: '', password: '' });
       fetchStaffs();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra');
+      alert(err.response?.data?.message || 'Có lỗi xảy ra');
     }
   };
 
@@ -47,10 +46,10 @@ export default function StaffManagementPage() {
     if (!window.confirm(`Bạn có chắc muốn ${staff.user.isActive ? 'khóa' : 'mở khóa'} tài khoản này?`)) return;
     try {
       const res = await operatorAPI.toggleStaffActive(staff.id);
-      toast.success(res.data.message);
+      alert(res.data.message);
       fetchStaffs();
     } catch (err) {
-      toast.error('Có lỗi xảy ra');
+      alert('Có lỗi xảy ra');
     }
   };
 
@@ -58,12 +57,12 @@ export default function StaffManagementPage() {
     e.preventDefault();
     try {
       const res = await operatorAPI.resetStaffPassword(selectedStaff.id, newPassword);
-      toast.success(res.data.message);
+      alert(res.data.message);
       setShowResetModal(false);
       setNewPassword('');
       setSelectedStaff(null);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra');
+      alert(err.response?.data?.message || 'Có lỗi xảy ra');
     }
   };
 
