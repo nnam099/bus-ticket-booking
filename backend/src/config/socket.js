@@ -1,4 +1,4 @@
-const { Server } = require('socket.io');
+﻿const { Server } = require('socket.io');
 const { createAdapter } = require('@socket.io/redis-adapter');
 const { redisClient } = require('./redis');
 const jwt = require('jsonwebtoken');
@@ -8,46 +8,40 @@ const { corsOrigin } = require('./cors');
 let io;
 
 const initSocket = async (httpServer) => {
-  const pubClient = redisClient.duplicate();
-  const subClient = redisClient.duplicate();
-  await Promise.all([pubClient.connect(), subClient.connect()]);
-
   io = new Server(httpServer, {
     cors: {
       origin: corsOrigin,
       credentials: true,
     },
   });
-  io.adapter(createAdapter(pubClient, subClient));
 
-  // Auth middleware for socket
+  try {
+    const pubClient = redisClient.duplicate();
+    const subClient = redisClient.duplicate();
+    await Promise.all([pubClient.connect(), subClient.connect()]);
+    io.adapter(createAdapter(pubClient, subClient));
+  } catch (err) {
+    logger.warn('Failed to connect Redis Adapter for Socket.io: ' + err.message + '. Using in-memory adapter.');
+  }
+
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token;
     if (token) {
       try {
         socket.user = jwt.verify(token, process.env.JWT_SECRET);
       } catch {
-        // unauthenticated connections still allowed for public rooms (viewing seat map)
       }
     }
     next();
   });
 
   io.on('connection', (socket) => {
-    logger.info(`Socket connected: ${socket.id}`);
-
-    // Join trip room to receive real-time seat updates
+    logger.info('Socket connected: ' + socket.id);
     socket.on('join:trip', (tripId) => {
-      socket.join(`trip:${tripId}`);
-      logger.info(`Socket ${socket.id} joined trip:${tripId}`);
+      socket.join('trip:' + tripId);
     });
-
     socket.on('leave:trip', (tripId) => {
-      socket.leave(`trip:${tripId}`);
-    });
-
-    socket.on('disconnect', () => {
-      logger.info(`Socket disconnected: ${socket.id}`);
+      socket.leave('trip:' + tripId);
     });
   });
 

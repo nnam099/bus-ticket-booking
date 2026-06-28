@@ -41,6 +41,7 @@ const start = async () => {
 
 start().catch((error) => {
   logger.error('Failed to start server:', error);
+  console.error(error.stack);
   process.exit(1);
 });
 

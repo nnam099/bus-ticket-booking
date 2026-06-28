@@ -6,7 +6,7 @@ import Button from '../../components/ui/Button';
 import PageHeader from '../../components/ui/PageHeader';
 
 export default function ProfilePage() {
-  const [form, setForm] = useState({ fullName: '', phone: '', companyName: '', hotline: '', licenseNumber: '', address: '' });
+  const [form, setForm] = useState({ fullName: '', phone: '', email: '', companyName: '', hotline: '', licenseNumber: '', address: '' });
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '' });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -19,10 +19,11 @@ export default function ProfilePage() {
       setForm({ 
         fullName: name, 
         phone: u.phone || '',
+        email: u.email || '',
         companyName: u.busOperator?.companyName || '',
         hotline: u.busOperator?.hotline || '',
         licenseNumber: u.busOperator?.licenseNumber || '',
-        address: u.busOperator?.address || ''
+        address: u.busOperator?.address || u.staff?.address || ''
       });
       setUserExt(u);
     });
@@ -36,8 +37,8 @@ export default function ProfilePage() {
       await userAPI.updateMe(form); 
       setMsg({ type: 'success', text: 'Cập nhật thành công!' }); 
     }
-    catch { 
-      setMsg({ type: 'error', text: 'Cập nhật thất bại.' }); 
+    catch (err) { 
+      setMsg({ type: 'error', text: err.response?.data?.message || 'Cập nhật thất bại.' }); 
     }
     finally { setLoading(false); }
   };
@@ -131,6 +132,21 @@ export default function ProfilePage() {
               onChange={e => setForm({ ...form, phone: e.target.value })} 
               placeholder="Nhập số điện thoại"
             />
+            <Input 
+              label="Email"
+              type="email"
+              value={form.email} 
+              onChange={e => setForm({ ...form, email: e.target.value })} 
+              placeholder="Nhập địa chỉ email"
+            />
+            {userExt?.staff && (
+              <Input 
+                label="Địa chỉ thường trú"
+                value={form.address} 
+                onChange={e => setForm({ ...form, address: e.target.value })} 
+                placeholder="Nhập địa chỉ"
+              />
+            )}
             <div className="pt-2">
               <Button type="submit" disabled={loading} fullWidth>
                 {loading ? 'Đang lưu...' : 'Lưu thay đổi'}

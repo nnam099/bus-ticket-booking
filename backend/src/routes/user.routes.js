@@ -13,7 +13,7 @@ router.get('/me', authenticate, async (req, res) => {
 
 router.put('/me', authenticate, async (req, res, next) => {
   try {
-    const { fullName, dateOfBirth, avatarUrl, phone, companyName, hotline, licenseNumber, address } = req.body;
+    const { fullName, dateOfBirth, avatarUrl, phone, companyName, hotline, licenseNumber, address, email } = req.body;
     
     const isCustomer = !!req.user.customer?.id;
     const isOperator = !!req.user.busOperator?.id;
@@ -31,6 +31,21 @@ router.put('/me', authenticate, async (req, res, next) => {
         prisma.user.update({
           where: { id: req.user.id },
           data: { phone: phone === '' ? null : phone },
+        })
+      );
+    }
+
+    if (email !== undefined) {
+      if (email !== '') {
+        const existing = await prisma.user.findUnique({ where: { email } });
+        if (existing && existing.id !== req.user.id) {
+          return res.status(400).json({ success: false, message: 'Email đã được sử dụng bởi tài khoản khác.' });
+        }
+      }
+      transactions.push(
+        prisma.user.update({
+          where: { id: req.user.id },
+          data: { email: email === '' ? null : email },
         })
       );
     }
@@ -63,7 +78,7 @@ router.put('/me', authenticate, async (req, res, next) => {
       transactions.push(
         prisma.staff.update({
           where: { userId: req.user.id },
-          data: { fullName },
+          data: { fullName, address },
         })
       );
     } else if (isAdmin) {
