@@ -200,7 +200,7 @@ export default function TripCheckInPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <Card className="shadow-sm border-[#e85d04]/20 bg-orange-50/10 dark:bg-[#e85d04]/5">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-5">
           <div>
             <h1 className="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-2">
               <i className="ti ti-ticket text-[#e85d04]" /> Soát vé chuyến xe
@@ -250,7 +250,8 @@ export default function TripCheckInPage() {
             )}
             {tripStatus && <Badge variant="primary" className="mt-3">Trạng thái mới: {tripStatus}</Badge>}
           </div>
-          <div className="flex flex-wrap gap-2 lg:justify-end">
+
+          <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-gray-200/50 dark:border-slate-800/50">
             {STATUS_ACTIONS.map(action => {
               const isPrimary = action.value === 'COMPLETED';
               const isDanger = action.value === 'CANCELLED';
