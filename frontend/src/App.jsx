@@ -43,8 +43,9 @@ const TripsPage = React.lazy(() => import('./pages/operator/TripsPage'));;
 const OperatorReportsPage = React.lazy(() => import('./pages/operator/ReportsPage'));;
 
 // Staff pages
-const StaffDashboard = React.lazy(() => import('./pages/staff/Dashboard'));;
-const TripCheckInPage = React.lazy(() => import('./pages/staff/TripCheckInPage'));;
+const StaffDashboard = React.lazy(() => import('./pages/staff/Dashboard'));
+const TripCheckInPage = React.lazy(() => import('./pages/staff/TripCheckInPage'));
+const StaffSchedulePage = React.lazy(() => import('./pages/staff/SchedulePage'));
 
 // Admin pages
 const AdminDashboard = React.lazy(() => import('./pages/admin/Dashboard'));;
@@ -110,6 +111,7 @@ export default function App() {
         {/* Staff */}
         <Route element={<PrivateRoute roles={['STAFF']}><StaffLayout /></PrivateRoute>}>
           <Route path="/staff" element={<StaffDashboard />} />
+          <Route path="/staff/schedule" element={<StaffSchedulePage />} />
           <Route path="/staff/trips/:tripId/check-in" element={<TripCheckInPage />} />
           <Route path="/staff/profile" element={<ProfilePage />} />
         </Route>

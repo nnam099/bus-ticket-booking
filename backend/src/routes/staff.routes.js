@@ -30,7 +30,17 @@ router.get('/trips/assigned', authenticate, authorize('STAFF'), async (req, res,
     const staffId = req.user.staff?.id;
     const trips = await prisma.trip.findMany({
       where: { tripStaffs: { some: { staffId } } },
-      include: { route: true, vehicle: { include: { vehicleType: true } } },
+      include: { 
+        route: true, 
+        vehicle: { include: { vehicleType: true } },
+        _count: {
+          select: {
+            tripSeats: {
+              where: { status: 'BOOKED' }
+            }
+          }
+        }
+      },
       orderBy: { departureTime: 'asc' },
     });
     res.json({ success: true, data: trips });

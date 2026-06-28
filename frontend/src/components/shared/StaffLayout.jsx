@@ -29,7 +29,8 @@ export default function StaffLayout() {
     {
       label: 'Công việc',
       items: [
-        { to: '/staff', label: 'Chuyến phân công', icon: 'ti-calendar-event' },
+        { to: '/staff', label: 'Tổng quan', icon: 'ti-dashboard' },
+        { to: '/staff/schedule', label: 'Lịch làm việc', icon: 'ti-calendar-event' },
       ]
     },
     {

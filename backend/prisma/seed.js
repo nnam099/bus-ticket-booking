@@ -1299,6 +1299,18 @@ async function main() {
     const allSeatData = [];
     const staffData = [];
 
+    const extraDrivers = [];
+    for (let i = 1; i <= 2; i++) {
+      extraDrivers.push(await ensureDriver({
+        email: `driver.ex.${corridor.key.replace(/-/g,'_')}.${i}@demo.vn`,
+        phone: `099${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`,
+        fullName: `Tài xế ${corridor.key.split('-')[0]} ${i}`,
+        licenseNo: `GPLX-EX-${corridor.key}-${i}`,
+        operator: corridor.operator,
+      }));
+    }
+    const corridorDrivers = [corridor.driver, ...extraDrivers];
+
     let currentDate = new Date(today);
     currentDate.setDate(today.getDate() - pastDays);
 
@@ -1345,7 +1357,7 @@ async function main() {
 
         staffData.push({
           tripId,
-          staffId: corridor.driver.id,
+          staffId: corridorDrivers[(allTripData.length - 1) % corridorDrivers.length].id,
           role: 'DRIVER'
         });
 
