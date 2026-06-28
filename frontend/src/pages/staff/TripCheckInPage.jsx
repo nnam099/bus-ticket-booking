@@ -350,27 +350,56 @@ export default function TripCheckInPage() {
                     return (
                       <div key={passenger.id} className={`rounded-xl border p-4 transition-all ${checked ? 'border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-900/10' : 'border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-[#e85d04]/30'}`}>
                         <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate font-bold text-gray-900 dark:text-white text-sm">{passenger.passengerName}</p>
-                            <p className="mt-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                              <span className="bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300">Ghế {seatCode || '-'}</span> 
-                              <span>{passenger.passengerPhone || '-'}</span>
-                            </p>
+                          <div className="min-w-0 space-y-2 flex-1">
+                            <div>
+                              <p className="truncate font-bold text-gray-900 dark:text-white text-sm">{passenger.passengerName}</p>
+                              <p className="mt-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                                <span className="bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded text-gray-700 dark:text-gray-300">Ghế {seatCode || '-'}</span> 
+                                <span>{passenger.passengerPhone || '-'}</span>
+                              </p>
+                            </div>
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400 space-y-1 bg-gray-50 dark:bg-slate-900/50 p-2 rounded-lg border border-gray-100 dark:border-slate-700">
+                              <p className="flex items-start gap-1.5">
+                                <i className="ti ti-map-pin text-emerald-500 mt-0.5 shrink-0" />
+                                <span className="line-clamp-1" title="Điểm đón">Đón: {trip?.route?.originAddress}</span>
+                              </p>
+                              <p className="flex items-start gap-1.5">
+                                <i className="ti ti-map-pin text-rose-500 mt-0.5 shrink-0" />
+                                <span className="line-clamp-1" title="Điểm xuống">Trả: {trip?.route?.destinationAddress}</span>
+                              </p>
+                            </div>
                           </div>
                           <Badge variant={badge.cls} className="shrink-0 text-[10px] px-2 py-0.5">
                             {checked ? 'Đã lên xe' : badge.label}
                           </Badge>
                         </div>
                         {!checked && (
-                          <Button
-                            onClick={() => handleCheckIn(passenger)}
-                            disabled={checkingTicketId === passenger.id}
-                            fullWidth
-                            variant="primary"
-                            className="mt-3 !py-1.5 text-xs"
-                          >
-                            {checkingTicketId === passenger.id ? 'Đang xác nhận...' : 'Xác nhận lên xe'}
-                          </Button>
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            <Button
+                              onClick={() => alert('Chức năng "Đánh dấu vắng mặt" đang phát triển')}
+                              disabled={checkingTicketId === passenger.id}
+                              variant="outline"
+                              className="!py-1.5 text-[11px] px-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                            >
+                              Vắng mặt
+                            </Button>
+                            <Button
+                              onClick={() => handleCheckIn(passenger)}
+                              disabled={checkingTicketId === passenger.id}
+                              variant="primary"
+                              className="!py-1.5 text-[11px] px-2"
+                            >
+                              {checkingTicketId === passenger.id ? 'Đang xác nhận...' : 'Xác nhận lên xe'}
+                            </Button>
+                            <Button
+                              onClick={() => alert('Chức năng "Kiểm tra QR vé" đang phát triển')}
+                              disabled={checkingTicketId === passenger.id}
+                              variant="outline"
+                              className="!py-1.5 text-[11px] px-2 col-span-2"
+                            >
+                              <i className="ti ti-qrcode mr-1" /> Quét QR vé
+                            </Button>
+                          </div>
                         )}
                       </div>
                     );
