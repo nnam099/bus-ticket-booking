@@ -41,6 +41,7 @@ const VehiclesPage = React.lazy(() => import('./pages/operator/VehiclesPage'));;
 const RoutesPage = React.lazy(() => import('./pages/operator/RoutesPage'));;
 const TripsPage = React.lazy(() => import('./pages/operator/TripsPage'));;
 const OperatorReportsPage = React.lazy(() => import('./pages/operator/ReportsPage'));;
+const StaffManagementPage = React.lazy(() => import('./pages/operator/StaffManagementPage'));;
 
 // Staff pages
 const StaffDashboard = React.lazy(() => import('./pages/staff/Dashboard'));
@@ -105,6 +106,7 @@ export default function App() {
           <Route path="/operator/trips" element={<TripsPage />} />
           <Route path="/operator/trips/:tripId/check-in" element={<TripCheckInPage />} />
           <Route path="/operator/reports" element={<OperatorReportsPage />} />
+          <Route path="/operator/staffs" element={<StaffManagementPage />} />
           <Route path="/operator/profile" element={<ProfilePage />} />
         </Route>
 

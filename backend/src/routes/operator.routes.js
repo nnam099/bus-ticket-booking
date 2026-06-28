@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const { authenticate, authorize } = require('../middlewares/auth.middleware');
 const prisma = require('../config/prisma');
 
@@ -144,6 +145,106 @@ router.get('/:id', async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+// ==========================================
+// STAFF MANAGEMENT (BUS_OPERATOR)
+// ==========================================
+
+// GET /api/operators/me/staffs
+router.get('/me/staffs', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
+  try {
+    const operatorId = req.user.busOperator?.id;
+    const staffs = await prisma.staff.findMany({
+      where: { operatorId },
+      include: { user: { select: { email: true, phone: true, isActive: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ success: true, data: staffs });
+  } catch (err) { next(err); }
+});
+
+// POST /api/operators/me/staffs
+router.post('/me/staffs', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
+  try {
+    const operatorId = req.user.busOperator?.id;
+    const { fullName, email, phone, role, password, licenseNo, address } = req.body;
+
+    if (!email || !phone || !password || !fullName || !role) {
+      return res.status(400).json({ success: false, message: 'Vui lòng điền đầy đủ thông tin bắt buộc.' });
+    }
+
+    const existingUser = await prisma.user.findFirst({
+      where: { OR: [{ email }, { phone }] }
+    });
+    if (existingUser) return res.status(400).json({ success: false, message: 'Email hoặc SĐT đã tồn tại.' });
+
+    const staffRole = await prisma.role.findUnique({ where: { name: 'STAFF' } });
+    
+    const user = await prisma.user.create({
+      data: {
+        email,
+        phone,
+        passwordHash: await bcrypt.hash(password, 12),
+        userRoles: { create: { roleId: staffRole.id } },
+        staff: {
+          create: {
+            operatorId,
+            fullName,
+            role,
+            licenseNo,
+            address
+          }
+        }
+      },
+      include: { staff: true }
+    });
+
+    res.json({ success: true, message: 'Thêm nhân viên thành công.', data: user.staff });
+  } catch (err) { next(err); }
+});
+
+// PATCH /api/operators/me/staffs/:id/toggle-active
+router.patch('/me/staffs/:id/toggle-active', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
+  try {
+    const operatorId = req.user.busOperator?.id;
+    const staff = await prisma.staff.findFirst({
+      where: { id: req.params.id, operatorId },
+      include: { user: true }
+    });
+    if (!staff) return res.status(404).json({ success: false, message: 'Không tìm thấy nhân viên.' });
+
+    const updatedUser = await prisma.user.update({
+      where: { id: staff.userId },
+      data: { isActive: !staff.user.isActive }
+    });
+
+    res.json({ success: true, message: updatedUser.isActive ? 'Đã mở khóa tài khoản.' : 'Đã khóa tài khoản.' });
+  } catch (err) { next(err); }
+});
+
+// PATCH /api/operators/me/staffs/:id/reset-password
+router.patch('/me/staffs/:id/reset-password', authenticate, authorize('BUS_OPERATOR'), async (req, res, next) => {
+  try {
+    const operatorId = req.user.busOperator?.id;
+    const { newPassword } = req.body;
+    
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+    }
+
+    const staff = await prisma.staff.findFirst({
+      where: { id: req.params.id, operatorId }
+    });
+    if (!staff) return res.status(404).json({ success: false, message: 'Không tìm thấy nhân viên.' });
+
+    await prisma.user.update({
+      where: { id: staff.userId },
+      data: { passwordHash: await bcrypt.hash(newPassword, 12) }
+    });
+
+    res.json({ success: true, message: 'Đã cấp lại mật khẩu mới cho nhân viên thành công.' });
+  } catch (err) { next(err); }
 });
 
 module.exports = router;

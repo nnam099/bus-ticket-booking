@@ -104,6 +104,10 @@ export const operatorAPI = {
   getById: (id) => api.get(`/operators/${id}`),
   getDashboard: (filters = {}) => api.get('/operators/me/dashboard', { params: typeof filters === 'string' ? { period: filters } : filters }),
   update: (data) => api.put('/operators/me', data),
+  getStaffs: () => api.get('/operators/me/staffs'),
+  createStaff: (data) => api.post('/operators/me/staffs', data),
+  toggleStaffActive: (id) => api.patch(`/operators/me/staffs/${id}/toggle-active`),
+  resetStaffPassword: (id, newPassword) => api.patch(`/operators/me/staffs/${id}/reset-password`, { newPassword }),
 };
 
 // Vehicle API

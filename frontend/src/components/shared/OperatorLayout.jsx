@@ -39,6 +39,7 @@ export default function OperatorLayout() {
         { to: '/operator/vehicles', label: 'Xe khách', icon: 'ti-car' },
         { to: '/operator/routes', label: 'Tuyến xe', icon: 'ti-map-route' },
         { to: '/operator/trips', label: 'Chuyến xe', icon: 'ti-calendar-event' },
+        { to: '/operator/staffs', label: 'Nhân viên', icon: 'ti-users' },
       ]
     },
     {
