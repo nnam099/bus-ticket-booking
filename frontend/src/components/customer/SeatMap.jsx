@@ -32,7 +32,7 @@ export default function SeatMap({ tripSeats, tripId }) {
     switch (seat.status) {
       case 'AVAILABLE': return 'bg-white border-gray-200 text-gray-600 hover:border-brand hover:bg-orange-50 hover:text-brand hover:-translate-y-1 hover:shadow-md dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300 dark:hover:border-brand dark:hover:bg-brand/10 dark:hover:text-orange-500';
       case 'PROCESSING': return 'bg-amber-100 border-amber-400 text-amber-700 cursor-not-allowed shadow-[0_0_8px_rgba(251,191,36,0.5)] dark:bg-amber-500/20 dark:border-amber-400 dark:text-amber-300 dark:shadow-[0_0_10px_rgba(251,191,36,0.4)]';
-      case 'BOOKED': return 'bg-slate-300 border-slate-400 text-slate-700 cursor-not-allowed dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300';
+      case 'BOOKED': return 'bg-slate-400 border-slate-500 text-white cursor-not-allowed dark:bg-slate-600 dark:border-slate-500 dark:text-slate-200';
       case 'UNAVAILABLE': return 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-600';
       default: return 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50 dark:bg-slate-900 dark:border-slate-800';
     }
@@ -174,7 +174,7 @@ export default function SeatMap({ tripSeats, tripId }) {
           { cls: 'bg-white border-gray-200 dark:bg-slate-800 dark:border-slate-600', label: 'Còn trống' },
           { cls: 'bg-gradient-to-br from-orange-400 to-brand border-transparent', label: 'Đang chọn' },
           { cls: 'bg-amber-100 border-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)] dark:bg-amber-500/20 dark:border-amber-400 dark:shadow-[0_0_10px_rgba(251,191,36,0.4)]', label: 'Đang giữ' },
-          { cls: 'bg-slate-300 border-slate-400 dark:bg-slate-700 dark:border-slate-600', label: 'Đã bán' },
+          { cls: 'bg-slate-400 border-slate-500 dark:bg-slate-600 dark:border-slate-500', label: 'Đã bán' },
         ].map(l => (
           <div key={l.label} className="flex items-center gap-2">
             <div className={`w-5 h-5 rounded-[6px] border-[1.5px] ${l.cls}`} />
