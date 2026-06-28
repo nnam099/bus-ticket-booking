@@ -152,6 +152,7 @@ export const adminAPI = {
   getAllOperators: () => api.get('/admin/operators'),
   getPendingOperators: () => api.get('/admin/operators/pending'),
   approveOperator: (id) => api.patch(`/admin/operators/${id}/approve`),
+  rejectOperator: (id) => api.delete(`/admin/operators/${id}/reject`),
   toggleUserActive: (id) => api.patch(`/admin/users/${id}/toggle-active`),
   getAuditLogs: (params) => api.get('/admin/audit-logs', { params }),
   getPendingReviews: () => api.get('/admin/reviews/pending'),

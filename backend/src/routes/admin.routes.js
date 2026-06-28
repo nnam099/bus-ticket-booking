@@ -116,6 +116,47 @@ router.patch('/operators/:id/approve', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// DELETE /api/admin/operators/:id/reject - Từ chối (xóa) đăng ký nhà xe
+router.delete('/operators/:id/reject', async (req, res, next) => {
+  try {
+    const operatorId = req.params.id;
+    
+    // Find the operator first to get the user ID
+    const operator = await prisma.busOperator.findUnique({
+      where: { id: operatorId },
+      include: { user: true }
+    });
+
+    if (!operator) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy nhà xe' });
+    }
+
+    // Delete the operator and the user account
+    await prisma.$transaction(async (tx) => {
+      // The schema has cascading delete from User to BusOperator, so deleting User is enough
+      // But just to be safe, delete both directly if needed, or just delete the User
+      await tx.user.delete({
+        where: { id: operator.userId }
+      });
+
+      await tx.auditLog.create({
+        data: {
+          userId: req.user.id,
+          action: 'REJECT_OPERATOR',
+          resource: 'BusOperator',
+          resourceId: operatorId,
+          details: { companyName: operator.companyName, email: operator.user?.email },
+          ...requestMeta(req),
+        },
+      });
+    });
+
+    res.json({ success: true, message: 'Đã từ chối và xóa hồ sơ nhà xe thành công.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // PATCH /api/admin/users/:id/toggle-active - Khóa/mở khóa tài khoản
 router.patch('/users/:id/toggle-active', async (req, res, next) => {
   try {

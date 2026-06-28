@@ -40,6 +40,17 @@ export default function AdminOperatorsPage() {
     }
   };
 
+  const handleReject = async (id) => {
+    if (!window.confirm('Bạn có chắc chắn muốn từ chối và xóa hồ sơ nhà xe này?')) return;
+    try {
+      await adminAPI.rejectOperator(id);
+      setPending(prev => prev.filter(op => op.id !== id));
+      setAllOps(prev => prev.filter(op => op.id !== id));
+    } catch {
+      alert('Từ chối nhà xe thất bại.');
+    }
+  };
+
   const filteredOps = allOps.filter(op =>
     op.companyName?.toLowerCase().includes(search.toLowerCase()) ||
     op.user?.email?.toLowerCase().includes(search.toLowerCase()) ||
@@ -179,9 +190,12 @@ export default function AdminOperatorsPage() {
                       <p className="flex items-center gap-2"><i className="ti ti-map-pin text-[#e85d04]" /> {op.address || 'Chưa cập nhật'}</p>
                     </div>
                   </div>
-                  <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-800">
-                    <Button fullWidth onClick={() => handleApprove(op.id)}>
-                      Duyệt nhà xe
+                  <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-800 flex gap-3">
+                    <Button variant="danger" className="flex-1" onClick={() => handleReject(op.id)}>
+                      Từ chối
+                    </Button>
+                    <Button className="flex-1" onClick={() => handleApprove(op.id)}>
+                      Duyệt
                     </Button>
                   </div>
                 </Card>
