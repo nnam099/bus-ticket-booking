@@ -31,7 +31,7 @@ export default function SeatMap({ tripSeats, tripId }) {
     if (isSelected) return 'bg-gradient-to-br from-orange-400 to-brand border-transparent text-white shadow-[0_4px_12px_rgba(232,93,4,0.35)] scale-105';
     switch (seat.status) {
       case 'AVAILABLE': return 'bg-white border-gray-200 text-gray-600 hover:border-brand hover:bg-orange-50 hover:text-brand hover:-translate-y-1 hover:shadow-md dark:bg-slate-800 dark:border-slate-600 dark:text-slate-300 dark:hover:border-brand dark:hover:bg-brand/10 dark:hover:text-orange-500';
-      case 'PROCESSING': return 'bg-amber-50 border-amber-300 text-amber-600 cursor-not-allowed shadow-inner dark:bg-amber-500/10 dark:border-amber-500/40 dark:text-amber-400';
+      case 'PROCESSING': return 'bg-amber-100 border-amber-400 text-amber-700 cursor-not-allowed shadow-[0_0_8px_rgba(251,191,36,0.5)] dark:bg-amber-500/20 dark:border-amber-400 dark:text-amber-300 dark:shadow-[0_0_10px_rgba(251,191,36,0.4)]';
       case 'BOOKED': return 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed opacity-70 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-600';
       case 'UNAVAILABLE': return 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-600';
       default: return 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed opacity-50 dark:bg-slate-900 dark:border-slate-800';
@@ -166,7 +166,7 @@ export default function SeatMap({ tripSeats, tripId }) {
         {[
           { cls: 'bg-white border-gray-200 dark:bg-slate-800 dark:border-slate-600', label: 'Còn trống' },
           { cls: 'bg-gradient-to-br from-orange-400 to-brand border-transparent', label: 'Đang chọn' },
-          { cls: 'bg-amber-50 border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/40', label: 'Đang giữ' },
+          { cls: 'bg-amber-100 border-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)] dark:bg-amber-500/20 dark:border-amber-400 dark:shadow-[0_0_10px_rgba(251,191,36,0.4)]', label: 'Đang giữ' },
           { cls: 'bg-gray-100 border-gray-200 opacity-70 dark:bg-slate-900 dark:border-slate-800', label: 'Đã bán' },
         ].map(l => (
           <div key={l.label} className="flex items-center gap-2">
