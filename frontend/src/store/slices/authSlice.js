@@ -41,6 +41,15 @@ export const register = createAsyncThunk('auth/register', async (data, { rejectW
   }
 });
 
+export const registerOperator = createAsyncThunk('auth/registerOperator', async (data, { rejectWithValue }) => {
+  try {
+    const res = await authAPI.registerOperator(data);
+    return res.data;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Đăng ký đối tác thất bại');
+  }
+});
+
 const authSlice = createSlice({
   name: 'auth',
   initialState: { user, loading: false, error: null },
@@ -74,7 +83,10 @@ const authSlice = createSlice({
       .addCase(register.rejected, (state, { payload }) => {
         state.loading = false;
         state.error = payload;
-      });
+      })
+      .addCase(registerOperator.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(registerOperator.fulfilled, (state) => { state.loading = false; })
+      .addCase(registerOperator.rejected, (state, { payload }) => { state.loading = false; state.error = payload; })
   },
 });
 

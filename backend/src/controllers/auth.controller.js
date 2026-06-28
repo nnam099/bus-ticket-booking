@@ -120,6 +120,48 @@ const register = async (req, res, next) => {
   }
 };
 
+const registerOperator = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
+
+    const { email, phone, password, companyName, licenseNumber, hotline, address } = req.body;
+    const existing = await prisma.user.findFirst({ where: { OR: buildIdentifierWhere({ email, phone }) } });
+    if (existing) return res.status(409).json({ success: false, message: 'Email hoac so dien thoai da duoc su dung.' });
+
+    const existingLicense = await prisma.busOperator.findUnique({ where: { licenseNumber } });
+    if (existingLicense) return res.status(409).json({ success: false, message: 'Ma so giay phep kinh doanh da ton tai.' });
+
+    const operatorRole = await prisma.role.findUnique({ where: { name: 'BUS_OPERATOR' } });
+    if (!operatorRole) {
+      return res.status(500).json({ success: false, message: 'BUS_OPERATOR role is not initialized. Please run seed.' });
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        phone,
+        passwordHash: await bcrypt.hash(password, 12),
+        userRoles: { create: { roleId: operatorRole.id } },
+        busOperator: { 
+          create: { 
+            companyName,
+            licenseNumber,
+            hotline,
+            address,
+            isApproved: false
+          } 
+        },
+      },
+      include: { busOperator: true, userRoles: { include: { role: true } } },
+    });
+
+    res.status(201).json({ success: true, message: 'Dang ky doi tac thanh cong! Vui long cho Admin phe duyet.' });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
@@ -263,4 +305,4 @@ function formatUser(user) {
   return rest;
 }
 
-module.exports = { register, login, sendOtp, verifyOtp, forgotPassword, resetPassword, logout };
+module.exports = { register, registerOperator, login, sendOtp, verifyOtp, forgotPassword, resetPassword, logout };

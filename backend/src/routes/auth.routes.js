@@ -21,6 +21,22 @@ router.post(
   authController.register
 );
 
+// POST /api/auth/register-operator
+router.post(
+  '/register-operator',
+  authLimiter,
+  [
+    body('companyName').trim().notEmpty().withMessage('Tên công ty/nhà xe không được để trống.'),
+    body('licenseNumber').trim().notEmpty().withMessage('Mã số kinh doanh/Giấy phép không được để trống.'),
+    body('hotline').trim().notEmpty().withMessage('Hotline không được để trống.'),
+    body('address').trim().notEmpty().withMessage('Địa chỉ không được để trống.'),
+    body('email').trim().notEmpty().isEmail().withMessage('Email không hợp lệ.'),
+    body('phone').trim().notEmpty().isMobilePhone('vi-VN').withMessage('Số điện thoại không hợp lệ.'),
+    body('password').isLength({ min: 6 }).withMessage('Mật khẩu phải có ít nhất 6 ký tự.'),
+  ],
+  authController.registerOperator
+);
+
 // POST /api/auth/login
 router.post(
   '/login',
