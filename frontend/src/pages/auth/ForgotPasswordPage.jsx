@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 import { Card, Input, Button } from '../../components/ui';
+import { KeyRound, CheckCircle2 } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState(1);
@@ -48,7 +49,9 @@ export default function ForgotPasswordPage() {
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md page-enter">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3 inline-block bg-orange-100 dark:bg-orange-900/30 p-4 rounded-full shadow-inner">🔐</div>
+          <div className="mb-4 inline-flex bg-orange-100 dark:bg-orange-900/30 p-4 rounded-full shadow-inner text-orange-600 dark:text-orange-400">
+            <KeyRound className="w-10 h-10" />
+          </div>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Quên mật khẩu</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2 font-medium">Lấy lại quyền truy cập tài khoản</p>
         </div>
@@ -127,7 +130,7 @@ export default function ForgotPasswordPage() {
 
           {step === 4 && (
             <div className="text-center py-4 page-enter">
-              <div className="text-6xl mb-4 text-emerald-500 animate-bounce">✅</div>
+              <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
               <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">Thành công!</h3>
               <p className="font-medium text-gray-600 dark:text-gray-400 mb-6">Mật khẩu của bạn đã được đặt lại thành công.</p>
               <Link to="/login">

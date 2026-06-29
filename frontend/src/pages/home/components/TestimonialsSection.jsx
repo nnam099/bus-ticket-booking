@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Star } from 'lucide-react';
 import WaveDivider from '../../../components/ui/WaveDivider';
 import { reviewAPI } from '../../../services/api';
 
@@ -93,7 +94,7 @@ export default function TestimonialsSection() {
           </div>
         ) : (
           <div className="text-center py-10">
-            <div className="text-5xl mb-4">⭐</div>
+            <Star className="w-12 h-12 text-yellow-400 mb-4 fill-current" />
             <h3 className="font-quicksand font-bold text-mocha text-xl mb-2">Chưa có đánh giá nào</h3>
             <p className="text-mocha-light">Hãy là những người đầu tiên trải nghiệm và chia sẻ cùng BusGo nhé!</p>
           </div>

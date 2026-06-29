@@ -4,6 +4,7 @@ import { ticketAPI, bookingAPI, reviewAPI } from '../../services/api';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { formatInvoiceCode, formatTicketCode } from '../../utils/codes';
+import { Ticket, Star } from 'lucide-react';
 
 const statusConfig = {
   PENDING: { label: 'Chờ thanh toán', className: 'bg-yellow-100 text-yellow-700' },
@@ -122,8 +123,8 @@ export default function TicketDetailPage() {
 
       <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="bg-gradient-to-br from-orange-50 to-white px-5 py-6 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
-            🎫
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-orange-600 shadow-sm">
+            <Ticket className="w-6 h-6" />
           </div>
           <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
             {route?.originCity || '-'} → {route?.destinationCity || '-'}
@@ -188,9 +189,9 @@ export default function TicketDetailPage() {
                   <button
                     key={n}
                     onClick={() => setRating(n)}
-                    className={`text-2xl transition-transform hover:scale-110 ${n <= rating ? '' : 'opacity-30'}`}
+                    className={`transition-transform hover:scale-110 ${n <= rating ? 'text-yellow-500' : 'text-gray-300'}`}
                   >
-                    ★
+                    <Star className="w-6 h-6" fill="currentColor" />
                   </button>
                 ))}
               </div>

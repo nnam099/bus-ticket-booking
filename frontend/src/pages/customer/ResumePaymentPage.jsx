@@ -4,11 +4,12 @@ import { paymentAPI, bookingAPI } from '../../services/api';
 import { format, formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { formatInvoiceCode } from '../../utils/codes';
+import { CreditCard, Landmark, Smartphone, AlertTriangle, Timer, Bus } from 'lucide-react';
 
 const PAYMENT_METHODS = [
-  { value: 'E_WALLET', label: 'Ví điện tử (MoMo, ZaloPay)', icon: '💳', gateway: 'MOMO' },
-  { value: 'BANK_CARD', label: 'Thẻ ngân hàng (ATM/Visa)', icon: '🏦', gateway: 'VNPAY' },
-  { value: 'BANK_TRANSFER', label: 'Chuyển khoản ngân hàng', icon: '📲', gateway: 'VNPAY' },
+  { value: 'E_WALLET', label: 'Ví điện tử (MoMo, ZaloPay)', icon: <CreditCard className="w-5 h-5" />, gateway: 'MOMO' },
+  { value: 'BANK_CARD', label: 'Thẻ ngân hàng (ATM/Visa)', icon: <Landmark className="w-5 h-5" />, gateway: 'VNPAY' },
+  { value: 'BANK_TRANSFER', label: 'Chuyển khoản ngân hàng', icon: <Smartphone className="w-5 h-5" />, gateway: 'VNPAY' },
 ];
 
 function CountdownTimer({ expiresAt }) {
@@ -41,7 +42,9 @@ function CountdownTimer({ expiresAt }) {
   return (
     <div className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold
       ${expired ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
-      <span className="text-xl">{expired ? '⚠️' : '⏱️'}</span>
+      <span className="text-xl flex items-center justify-center">
+        {expired ? <AlertTriangle className="w-5 h-5" /> : <Timer className="w-5 h-5" />}
+      </span>
       <div>
         {expired ? (
           <p>Phiên giữ ghế đã hết hạn. Ghế có thể đã được người khác đặt.</p>
@@ -150,7 +153,7 @@ export default function ResumePaymentPage() {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8">
         <div className="card border-red-200 bg-red-50 text-center py-12">
-          <div className="text-5xl mb-4">😕</div>
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-lg font-bold text-red-700">{error || 'Không tìm thấy đơn hàng.'}</h1>
           <Link to="/my-tickets" className="btn-primary mt-6 inline-block">
             Quay lại Vé của tôi
@@ -201,7 +204,7 @@ export default function ResumePaymentPage() {
             <p className="text-xs text-gray-500 mt-0.5">{route?.originAddress}</p>
           </div>
           <div className="flex flex-col items-center gap-1 text-brand">
-            <span className="text-lg">🚌</span>
+            <Bus className="w-6 h-6" />
             <div className="h-px w-12 bg-brand/30" />
           </div>
           <div className="flex-1 text-center">

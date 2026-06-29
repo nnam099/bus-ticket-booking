@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { register, registerOperator, clearError } from '../../store/slices/authSlice';
 import { Card, Input, Button } from '../../components/ui';
+import { Bus, Building } from 'lucide-react';
 
 export default function RegisterPage() {
   const dispatch = useDispatch();
@@ -157,8 +158,8 @@ export default function RegisterPage() {
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md page-enter">
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3 inline-block bg-orange-100 dark:bg-orange-900/30 p-4 rounded-full shadow-inner">
-            {role === 'CUSTOMER' ? '🚌' : '🏢'}
+          <div className="mb-4 inline-flex bg-orange-100 dark:bg-orange-900/30 p-4 rounded-full shadow-inner text-orange-600 dark:text-orange-400">
+            {role === 'CUSTOMER' ? <Bus className="w-10 h-10" /> : <Building className="w-10 h-10" />}
           </div>
           <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
             {role === 'CUSTOMER' ? 'Tạo tài khoản' : 'Đăng ký Nhà xe'}

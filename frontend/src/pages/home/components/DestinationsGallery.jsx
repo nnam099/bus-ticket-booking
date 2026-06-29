@@ -1,4 +1,5 @@
 import WaveDivider from '../../../components/ui/WaveDivider';
+import { Star } from 'lucide-react';
 import { DESTINATIONS } from '../constants';
 
 export default function DestinationsGallery({ handleQuickRoute }) {
@@ -35,7 +36,7 @@ export default function DestinationsGallery({ handleQuickRoute }) {
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(to_top,rgba(74,59,50,0.4)_0%,transparent_60%)]" />
                 <div className="absolute top-3 right-3 flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-white text-brand">
-                  ⭐ {dest.rating}
+                  <Star className="w-3.5 h-3.5 inline mr-1 text-yellow-400 fill-current" />{dest.rating}
                 </div>
                 <div className="absolute bottom-3 left-4">
                   <span

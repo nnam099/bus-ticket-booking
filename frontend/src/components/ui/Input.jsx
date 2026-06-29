@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function Input({ label, error, className = '', containerClassName = '', icon, type, ...props }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -26,7 +27,7 @@ export default function Input({ label, error, className = '', containerClassName
             onClick={() => setShowPassword(!showPassword)}
             tabIndex="-1"
           >
-            <i className={`ti ${showPassword ? 'ti-eye-off' : 'ti-eye'} text-[18px]`}></i>
+            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
           </button>
         )}
       </div>

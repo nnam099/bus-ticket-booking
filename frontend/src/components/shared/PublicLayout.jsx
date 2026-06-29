@@ -5,6 +5,7 @@ import { logout } from '../../store/slices/authSlice';
 import { authAPI } from '../../services/api';
 import { cityOptions, normalizeText } from '../../constants/travel';
 import { format } from 'date-fns';
+import { Bus } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 // ── Modal: Giới thiệu BusGo Việt Nam ──────────────────────────────────────────
@@ -24,7 +25,7 @@ function AboutModal({ onClose }) {
           <h2 className="text-2xl font-black" style={{ fontFamily: "'Quicksand', sans-serif" }}>
             BusGo <span className="text-white/80">Việt Nam</span>
           </h2>
-          <p className="mt-2 text-sm text-white/80">Hành trình của bạn, sứ mệnh của chúng tôi 🚌</p>
+          <p className="mt-2 text-sm text-white/80">Hành trình của bạn, sứ mệnh của chúng tôi <Bus className="w-4 h-4 inline-block ml-1" /></p>
         </div>
 
         {/* Body */}
@@ -298,7 +299,7 @@ export default function PublicLayout() {
                 </span>
               </div>
               <p className="text-sm leading-relaxed" style={{ color: '#c4a898' }}>
-                Hành trình của bạn, sứ mệnh của chúng tôi. Đặt vé xe khách an toàn và tiện lợi nhất Việt Nam 🚌
+                Hành trình của bạn, sứ mệnh của chúng tôi. Đặt vé xe khách an toàn và tiện lợi nhất Việt Nam <Bus className="w-4 h-4 inline-block ml-1" />
               </p>
             </div>
 

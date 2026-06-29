@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { paymentAPI, ticketAPI, userAPI } from '../services/api';
 import { formatInvoiceCode, formatTicketCode } from '../utils/codes';
+import { Ticket, Zap, Star, CreditCard } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared helpers
@@ -225,7 +226,9 @@ function MyTicketsPanel() {
 
       {filtered.length === 0 ? (
         <div className="card py-14 text-center text-gray-500">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-2xl">🎫</div>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400">
+            <Ticket className="w-6 h-6" />
+          </div>
           <p className="font-semibold text-gray-700">
             {filter === 'all' ? 'Bạn chưa có vé nào' : 'Không có vé ở mục này'}
           </p>
@@ -254,10 +257,14 @@ function MyTicketsPanel() {
                       </h3>
                       <span className={`badge ${badge.cls}`}>{badge.label}</span>
                       {isPending && (
-                        <span className="badge animate-pulse bg-yellow-100 text-yellow-700">⚡ Cần thanh toán</span>
+                        <span className="badge animate-pulse bg-yellow-100 text-yellow-700 flex items-center gap-1">
+                          <Zap className="w-3.5 h-3.5" /> Cần thanh toán
+                        </span>
                       )}
                       {canReview && (
-                        <span className="badge bg-orange-100 text-brand">⭐ Chờ đánh giá</span>
+                        <span className="badge bg-orange-100 text-brand flex items-center gap-1">
+                          <Star className="w-3.5 h-3.5" /> Chờ đánh giá
+                        </span>
                       )}
                     </div>
 
@@ -287,15 +294,15 @@ function MyTicketsPanel() {
                         <>
                           <Link
                             to={`/my-tickets/order/${ticket.order?.id}/pay`}
-                            className="rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-yellow-600"
+                            className="rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-yellow-600 flex items-center gap-1.5"
                           >
-                            💳 Thanh toán
+                            <CreditCard className="w-3.5 h-3.5" /> Thanh toán
                           </Link>
                         </>
                       ) : (
                         <>
-                          <Link to={`/my-tickets/${ticket.id}`} className="btn-primary px-3 py-1.5 text-xs">
-                            {canReview ? '⭐ Đánh giá' : canCancel ? '🎫 Hủy' : 'Xem vé'}
+                          <Link to={`/my-tickets/${ticket.id}`} className="btn-primary px-3 py-1.5 text-xs flex items-center gap-1.5">
+                            {canReview ? <><Star className="w-3.5 h-3.5" /> Đánh giá</> : canCancel ? <><Ticket className="w-3.5 h-3.5" /> Hủy</> : 'Xem vé'}
                           </Link>
                         </>
                       )}
@@ -332,7 +339,7 @@ export default function LookupPage() {
   const [loading, setLoading] = useState(false);
 
   const tabs = [
-    ...(isCustomer ? [{ value: 'mine', label: '🎫 Vé của tôi' }] : []),
+    ...(isCustomer ? [{ value: 'mine', label: 'Vé của tôi' }] : []),
     { value: 'ticket', label: 'Tra cứu vé' },
     { value: 'invoice', label: 'Tra cứu hóa đơn' },
   ];

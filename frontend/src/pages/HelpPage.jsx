@@ -1,3 +1,5 @@
+import { Bus, HelpCircle, Phone } from 'lucide-react';
+
 export default function HelpPage() {
   const faqs = [
     {
@@ -47,7 +49,9 @@ export default function HelpPage() {
 
       {/* Steps */}
       <div className="card mb-8">
-        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">🚌 Hướng dẫn đặt vé nhanh</h2>
+        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
+          <Bus className="w-5 h-5 text-brand" /> Hướng dẫn đặt vé nhanh
+        </h2>
         <ol className="space-y-3">
           {[
             { title: 'Tìm chuyến xe', desc: 'Nhập điểm đi, điểm đến và ngày khởi hành trên trang chủ.' },
@@ -68,7 +72,9 @@ export default function HelpPage() {
       </div>
 
       {/* FAQ */}
-      <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">❓ Câu hỏi thường gặp</h2>
+      <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
+        <HelpCircle className="w-5 h-5 text-brand" /> Câu hỏi thường gặp
+      </h2>
       <div className="space-y-3">
         {faqs.map(({ q, a }, i) => (
           <details key={i} className="card group cursor-pointer">
@@ -85,8 +91,8 @@ export default function HelpPage() {
       <div className="mt-10 card border-orange-200 bg-orange-50 dark:bg-slate-800 text-center">
         <p className="font-bold text-gray-800 dark:text-gray-100">Không tìm thấy câu trả lời?</p>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Liên hệ tổng đài hỗ trợ miễn phí</p>
-        <a href="tel:18001234" className="mt-4 inline-block btn-primary px-8 py-3 text-base">
-          📞 1800 1234
+        <a href="tel:18001234" className="mt-4 inline-flex items-center justify-center gap-2 btn-primary px-8 py-3 text-base">
+          <Phone className="w-5 h-5" /> 1800 1234
         </a>
       </div>
     </div>

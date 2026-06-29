@@ -1,13 +1,19 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleSeat, setLockExpiry } from '../../store/slices/bookingSlice';
+import { toggleSeat, setLockExpiry, resetBooking } from '../../store/slices/bookingSlice';
+import { showToast } from '../../store/slices/uiSlice';
 import { joinTripRoom, leaveTripRoom, onSeatsUpdated, connectSocket } from '../../services/socket';
 import { bookingAPI } from '../../services/api';
 
 export default function SeatMap({ tripSeats, tripId }) {
   const dispatch = useDispatch();
   const { selectedSeats } = useSelector(s => s.booking);
+  const selectedSeatsRef = useRef(selectedSeats);
   const [seats, setSeats] = useState(tripSeats || []);
+
+  useEffect(() => {
+    selectedSeatsRef.current = selectedSeats;
+  }, [selectedSeats]);
 
   useEffect(() => {
     connectSocket();
@@ -17,6 +23,27 @@ export default function SeatMap({ tripSeats, tripId }) {
       setSeats(prev => prev.map(s =>
         seatIds.includes(s.id) ? { ...s, status } : s
       ));
+
+      // Bắt sự kiện ghế bị server release (do timeout hoặc Admin hủy)
+      if (status === 'AVAILABLE' || status === 'BOOKED') {
+        const currentSelected = selectedSeatsRef.current;
+        const forciblyReleasedSeats = currentSelected.filter(s => seatIds.includes(s.id));
+        if (forciblyReleasedSeats.length > 0) {
+          forciblyReleasedSeats.forEach(seat => {
+            dispatch(toggleSeat({ id: seat.id, seatCode: seat.seatCode, price: seat.price }));
+          });
+          
+          dispatch(showToast({
+            message: `Ghế ${forciblyReleasedSeats.map(s => s.seatCode).join(', ')} đã hết thời gian giữ chỗ.`,
+            type: 'warning'
+          }));
+
+          // Nếu tất cả ghế đang giữ đều bị nhả ra (timeout)
+          if (currentSelected.length === forciblyReleasedSeats.length) {
+            dispatch(setLockExpiry(null));
+          }
+        }
+      }
     });
 
     return () => {

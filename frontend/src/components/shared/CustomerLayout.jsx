@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../../services/api';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
+import { Home, Ticket, Receipt, Search, User } from 'lucide-react';
 
 export default function CustomerLayout() {
   const { user } = useSelector(s => s.auth);
@@ -14,11 +15,11 @@ export default function CustomerLayout() {
   const location = useLocation();
 
   const links = [
-    { to: '/dashboard', label: '🏠 Trang chủ' },
-    { to: '/my-tickets', label: '🎫 Vé của tôi' },
-    { to: '/my-invoices', label: '🧾 Hóa đơn' },
-    { to: '/lookup', label: '🔎 Tra cứu' },
-    { to: '/profile', label: '👤 Hồ sơ' },
+    { to: '/dashboard', label: 'Trang chủ', icon: <Home className="w-4 h-4" /> },
+    { to: '/my-tickets', label: 'Vé của tôi', icon: <Ticket className="w-4 h-4" /> },
+    { to: '/my-invoices', label: 'Hóa đơn', icon: <Receipt className="w-4 h-4" /> },
+    { to: '/lookup', label: 'Tra cứu', icon: <Search className="w-4 h-4" /> },
+    { to: '/profile', label: 'Hồ sơ', icon: <User className="w-4 h-4" /> },
   ];
 
   const isActive = (path) => location.pathname.startsWith(path);
@@ -53,7 +54,8 @@ export default function CustomerLayout() {
           <div className="flex items-center gap-3 lg:gap-6 text-sm font-semibold overflow-x-auto hide-scrollbar mr-auto ml-4 lg:ml-8">
             {links.map(l => (
               <Link key={l.to} to={l.to}
-                className={`relative py-2 text-gray-600 dark:text-slate-300 hover:text-brand dark:hover:text-brand transition-colors duration-300 group whitespace-nowrap shrink-0`}>
+                className={`relative py-2 text-gray-600 dark:text-slate-300 hover:text-brand dark:hover:text-brand transition-colors duration-300 group whitespace-nowrap shrink-0 flex items-center gap-1.5`}>
+                {l.icon}
                 {l.label}
                 <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-brand transform origin-left transition-transform duration-300 ${isActive(l.to) ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
               </Link>

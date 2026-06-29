@@ -4,6 +4,7 @@ import { userAPI } from '../../services/api';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { formatInvoiceCode, formatTicketCode } from '../../utils/codes';
+import { Ticket, Star } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
 const STATUS_MAP = {
@@ -166,7 +167,7 @@ export default function MyTicketsPage() {
 
       {displayedTickets.length === 0 ? (
         <div className="card text-center py-16 text-gray-500">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-2xl">🎫</div>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gray-100 text-gray-400"><Ticket className="w-6 h-6" /></div>
           <p className="font-semibold text-gray-800">Bạn chưa có vé nào đã thanh toán</p>
           <p className="mt-1 text-sm">Tìm chuyến phù hợp và đặt vé chỉ trong vài bước.</p>
           <Link to="/" className="btn-primary mt-4 inline-block">Đặt vé ngay</Link>
@@ -210,7 +211,7 @@ export default function MyTicketsPage() {
                     to={`/my-tickets/${ticket.id}`}
                     className={`btn-${canReview ? 'primary' : canCancel ? 'primary' : 'outline'} px-4 py-1.5 text-xs whitespace-nowrap bg-[#e85d04] text-white hover:bg-[#e85d04]/90`}
                   >
-                    {canReview ? '⭐ Đánh giá' : canCancel ? '🎫 Hủy' : 'Xem vé'}
+                    {canReview ? <span className="flex items-center gap-1"><Star className="w-4 h-4" /> Đánh giá</span> : canCancel ? <span className="flex items-center gap-1"><Ticket className="w-4 h-4" /> Hủy</span> : 'Xem vé'}
                   </Link>
                 </div>
               </div>

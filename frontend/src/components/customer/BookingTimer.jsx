@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Timer, AlertTriangle } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { resetBooking } from '../../store/slices/bookingSlice';
 import { useNavigate } from 'react-router-dom';
@@ -49,12 +50,12 @@ export default function BookingTimer({ expiresAt, tripId, seatIds = [], redirect
   return (
     <div className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-4 text-sm font-medium
       ${urgent ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-orange-50 border border-orange-200 text-orange-700'}`}>
-      <span className="text-lg">⏱️</span>
+      <Timer className="w-5 h-5" />
       <span>
         Thời gian giữ chỗ còn lại:{' '}
         <strong>{mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')}</strong>
       </span>
-      {urgent && <span className="ml-auto animate-pulse">⚠️ Sắp hết hạn!</span>}
+      {urgent && <span className="ml-auto animate-pulse"><AlertTriangle className="w-4 h-4 inline mr-1" />Sắp hết hạn!</span>}
     </div>
   );
 }
