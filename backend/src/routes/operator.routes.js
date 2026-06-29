@@ -66,7 +66,12 @@ router.get('/me/dashboard', authenticate, authorize('BUS_OPERATOR'), async (req,
     const todayEnd = new Date(todayStart);
     todayEnd.setHours(23, 59, 59, 999);
 
-    const [totalTrips, totalTickets, revenue, todayTrips, todayTickets, todayRevenue, upcomingTrips, routes] = await Promise.all([
+    const [
+      totalTrips, totalTickets, revenue, 
+      todayTrips, todayTickets, todayRevenue, upcomingTrips, routes,
+      totalActiveVehicles, maintenanceVehicles, runningVehicles,
+      totalActiveDrivers, driversOnLeave, delayedTrips, cancelledTrips
+    ] = await Promise.all([
       prisma.trip.count({ where: { ...tripScope, departureTime: { gte: startDate, lte: endDate } } }),
       prisma.ticketDetail.count({
         where: { status: { in: ['PAID', 'CHECKED_IN', 'COMPLETED'] }, ...ticketScope, createdAt: { gte: startDate, lte: endDate } },
@@ -95,7 +100,33 @@ router.get('/me/dashboard', authenticate, authorize('BUS_OPERATOR'), async (req,
         select: { id: true, originCity: true, destinationCity: true },
         orderBy: [{ originCity: 'asc' }, { destinationCity: 'asc' }],
       }),
+      // Operational Stats
+      prisma.vehicle.count({ where: { operatorId, isActive: true } }),
+      prisma.vehicle.count({ where: { operatorId, isActive: true, status: 'IN_MAINTENANCE' } }),
+      prisma.trip.findMany({ 
+        where: { ...tripScope, status: { in: ['BOARDING', 'DEPARTED'] } }, 
+        select: { vehicleId: true }, 
+        distinct: ['vehicleId'] 
+      }),
+      prisma.staff.count({ where: { operatorId, role: 'DRIVER', user: { isActive: true } } }),
+      prisma.staffLeave.findMany({
+        where: { 
+          staff: { operatorId, role: 'DRIVER' }, 
+          status: 'APPROVED', 
+          startDate: { lte: new Date() }, 
+          endDate: { gte: new Date() } 
+        },
+        select: { staffId: true },
+        distinct: ['staffId']
+      }),
+      prisma.trip.count({ where: { ...tripScope, status: 'DELAYED', departureTime: { gte: todayStart, lte: todayEnd } } }),
+      prisma.trip.count({ where: { ...tripScope, status: 'CANCELLED', departureTime: { gte: todayStart, lte: todayEnd } } })
     ]);
+
+    const runningVehiclesCount = runningVehicles.filter(v => v.vehicleId).length;
+    const waitingVehiclesCount = Math.max(0, totalActiveVehicles - maintenanceVehicles - runningVehiclesCount);
+    const driversOnLeaveCount = driversOnLeave.length;
+    const driversOnDutyCount = Math.max(0, totalActiveDrivers - driversOnLeaveCount);
 
     res.json({
       success: true,
@@ -108,6 +139,16 @@ router.get('/me/dashboard', authenticate, authorize('BUS_OPERATOR'), async (req,
         todayRevenue: todayRevenue._sum.price || 0,
         upcomingTrips,
         routes,
+        operations: {
+          activeVehicles: totalActiveVehicles - maintenanceVehicles,
+          runningVehicles: runningVehiclesCount,
+          waitingVehicles: waitingVehiclesCount,
+          maintenanceVehicles,
+          driversOnDuty: driversOnDutyCount,
+          driversOnLeave: driversOnLeaveCount,
+          delayedTrips,
+          cancelledTrips
+        },
         filters: { period, startDate, endDate, routeId: routeId || null },
       },
     });

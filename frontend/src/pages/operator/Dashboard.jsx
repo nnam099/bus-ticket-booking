@@ -22,10 +22,10 @@ export default function OperatorDashboard() {
   ] : [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader 
         title="Tổng quan nhà xe" 
-        description="Theo dõi doanh thu, vé bán và lịch chạy trong ngày." 
+        description="Theo dõi doanh thu, vé bán và tình hình vận hành." 
       />
 
       <Card>
@@ -87,6 +87,32 @@ export default function OperatorDashboard() {
               <span className="text-4xl font-black text-[#e85d04]">{stats.upcomingTrips}</span>
             </div>
           </Card>
+
+          {stats.operations && (
+            <div className="mt-8 space-y-4">
+              <h3 className="text-lg font-black text-gray-800 dark:text-white flex items-center gap-2">
+                <i className="ti ti-activity text-[#e85d04]" /> Tình trạng vận hành
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                {[
+                  { label: 'Xe đang chạy', value: stats.operations.runningVehicles, icon: 'ti-car', color: 'text-green-600', bg: 'bg-green-50' },
+                  { label: 'Xe đang chờ', value: stats.operations.waitingVehicles, icon: 'ti-parking', color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: 'Xe bảo dưỡng', value: stats.operations.maintenanceVehicles, icon: 'ti-tool', color: 'text-orange-600', bg: 'bg-orange-50' },
+                  { label: 'Tài xế trực', value: stats.operations.driversOnDuty, icon: 'ti-steering-wheel', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                  { label: 'Tài xế nghỉ', value: stats.operations.driversOnLeave, icon: 'ti-bed', color: 'text-gray-600', bg: 'bg-gray-100' },
+                  { label: 'Chuyến bị trễ/hủy', value: `${stats.operations.delayedTrips} / ${stats.operations.cancelledTrips}`, icon: 'ti-alert-triangle', color: 'text-red-600', bg: 'bg-red-50' },
+                ].map(op => (
+                  <Card key={op.label} className="!p-4 text-center">
+                    <div className={`mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl ${op.bg} ${op.color} dark:bg-slate-800`}>
+                      <i className={`ti ${op.icon} text-xl`}></i>
+                    </div>
+                    <div className="text-2xl font-black text-gray-900 dark:text-white">{op.value}</div>
+                    <div className="mt-1 text-xs font-semibold text-gray-500 dark:text-gray-400">{op.label}</div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <Loading />
