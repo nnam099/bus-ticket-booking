@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { clearResults, searchTrips } from '../store/slices/tripSlice';
@@ -18,6 +18,8 @@ export default function SearchResultsPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { results, loading, error } = useSelector(s => s.trip);
+
+  const [selectedOperator, setSelectedOperator] = useState('ALL');
 
   const origin = params.get('origin');
   const destination = params.get('destination');
@@ -45,7 +47,24 @@ export default function SearchResultsPage() {
     }
 
     dispatch(searchTrips({ origin: validOrigin, destination: validDestination, date }));
+    setSelectedOperator('ALL');
   }, [origin, destination, date, validOrigin, validDestination, hasInvalidSearch, navigate, dispatch]);
+
+  const operators = useMemo(() => {
+    if (!results) return [];
+    const ops = new Set();
+    results.forEach(trip => {
+      if (trip.route?.operator?.companyName) {
+        ops.add(trip.route.operator.companyName);
+      }
+    });
+    return Array.from(ops).sort();
+  }, [results]);
+
+  const filteredResults = useMemo(() => {
+    if (selectedOperator === 'ALL') return results;
+    return results.filter(trip => trip.route?.operator?.companyName === selectedOperator);
+  }, [results, selectedOperator]);
 
   const handleSelect = (trip) => {
     dispatch(setSelectedTrip(trip));
@@ -140,8 +159,37 @@ export default function SearchResultsPage() {
         </div>
       )}
 
+      {!loading && results.length > 0 && operators.length > 1 && (
+        <div className="mb-6 flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <span className="text-gray-500 font-medium whitespace-nowrap">Lọc nhà xe:</span>
+          <button
+            onClick={() => setSelectedOperator('ALL')}
+            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+              selectedOperator === 'ALL'
+                ? 'bg-brand text-white shadow-md shadow-brand/30'
+                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            Tất cả
+          </button>
+          {operators.map(op => (
+            <button
+              key={op}
+              onClick={() => setSelectedOperator(op)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+                selectedOperator === op
+                  ? 'bg-brand text-white shadow-md shadow-brand/30'
+                  : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+              }`}
+            >
+              {op}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="space-y-6">
-        {results.map(trip => {
+        {filteredResults.map(trip => {
           const available = trip._count?.tripSeats ?? '?';
           const badge = statusBadge[trip.status] || { label: trip.status, cls: 'bg-gray-100 text-gray-600' };
           return (
