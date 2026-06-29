@@ -55,12 +55,12 @@ export default function AdminDashboard() {
     : routes;
 
   const cards = stats ? [
-    { label: 'Người dùng', value: stats.totalUsers, icon: 'users', trend: '+12%' },
-    { label: 'Nhà xe', value: stats.totalOperators, icon: 'operator', trend: '+2' },
-    { label: 'Chuyến trong kỳ', value: stats.totalTrips, icon: 'bus', trend: '+5%' },
-    { label: 'Vé đã bán', value: stats.totalTickets, icon: 'ticket', trend: '+18%' },
-    { label: 'Chuyến hôm nay', value: stats.todayTrips, icon: 'calendar', trend: '0%' },
-    { label: 'Vé hôm nay', value: stats.todayTickets, icon: 'check', trend: '+3%' },
+    { label: 'Người dùng', value: stats.totalUsers, icon: 'users', trend: '+12%', color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Nhà xe', value: stats.totalOperators, icon: 'operator', trend: '+2', color: 'text-orange-600', bg: 'bg-orange-50' },
+    { label: 'Chuyến trong kỳ', value: stats.totalTrips, icon: 'bus', trend: '+5%', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Vé đã bán', value: stats.totalTickets, icon: 'ticket', trend: '+18%', color: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Chuyến hôm nay', value: stats.todayTrips, icon: 'calendar', trend: '0%', color: 'text-sky-600', bg: 'bg-sky-50' },
+    { label: 'Vé hôm nay', value: stats.todayTickets, icon: 'check', trend: '+3%', color: 'text-rose-600', bg: 'bg-rose-50' },
   ] : [];
 
   return (
@@ -113,23 +113,19 @@ export default function AdminDashboard() {
 
       {stats ? (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
             {cards.map(c => (
-              <Card key={c.label}>
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">{c.label}</span>
-                  <div className="text-gray-400 dark:text-gray-500">
-                    <AdminIcon name={c.icon} />
+              <Card key={c.label} className="!p-5 text-center flex flex-col justify-center items-center hover:shadow-lg transition-shadow relative overflow-hidden group">
+                <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl ${c.bg} ${c.color} dark:bg-slate-800 transition-transform group-hover:scale-110`}>
+                  <AdminIcon name={c.icon} />
+                </div>
+                <div className="text-3xl font-black text-gray-900 dark:text-white mb-1">{c.value}</div>
+                <div className="text-[13px] font-semibold text-gray-500 dark:text-gray-400">{c.label}</div>
+                {c.trend && c.trend !== '0%' && (
+                  <div className="absolute top-2 right-2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                    {c.trend}
                   </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <div className="text-2xl font-semibold text-gray-900 dark:text-white">{c.value}</div>
-                  {c.trend && (
-                    <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                      {c.trend}
-                    </span>
-                  )}
-                </div>
+                )}
               </Card>
             ))}
           </div>
