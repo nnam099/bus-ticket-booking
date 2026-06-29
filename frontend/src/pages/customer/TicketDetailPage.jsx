@@ -103,17 +103,47 @@ export default function TicketDetailPage() {
     if (!ticketRef.current) return;
     setDownloading(true);
     try {
-      const canvas = await html2canvas(ticketRef.current, { scale: 2, useCORS: true });
+      const element = ticketRef.current;
+      // Chụp ảnh thẻ vé chất lượng cao (scale 3)
+      const canvas = await html2canvas(element, { 
+        scale: 3, 
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      });
       const imgData = canvas.toDataURL('image/png');
+      
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4'
       });
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      // Vẽ background nền nhẹ cho file PDF
+      pdf.setFillColor(250, 250, 250);
+      pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
+      
+      // Header màu cam giả lập
+      pdf.setFillColor(232, 93, 4); // #e85d04
+      pdf.rect(0, 0, pdfWidth, 15, 'F');
+
+      // Kích thước vé trên PDF (Căn giữa, để lại margin)
+      const margin = 20; // 20mm
+      const imgWidth = pdfWidth - (margin * 2);
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const x = margin;
+      const y = 35; // Cách top 35mm
+      
+      // Thêm bóng mờ/viền cho vé trong PDF
+      pdf.setDrawColor(220, 220, 220);
+      pdf.setFillColor(255, 255, 255);
+      pdf.roundedRect(x - 1, y - 1, imgWidth + 2, imgHeight + 2, 3, 3, 'FD');
+
+      // Dán hình ảnh vé vào
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+
       pdf.save(`Ve-BusGo-${formatTicketCode(ticket)}.pdf`);
     } catch (error) {
       console.error('Error generating PDF', error);
