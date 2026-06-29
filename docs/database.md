@@ -91,6 +91,22 @@ PENDING -> PAID -> COMPLETED
 | `audit_logs` | Nhật ký hành động hệ thống |
 | `system_configs` | Cấu hình nghiệp vụ như thời gian giữ ghế, chính sách hoàn tiền |
 
+### Enterprise TMS Extensions (Hệ thống quản lý vận tải)
+
+| Bảng | Mô tả |
+| --- | --- |
+| `depots` | Bến bãi, trạm dừng đỗ của nhà xe |
+| `parking_slots` | Vị trí đỗ xe tại các bến bãi |
+| `schedules` | Lịch trình chạy xe tự động (Cron rule) |
+| `schedule_exceptions` | Các ngoại lệ của lịch trình (Ngày nghỉ, tăng giá) |
+| `trip_event_logs` | Nhật ký sự kiện trên chuyến xe (Kiểm tra, xuất bến, trễ) |
+| `trip_incidents` | Sự cố phát sinh (Hỏng xe, thời tiết, tai nạn) |
+| `vehicle_maintenances` | Quản lý bảo trì, sửa chữa xe |
+| `vehicle_location_histories`| Lịch sử GPS định vị xe |
+| `staff_shifts` | Ca làm việc của tài xế (Clock in/out) |
+| `staff_leaves` | Quản lý ngày phép của nhân viên |
+
+
 ## Ràng buộc quan trọng
 
 Chống double-booking:

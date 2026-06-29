@@ -40,6 +40,9 @@ Hệ thống đặt vé xe khách hỗ trợ khách hàng tìm chuyến, giữ g
 | NX-05 | Theo dõi vé | Xem vé đã thanh toán theo chuyến |
 | NX-06 | Cập nhật trạng thái chuyến | Boarding, on route, completed, delayed, cancelled |
 | NX-07 | Báo cáo | Doanh thu, số chuyến, số vé theo ngày/tháng/năm |
+| NX-08 | Quản lý bến bãi (TMS) | Thêm, sửa, xóa thông tin Depot, Parking Slots |
+| NX-09 | Điều phối & Sự cố (TMS) | Dispatch xe, ghi nhận Trip Incident, bảo trì xe |
+| NX-10 | Lên lịch tự động (TMS) | Cấu hình Schedule sinh chuyến tự động bằng CronJob |
 
 ## Chức năng nhân viên
 
@@ -49,6 +52,7 @@ Hệ thống đặt vé xe khách hỗ trợ khách hàng tìm chuyến, giữ g
 | NV-02 | Xem hành khách | Danh sách khách đã thanh toán/hoàn tất |
 | NV-03 | Check-in | Xác nhận khách lên xe |
 | NV-04 | Cập nhật chuyến | Cập nhật trạng thái chuyến được phân công |
+| NV-05 | Chấm công & Phép | Ghi nhận Clock in/out (Shift) và xin nghỉ phép (Leave) |
 
 ## Chức năng admin
 

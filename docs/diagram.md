@@ -10,8 +10,10 @@ users
   ├─ customers ─ orders ─ payments
   │                  └─ ticket_details ─ reviews
   ├─ bus_operators ─ routes ─ trips ─ trip_seats ─ ticket_details
-  │                  └─ vehicles ─ vehicle_types ─ seat_layouts
+  │                  ├─ vehicles ─ vehicle_types ─ seat_layouts
+  │                  └─ depots ─ parking_slots
   └─ staffs ─ trip_staffs ─ trips
+     └─ staff_shifts / staff_leaves
 ```
 
 ## Kiến trúc runtime
@@ -132,4 +134,19 @@ Admin
   ├─ GET /api/admin/audit-logs
   ├─ GET /api/admin/reviews/pending
   └─ PATCH /api/admin/reviews/:id/approve
+
+## Luồng Quản lý Vận tải (TMS - Enterprise)
+
+```text
+Cron Job (Tự động)
+  │
+  ├─ Đọc bảng `schedules`
+  ├─ Kiểm tra `schedule_exceptions`
+  └─ Tự động tạo `trips` theo tần suất cron_rule
+
+Operator
+  │
+  ├─ POST /api/dispatch/vehicles (Điều phối xe vào bến/chuyến)
+  ├─ POST /api/incident/report (Báo cáo sự cố Trip Incident)
+  └─ Màn hình Audit Page theo dõi Event Log
 ```
