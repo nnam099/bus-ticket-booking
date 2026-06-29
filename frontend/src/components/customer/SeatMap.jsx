@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { toggleSeat } from '../../store/slices/bookingSlice';
+import { toggleSeat, setLockExpiry } from '../../store/slices/bookingSlice';
 import { joinTripRoom, leaveTripRoom, onSeatsUpdated, connectSocket } from '../../services/socket';
+import { bookingAPI } from '../../services/api';
 
 export default function SeatMap({ tripSeats, tripId }) {
   const dispatch = useDispatch();
@@ -38,10 +39,24 @@ export default function SeatMap({ tripSeats, tripId }) {
     }
   }, [selectedSeats]);
 
-  const handleClick = useCallback((seat) => {
-    if (seat.status !== 'AVAILABLE' && !selectedSeats.some(s => s.id === seat.id)) return;
+  const handleClick = useCallback(async (seat) => {
+    const isCurrentlySelected = selectedSeats.some(s => s.id === seat.id);
+    if (seat.status !== 'AVAILABLE' && !isCurrentlySelected) return;
+
+    if (isCurrentlySelected) {
+      try {
+        await bookingAPI.releaseSeats({ tripId, seatIds: [seat.id] });
+      } catch (err) {
+        console.error('Lỗi khi hủy giữ chỗ:', err);
+      }
+      
+      if (selectedSeats.length === 1) {
+        dispatch(setLockExpiry(null));
+      }
+    }
+
     dispatch(toggleSeat({ id: seat.id, seatCode: seat.seatLayout.seatCode, price: seat.price }));
-  }, [dispatch, selectedSeats]);
+  }, [dispatch, selectedSeats, tripId]);
 
   const floors = [...new Set(seats.map(s => s.seatLayout.floor))].sort((a, b) => a - b);
 
