@@ -159,7 +159,7 @@ export default function SearchResultsPage() {
         </div>
       )}
 
-      {!loading && results.length > 0 && operators.length > 1 && (
+      {!loading && results.length > 0 && operators.length > 0 && (
         <div className="mb-6 flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
           <span className="text-gray-500 font-medium whitespace-nowrap">Lọc nhà xe:</span>
           <button
