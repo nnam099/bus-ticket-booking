@@ -72,7 +72,7 @@ const searchTrips = async (req, res, next) => {
 
 const getTripById = async (req, res, next) => {
   try {
-    const trip = await prisma.trip.findUnique({
+    const trip = await prisma.trip.findFirst({
       where: { id: req.params.id, route: { operator: { isApproved: true, user: { isActive: true } } } },
       include: {
         route: { include: { operator: true } },
