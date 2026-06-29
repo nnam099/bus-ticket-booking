@@ -1,5 +1,6 @@
 const prisma = require('../config/prisma');
 const { createNotifications } = require('../services/notification.service');
+const { AppError } = require('../middlewares/errorHandler');
 
 const findManagedTrip = async (req, tripId) => {
   if (req.roles?.includes('BUS_OPERATOR')) {
@@ -152,9 +153,7 @@ const createTrip = async (req, res, next) => {
         select: { id: true },
       });
       if (lockedOverlap) {
-        const error = new Error(`Xe da co chuyen khac trong khung gio nay hoac chua du ${TURNAROUND_MINUTES} phut quay dau.`);
-        error.statusCode = 409;
-        throw error;
+        throw new AppError(`Xe đã có chuyến khác trong khung giờ này hoặc chưa đủ ${TURNAROUND_MINUTES} phút quay đầu.`, 409);
       }
 
       const newTrip = await tx.trip.create({
@@ -207,9 +206,7 @@ const updateTripStatus = async (req, res, next) => {
     const trip = await prisma.$transaction(async (tx) => {
       const lockedRows = await tx.$queryRaw`SELECT id FROM "trips" WHERE id = ${req.params.id} FOR UPDATE`;
       if (!lockedRows.length) {
-        const error = new Error('Khong tim thay chuyen xe.');
-        error.statusCode = 404;
-        throw error;
+        throw new AppError('Không tìm thấy chuyến xe.', 404);
       }
 
       const currentTrip = await tx.trip.findUnique({
@@ -217,9 +214,7 @@ const updateTripStatus = async (req, res, next) => {
         include: { route: true },
       });
       if (currentTrip.status && !allowedTransitions[currentTrip.status]?.includes(status)) {
-        const error = new Error('Khong the chuyen trang thai chuyen xe theo thu tu nay.');
-        error.statusCode = 400;
-        throw error;
+        throw new AppError('Không thể chuyển trạng thái chuyến xe theo thứ tự này.', 400);
       }
 
       return tx.trip.update({
@@ -327,9 +322,7 @@ const updateTrip = async (req, res, next) => {
         select: { id: true },
       });
       if (lockedOverlap) {
-        const error = new Error(`Xe da co chuyen khac trong khung gio nay hoac chua du ${TURNAROUND_MINUTES} phut quay dau.`);
-        error.statusCode = 409;
-        throw error;
+        throw new AppError(`Xe đã có chuyến khác trong khung giờ này hoặc chưa đủ ${TURNAROUND_MINUTES} phút quay đầu.`, 409);
       }
 
       return tx.trip.update({

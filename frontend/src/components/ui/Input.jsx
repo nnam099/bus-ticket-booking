@@ -17,6 +17,7 @@ export default function Input({ label, error, className = '', containerClassName
         )}
         <input 
           type={inputType}
+          maxLength={isPassword && !props.maxLength ? 50 : props.maxLength}
           className={`w-full bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-md ${icon ? 'pl-9' : 'px-3'} ${isPassword ? 'pr-10' : 'pr-3'} py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-all shadow-sm placeholder-gray-400 ${error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''} ${className}`}
           {...props}
         />

@@ -45,10 +45,15 @@ async function main() {
     
     await attachRole(staffUser.id, staffRole.id);
     
+    const firstNames = ['Nguyễn', 'Trần', 'Lê', 'Phạm', 'Hoàng', 'Huỳnh', 'Phan', 'Vũ', 'Võ', 'Đặng', 'Bùi', 'Đỗ', 'Hồ', 'Ngô', 'Dương', 'Lý'];
+    const middleNames = ['Văn', 'Hữu', 'Minh', 'Đức', 'Xuân', 'Quang', 'Thịnh', 'Công', 'Thành', 'Tuấn', 'Ngọc', 'Quốc', 'Hải', 'Khắc', 'Đình'];
+    const lastNames = ['Anh', 'An', 'Bảo', 'Bằng', 'Cường', 'Dũng', 'Dương', 'Đạt', 'Đức', 'Hải', 'Hiếu', 'Hoàng', 'Huy', 'Hùng', 'Khang', 'Khánh', 'Khoa', 'Kiên', 'Lâm', 'Long', 'Minh', 'Nam', 'Phát', 'Phong', 'Phú', 'Phúc', 'Quân', 'Quang', 'Quốc', 'Sơn', 'Tài', 'Tâm', 'Thái', 'Thành', 'Thiện', 'Thịnh', 'Tiến', 'Tùng', 'Tuấn', 'Tú', 'Vinh', 'Việt', 'Vĩ'];
+    const randomName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${middleNames[Math.floor(Math.random() * middleNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+    
     const driver = await prisma.staff.upsert({
       where: { userId: staffUser.id },
-      update: { fullName: `Tài xế Bổ sung ${i}`, role: 'DRIVER', licenseNo: `GPLX-EXTRA-${i}`, phone, operatorId: operator.id },
-      create: { userId: staffUser.id, operatorId: operator.id, fullName: `Tài xế Bổ sung ${i}`, role: 'DRIVER', licenseNo: `GPLX-EXTRA-${i}`, phone },
+      update: { fullName: randomName, role: 'DRIVER', licenseNo: `GPLX-EXTRA-${i}`, phone, operatorId: operator.id },
+      create: { userId: staffUser.id, operatorId: operator.id, fullName: randomName, role: 'DRIVER', licenseNo: `GPLX-EXTRA-${i}`, phone },
     });
     newDrivers.push(driver);
   }

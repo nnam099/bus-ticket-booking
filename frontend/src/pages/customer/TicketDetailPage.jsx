@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ticketAPI, bookingAPI, reviewAPI } from '../../services/api';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { formatInvoiceCode, formatTicketCode } from '../../utils/codes';
-import { Ticket, Star } from 'lucide-react';
+import { Ticket, Star, Download } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 const statusConfig = {
   PENDING: { label: 'Chờ thanh toán', className: 'bg-yellow-100 text-yellow-700' },
@@ -54,6 +56,8 @@ export default function TicketDetailPage() {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [reviewed, setReviewed] = useState(false);
+  const ticketRef = useRef(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     ticketAPI.getById(id)
@@ -95,6 +99,30 @@ export default function TicketDetailPage() {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    if (!ticketRef.current) return;
+    setDownloading(true);
+    try {
+      const canvas = await html2canvas(ticketRef.current, { scale: 2, useCORS: true });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Ve-BusGo-${formatTicketCode(ticket)}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF', error);
+      alert('Có lỗi xảy ra khi tải vé.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (loading) return <div className="text-center py-16 text-gray-500">Đang tải...</div>;
   if (!ticket) return <div className="text-center py-16 text-gray-500">Không tìm thấy vé.</div>;
 
@@ -117,11 +145,21 @@ export default function TicketDetailPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
-      <button onClick={() => navigate(-1)} className="mb-5 text-sm font-semibold text-brand hover:underline">
+      <div className="mb-5 flex items-center justify-between">
+        <button onClick={() => navigate(-1)} className="text-sm font-semibold text-brand hover:underline">
         ← Quay lại
       </button>
+        <button 
+          onClick={handleDownloadPDF} 
+          disabled={downloading}
+          className="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download className="h-4 w-4" />
+          {downloading ? 'Đang tải...' : 'Tải vé PDF'}
+        </button>
+      </div>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+      <div ref={ticketRef} className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
         <div className="bg-gradient-to-br from-orange-50 to-white px-5 py-6 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-orange-600 shadow-sm">
             <Ticket className="w-6 h-6" />

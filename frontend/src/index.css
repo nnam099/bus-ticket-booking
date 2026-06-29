@@ -443,3 +443,7 @@ html.dark .admin-theme-shell .hover\:bg-gray-50:hover {
   background-color: rgba(30, 41, 59, 0.72) !important;
 }
 
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
