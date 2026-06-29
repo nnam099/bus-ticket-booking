@@ -1,9 +1,9 @@
 export const DESTINATIONS = [
   {
     name: 'Vịnh Hạ Long',
-    region: '🌊 Miền Bắc',
+    region: 'Miền Bắc',
     regionColor: '#2d6a4f',
-    desc: 'Di sản thiên nhiên thế giới · 🚌 5h từ Hà Nội',
+    desc: 'Di sản thiên nhiên thế giới · 5h từ Hà Nội',
     rating: '4.9',
     img: 'https://images.pexels.com/photos/6877795/pexels-photo-6877795.jpeg?auto=compress&cs=tinysrgb&w=600&q=80',
     origin: 'Hà Nội',
@@ -11,9 +11,9 @@ export const DESTINATIONS = [
   },
   {
     name: 'Đà Lạt',
-    region: '🌿 Tây Nguyên',
+    region: 'Tây Nguyên',
     regionColor: '#2d6a4f',
-    desc: 'Thành phố sương mù · 🚌 7h từ TP.HCM',
+    desc: 'Thành phố sương mù · 7h từ TP.HCM',
     rating: '4.8',
     img: 'https://images.pexels.com/photos/2582597/pexels-photo-2582597.jpeg?auto=compress&cs=tinysrgb&w=600&q=80',
     origin: 'Hồ Chí Minh',
@@ -21,9 +21,9 @@ export const DESTINATIONS = [
   },
   {
     name: 'Hội An',
-    region: '🏮 Miền Trung',
+    region: 'Miền Trung',
     regionColor: '#e85d04',
-    desc: 'Phố cổ lung linh · 🚌 4h từ Đà Nẵng',
+    desc: 'Phố cổ lung linh · 4h từ Đà Nẵng',
     rating: '4.9',
     img: 'https://images.unsplash.com/photo-1679033746255-1acf0c86fd11?auto=format&w=600&q=80&fit=crop',
     origin: 'Đà Nẵng',
@@ -31,9 +31,9 @@ export const DESTINATIONS = [
   },
   {
     name: 'Nha Trang',
-    region: '🏖️ Miền Nam',
+    region: 'Miền Nam',
     regionColor: '#2d6a4f',
-    desc: 'Biển xanh cát trắng · 🚌 9h từ Hà Nội',
+    desc: 'Biển xanh cát trắng · 9h từ Hà Nội',
     rating: '4.7',
     img: 'https://images.pexels.com/photos/983242/pexels-photo-983242.png?auto=compress&cs=tinysrgb&w=600&q=80',
     origin: 'Hồ Chí Minh',
@@ -50,9 +50,9 @@ export const ACTIVITY_FEED = [
 ];
 
 export const WHY_CARDS = [
-  { emoji: '🚌', title: 'Chọn ghế yêu thích', desc: 'Tự chọn vị trí ghế ngồi thoải mái theo sở thích', bg: 'bg-peach' },
-  { emoji: '💳', title: 'Thanh toán siêu tốc', desc: 'Đa dạng hình thức, an toàn và bảo mật tuyệt đối', bg: 'bg-green-50' },
-  { emoji: '🎫', title: 'Hoàn vé không rắc rối', desc: 'Đổi hoặc hoàn vé trong 24h, không câu hỏi thêm', bg: 'bg-green-50' },
+  { iconType: 'bus', title: 'Chọn ghế yêu thích', desc: 'Tự chọn vị trí ghế ngồi thoải mái theo sở thích', bg: 'bg-peach' },
+  { iconType: 'card', title: 'Thanh toán siêu tốc', desc: 'Đa dạng hình thức, an toàn và bảo mật tuyệt đối', bg: 'bg-green-50' },
+  { iconType: 'ticket', title: 'Hoàn vé không rắc rối', desc: 'Đổi hoặc hoàn vé trong 24h, không câu hỏi thêm', bg: 'bg-green-50' },
 ];
 
 export const TESTIMONIALS = [

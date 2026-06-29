@@ -5,6 +5,7 @@ import { setSelectedTrip } from '../store/slices/bookingSlice';
 import { tripAPI, reviewAPI } from '../services/api';
 import { format, differenceInMinutes } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { Bus, SearchX, Phone, Armchair, BusFront, Users, User, Info, Star, Loader2 } from 'lucide-react';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -75,7 +76,7 @@ export default function TripDetailPage() {
   // ── Loading ──────────────────────────────────────────────────────────────
   if (loading) return (
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-gray-400">
-      <div className="text-5xl animate-bounce">🚌</div>
+      <Loader2 className="w-12 h-12 text-brand animate-spin" />
       <p className="font-medium">Đang tải thông tin chuyến xe...</p>
     </div>
   );
@@ -83,7 +84,7 @@ export default function TripDetailPage() {
   // ── Error ─────────────────────────────────────────────────────────────────
   if (error) return (
     <div className="max-w-xl mx-auto px-4 py-20 text-center">
-      <div className="text-6xl mb-4">😔</div>
+      <SearchX className="w-16 h-16 text-gray-300 mx-auto mb-4" />
       <h1 className="text-2xl font-black text-gray-800 mb-2">Không tìm thấy chuyến</h1>
       <p className="text-gray-500 mb-8">{error}</p>
       <button onClick={() => navigate(-1)} className="btn-outline">← Quay lại</button>
@@ -150,16 +151,16 @@ export default function TripDetailPage() {
                   className="w-14 h-14 rounded-2xl object-cover shadow-sm border border-gray-100"
                 />
               ) : (
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-2xl shadow-sm">
-                  🚌
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 shadow-sm">
+                  <Bus className="w-7 h-7" />
                 </div>
               )}
               <div>
                 <h1 className="text-xl font-black text-gray-800">{operator?.companyName}</h1>
                 <p className="text-gray-500 text-sm font-medium flex items-center gap-1.5 mt-0.5">
-                  <span>🚐</span> {vType?.name}
+                  <Bus className="w-4 h-4" /> {vType?.name}
                   {operator?.hotline && (
-                    <span className="ml-3">📞 <a href={`tel:${operator.hotline}`} className="text-brand hover:underline">{operator.hotline}</a></span>
+                    <span className="ml-3 flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> <a href={`tel:${operator.hotline}`} className="text-brand hover:underline">{operator.hotline}</a></span>
                   )}
                 </p>
                 {avgRating && (
@@ -258,7 +259,9 @@ export default function TripDetailPage() {
         {/* Seat availability */}
         <div className="card">
           <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-brand/10 text-brand flex items-center justify-center text-sm">💺</span>
+            <span className="w-8 h-8 rounded-xl bg-brand/10 text-brand flex items-center justify-center">
+              <Armchair className="w-4 h-4" />
+            </span>
             Tình trạng ghế
           </h2>
           <div className="space-y-2.5">
@@ -297,7 +300,9 @@ export default function TripDetailPage() {
         {/* Vehicle info */}
         <div className="card">
           <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-brand/10 text-brand flex items-center justify-center text-sm">🚐</span>
+            <span className="w-8 h-8 rounded-xl bg-brand/10 text-brand flex items-center justify-center">
+              <BusFront className="w-4 h-4" />
+            </span>
             Thông tin xe
           </h2>
           <div className="space-y-3">
@@ -320,7 +325,9 @@ export default function TripDetailPage() {
         {/* Staff */}
         <div className="card">
           <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-brand/10 text-brand flex items-center justify-center text-sm">👤</span>
+            <span className="w-8 h-8 rounded-xl bg-brand/10 text-brand flex items-center justify-center">
+              <Users className="w-4 h-4" />
+            </span>
             Tổ lái xe
           </h2>
           {trip.tripStaffs?.length === 0 ? (
@@ -329,19 +336,23 @@ export default function TripDetailPage() {
             <div className="space-y-3">
               {drivers.map((ts, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm">🧑‍✈️</div>
+                  <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                    <User className="w-4 h-4" />
+                  </div>
                   <div>
                     <div className="text-sm font-semibold text-gray-700">{ts.staff?.fullName}</div>
-                    <div className="text-xs text-blue-500">Tài xế</div>
+                    <div className="text-xs text-blue-500 font-medium">Tài xế</div>
                   </div>
                 </div>
               ))}
               {assistants.map((ts, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-sm">🧑</div>
+                  <div className="w-9 h-9 rounded-full bg-green-50 text-green-500 flex items-center justify-center">
+                    <User className="w-4 h-4" />
+                  </div>
                   <div>
                     <div className="text-sm font-semibold text-gray-700">{ts.staff?.fullName}</div>
-                    <div className="text-xs text-green-500">Phụ xe</div>
+                    <div className="text-xs text-green-500 font-medium">Phụ xe</div>
                   </div>
                 </div>
               ))}
@@ -349,9 +360,10 @@ export default function TripDetailPage() {
           )}
 
           {/* Cancellation policy reminder */}
-          <div className="mt-4 pt-3 border-t border-dashed border-gray-100">
-            <p className="text-xs text-gray-400 leading-relaxed">
-              ℹ️ Hủy vé trước <strong>3 ngày</strong> được hoàn <strong>90%</strong> giá vé.
+          <div className="mt-4 pt-4 border-t border-dashed border-gray-100 flex gap-2">
+            <Info className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-gray-500 leading-relaxed">
+              Hủy vé trước <strong>3 ngày</strong> được hoàn <strong>90%</strong> giá vé.
             </p>
           </div>
         </div>
@@ -362,9 +374,11 @@ export default function TripDetailPage() {
         <div className="card">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-bold text-gray-800 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center text-sm">⭐</span>
+              <span className="w-8 h-8 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
+                <Star className="w-4 h-4" />
+              </span>
               Đánh giá nhà xe
-              <span className="ml-1 text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{reviews.length}</span>
+              <span className="ml-1 text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{reviews.length}</span>
             </h2>
             {avgRating && (
               <div className="flex items-center gap-2">

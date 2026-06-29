@@ -1,4 +1,5 @@
 import WaveDivider from '../../../components/ui/WaveDivider';
+import { Smartphone } from 'lucide-react';
 
 export default function CTABannerSection() {
   return (
@@ -13,8 +14,8 @@ export default function CTABannerSection() {
 
           <div className="relative z-10 flex items-center justify-between flex-wrap gap-8">
             <div className="max-w-[480px]">
-              <div className="inline-block px-4 py-1.5 rounded-full text-xs font-bold mb-4 bg-white/20 text-white">
-                📱 Ứng dụng di động
+              <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold mb-4 bg-white/20 text-white">
+                <Smartphone className="w-4 h-4" /> Ứng dụng di động
               </div>
               <h2 className="font-quicksand text-[38px] font-bold text-white m-0 mb-3 leading-[1.2]">
                 Đặt vé ngay trên
@@ -22,7 +23,7 @@ export default function CTABannerSection() {
                 điện thoại của bạn!
               </h2>
               <p className="text-white/85 text-[16px] m-0 mb-7 leading-[1.6] font-semibold">
-                Tải ứng dụng BusGo để đặt vé, theo dõi xe và nhận thông báo chuyến đi mọi lúc mọi nơi 🚌
+                Tải ứng dụng BusGo để đặt vé, theo dõi xe và nhận thông báo chuyến đi mọi lúc mọi nơi
               </p>
               <div className="flex gap-3 flex-wrap">
                 <button className="flex items-center gap-2.5 px-5 py-3 rounded-2xl font-bold transition-all hover:opacity-90 bg-white text-brand border-none cursor-pointer text-[14px]">
@@ -37,7 +38,9 @@ export default function CTABannerSection() {
             </div>
 
             <div className="text-right">
-              <div className="text-[80px] leading-none">📱</div>
+              <div className="flex justify-end">
+                <Smartphone className="w-24 h-24 text-white" strokeWidth={1.5} />
+              </div>
               <div className="flex gap-4 justify-end mt-4">
                 <div className="text-center">
                   <div className="font-quicksand text-[24px] font-bold text-white">4.9</div>

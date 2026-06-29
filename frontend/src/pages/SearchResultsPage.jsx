@@ -6,6 +6,7 @@ import { setSelectedTrip } from '../store/slices/bookingSlice';
 import { format, addDays, isValid, parseISO, subDays } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { findCity, normalizeText } from '../constants/travel';
+import { AlertTriangle, Bus, SearchX, Calendar, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
 const statusBadge = {
   SCHEDULED: { label: 'Còn chỗ', cls: 'bg-green-100 text-green-700' },
@@ -71,7 +72,7 @@ export default function SearchResultsPage() {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16">
         <div className="card border-orange-100 bg-orange-50 text-center py-12">
-          <div className="text-5xl mb-4">⚠️</div>
+          <AlertTriangle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
           <h1 className="text-2xl font-black text-gray-800">Thông tin tìm kiếm chưa hợp lệ</h1>
           <p className="mt-3 text-gray-600">
             {hasSameCity
@@ -91,7 +92,7 @@ export default function SearchResultsPage() {
       <div className="mb-10 text-center">
         <h1 className="text-3xl md:text-4xl font-black text-gray-800 flex items-center justify-center gap-4">
           <span>{validOrigin}</span>
-          <span className="text-brand">➔</span>
+          <ArrowRight className="w-8 h-8 md:w-10 md:h-10 text-brand" strokeWidth={3} />
           <span>{validDestination}</span>
         </h1>
         
@@ -101,25 +102,26 @@ export default function SearchResultsPage() {
             disabled={isPrevDisabled()}
             className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-600 hover:text-brand hover:border-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-100 disabled:hover:text-gray-600"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            <ChevronLeft className="w-5 h-5" />
           </button>
           
           <div className="text-brand font-medium text-lg bg-white px-8 py-2.5 rounded-full shadow-sm border border-gray-100 flex items-center gap-2 min-w-[220px] justify-center">
-            📅 {format(parsedDate, 'EEEE, dd/MM/yyyy', { locale: vi })}
+            <Calendar className="w-5 h-5 mr-1" />
+            {format(parsedDate, 'EEEE, dd/MM/yyyy', { locale: vi })}
           </div>
 
           <button 
             onClick={() => handleDateChange(1)} 
             className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-600 hover:text-brand hover:border-brand transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {loading && (
         <div className="text-center py-16 text-gray-500">
-          <div className="text-4xl mb-3 animate-bounce">🚌</div>
+          <Bus className="w-10 h-10 text-gray-400 mx-auto mb-3 animate-pulse" />
           <p>Đang tìm kiếm chuyến xe...</p>
         </div>
       )}
@@ -132,8 +134,8 @@ export default function SearchResultsPage() {
 
       {!loading && results.length === 0 && !error && (
         <div className="card text-center py-16 text-gray-500">
-          <div className="text-5xl mb-3">😔</div>
-          <p className="font-semibold">Không tìm thấy chuyến xe</p>
+          <SearchX className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+          <p className="font-semibold text-lg">Không tìm thấy chuyến xe</p>
           <p className="text-sm mt-1">Vui lòng thử lại với ngày khác hoặc tuyến đường khác.</p>
         </div>
       )}
@@ -156,8 +158,8 @@ export default function SearchResultsPage() {
                     <h3 className="font-black text-xl text-gray-800 group-hover:text-brand transition-colors">
                       {trip.route?.operator?.companyName}
                     </h3>
-                    <p className="text-gray-500 font-medium flex items-center gap-2 mt-1">
-                      <span>🚐</span> {trip.vehicle?.vehicleType?.name}
+                    <p className="text-gray-500 font-medium flex items-center gap-1.5 mt-1">
+                      <Bus className="w-4 h-4 text-gray-400" /> {trip.vehicle?.vehicleType?.name}
                     </p>
                   </div>
                   <span className={`badge ${badge.cls} shadow-sm`}>{badge.label}</span>

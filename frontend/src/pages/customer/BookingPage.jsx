@@ -6,6 +6,7 @@ import { tripAPI, bookingAPI, userAPI } from '../../services/api';
 import SeatMap from '../../components/customer/SeatMap';
 import BookingTimer from '../../components/customer/BookingTimer';
 import { format } from 'date-fns';
+import { Hourglass, CreditCard } from 'lucide-react';
 
 const VIETNAM_PHONE_REGEX = /^0\d{9}$/;
 
@@ -102,7 +103,9 @@ export default function BookingPage() {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="card border-yellow-200 bg-yellow-50 text-center py-10 space-y-5">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-yellow-100 text-3xl">⏳</div>
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-yellow-100 text-yellow-600 shadow-sm">
+            <Hourglass className="w-8 h-8" />
+          </div>
           <div>
             <h1 className="text-xl font-bold text-gray-800">Bạn đang có đơn đặt chỗ chưa thanh toán</h1>
             <p className="mt-2 text-sm text-gray-600">
@@ -113,9 +116,9 @@ export default function BookingPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               to={`/my-tickets/order/${pendingOrder.id}/pay`}
-              className="btn-primary px-8 py-3 text-base"
+              className="btn-primary px-8 py-3 text-base flex items-center justify-center gap-2"
             >
-              💳 Tiếp tục thanh toán
+              <CreditCard className="w-5 h-5" /> Tiếp tục thanh toán
             </Link>
             <Link to="/my-tickets" className="btn-outline px-8 py-3 text-base">
               Xem vé của tôi
