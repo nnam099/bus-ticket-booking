@@ -1,13 +1,21 @@
 export default function RefundPolicyPage() {
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
-      <div className="text-center mb-10">
-        <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-4">
-          <i className="ti ti-receipt-refund text-[#e85d04]" style={{ fontSize: 32 }} />
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-20 font-nunito transition-colors duration-300">
+      {/* Premium Header */}
+      <div className="bg-gradient-to-r from-rose-500 via-red-500 to-pink-600 pt-20 pb-32 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl translate-x-1/2 -translate-y-1/4"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-red-900/30 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2"></div>
+        
+        <div className="max-w-3xl mx-auto px-4 relative z-10 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30 text-white mb-6">
+            <i className="ti ti-receipt-refund text-4xl" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-md">Chính sách hoàn tiền</h1>
+          <p className="text-red-100 text-lg font-medium">Cập nhật lần cuối: 01/01/2025</p>
         </div>
-        <h1 className="text-3xl font-black text-gray-800 dark:text-gray-100">Chính sách hoàn tiền</h1>
-        <p className="mt-2 text-gray-500 dark:text-gray-400">Cập nhật lần cuối: 01/01/2025</p>
       </div>
+
+      <div className="max-w-3xl mx-auto px-4 -mt-20 relative z-20">
 
       <div className="space-y-6">
         {/* Tóm tắt */}
@@ -84,9 +92,10 @@ export default function RefundPolicyPage() {
           </div>
         ))}
 
-        <div className="card border-gray-200 bg-gray-50 dark:bg-slate-800 text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Cần hỗ trợ thêm? Gọi ngay <a href="tel:18001234" className="font-bold text-[#e85d04] hover:underline">1800 1234</a> (miễn phí) hoặc email <a href="mailto:hello@busgovietnam.vn" className="text-[#e85d04] hover:underline">hello@busgovietnam.vn</a></p>
+        <div className="card border-rose-200 bg-rose-50 dark:bg-slate-800 text-center shadow-lg">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Cần hỗ trợ thêm? Gọi ngay <a href="tel:18001234" className="font-bold text-rose-600 hover:underline">1800 1234</a> (miễn phí) hoặc email <a href="mailto:hello@busgovietnam.vn" className="text-rose-600 hover:underline">hello@busgovietnam.vn</a></p>
         </div>
+      </div>
       </div>
     </div>
   );

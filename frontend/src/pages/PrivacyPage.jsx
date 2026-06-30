@@ -65,14 +65,22 @@ export default function PrivacyPage() {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
-      <div className="text-center mb-10">
-        <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-4">
-          <i className="ti ti-shield-lock text-[#e85d04]" style={{ fontSize: 32 }} />
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-20 font-nunito transition-colors duration-300">
+      {/* Premium Header */}
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 pt-20 pb-32 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/4"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-900/20 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2"></div>
+        
+        <div className="max-w-3xl mx-auto px-4 relative z-10 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30 text-white mb-6 animate-pulse">
+            <i className="ti ti-shield-lock text-4xl" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-md">Chính sách bảo mật</h1>
+          <p className="text-emerald-100 text-lg font-medium">Cập nhật lần cuối: 01/01/2025</p>
         </div>
-        <h1 className="text-3xl font-black text-gray-800 dark:text-gray-100">Chính sách bảo mật</h1>
-        <p className="mt-2 text-gray-500 dark:text-gray-400">Cập nhật lần cuối: 01/01/2025</p>
       </div>
+
+      <div className="max-w-3xl mx-auto px-4 -mt-20 relative z-20">
 
       <div className="card mb-6 border-orange-200 bg-orange-50 dark:bg-slate-800">
         <p className="text-sm text-gray-600 dark:text-gray-300">
@@ -97,14 +105,15 @@ export default function PrivacyPage() {
         ))}
       </div>
 
-      <div className="mt-8 card border-gray-200 bg-gray-50 dark:bg-slate-800 text-center">
+      <div className="mt-8 card border-emerald-200 bg-emerald-50 dark:bg-slate-800 text-center shadow-lg">
         <p className="font-semibold text-gray-800 dark:text-gray-100 mb-1">Liên hệ về quyền riêng tư</p>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Email:{' '}
-          <a href="mailto:privacy@busgovietnam.vn" className="text-[#e85d04] hover:underline font-semibold">privacy@busgovietnam.vn</a>
+          <a href="mailto:privacy@busgovietnam.vn" className="text-emerald-600 hover:underline font-semibold">privacy@busgovietnam.vn</a>
           {' '}· Hotline:{' '}
-          <a href="tel:18001234" className="text-[#e85d04] hover:underline font-semibold">1800 1234</a>
+          <a href="tel:18001234" className="text-emerald-600 hover:underline font-semibold">1800 1234</a>
         </p>
+      </div>
       </div>
     </div>
   );

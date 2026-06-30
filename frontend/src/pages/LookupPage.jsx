@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { paymentAPI, ticketAPI, userAPI } from '../services/api';
 import { formatInvoiceCode, formatTicketCode } from '../utils/codes';
-import { Ticket, Zap, Star, CreditCard } from 'lucide-react';
+import { Ticket, Zap, Star, CreditCard, Search } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared helpers
@@ -361,18 +361,28 @@ export default function LookupPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-black text-gray-800">Tra cứu vé và hóa đơn</h1>
-        <p className="text-gray-500 mt-2">
-          {isCustomer
-            ? 'Xem vé của bạn hoặc tra cứu theo mã vé / mã hóa đơn.'
-            : 'Nhập mã được cấp sau thanh toán kèm số điện thoại đặt vé.'}
-        </p>
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-20 font-nunito transition-colors duration-300">
+      {/* Premium Header */}
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 pt-20 pb-32 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-x-1/2 -translate-y-1/4"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-900/20 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2"></div>
+        
+        <div className="max-w-4xl mx-auto px-4 relative z-10 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30 text-white mb-6">
+            <Search className="w-10 h-10" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-md">Tra cứu vé & Hành trình</h1>
+          <p className="text-blue-100 text-lg font-medium max-w-2xl mx-auto">
+            {isCustomer
+              ? 'Quản lý toàn bộ vé của bạn hoặc tra cứu nhanh qua mã hóa đơn.'
+              : 'Nhập mã vé được cấp sau khi thanh toán kèm số điện thoại để kiểm tra trạng thái.'}
+          </p>
+        </div>
       </div>
 
-      <div className="card">
-        {/* Tab switcher */}
+      <div className="max-w-4xl mx-auto px-4 -mt-20 relative z-20">
+        <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl shadow-indigo-900/10 border border-gray-100 dark:border-slate-700">
+          {/* Tab switcher */}
         <div className="inline-flex flex-wrap rounded-xl bg-gray-100 p-1 mb-6 gap-0.5">
           {tabs.map(tab => (
             <button
@@ -439,12 +449,13 @@ export default function LookupPage() {
 
       {/* Footer hint */}
       {!isCustomer && (
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="mt-10 text-center text-sm text-gray-500">
           Đã đăng nhập?{' '}
           <Link to="/login" className="font-semibold text-brand hover:underline">Đăng nhập</Link>
           {' '}để xem nhanh vé của bạn.
         </div>
       )}
+      </div>
     </div>
   );
 }

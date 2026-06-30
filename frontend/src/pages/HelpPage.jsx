@@ -1,4 +1,4 @@
-import { Bus, HelpCircle, Phone } from 'lucide-react';
+import { Bus, HelpCircle, Phone, LifeBuoy, Zap, ShieldCheck, CreditCard, Ticket } from 'lucide-react';
 
 export default function HelpPage() {
   const faqs = [
@@ -37,63 +37,138 @@ export default function HelpPage() {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-4">
-          <i className="ti ti-help text-[#e85d04]" style={{ fontSize: 32 }} />
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pb-20 font-nunito transition-colors duration-300">
+      {/* Premium Hero Section */}
+      <div className="relative bg-gradient-to-br from-[#e85d04] via-[#f48c06] to-[#faa307] pt-24 pb-32 overflow-hidden">
+        {/* Abstract Background Shapes */}
+        <div className="absolute top-0 left-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-black/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+        <div className="absolute top-1/2 left-3/4 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <div className="max-w-4xl mx-auto px-4 relative z-10 text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-md shadow-2xl mb-8 border border-white/30 text-white animate-bounce-slow">
+            <LifeBuoy className="w-10 h-10" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-white drop-shadow-md mb-4 tracking-tight">
+            Xin chào, chúng tôi có thể giúp gì cho bạn?
+          </h1>
+          <p className="text-orange-50 text-lg md:text-xl max-w-2xl mx-auto font-medium opacity-90">
+            Tìm kiếm câu trả lời nhanh chóng cho mọi thắc mắc về dịch vụ đặt vé trực tuyến của BusGo.
+          </p>
+          
+          {/* Search Bar */}
+          <div className="mt-10 max-w-2xl mx-auto bg-white/95 backdrop-blur-xl rounded-full p-2 flex items-center shadow-2xl border border-white/50 focus-within:ring-4 focus-within:ring-white/30 transition-all">
+            <div className="pl-6 text-gray-400">
+              <i className="ti ti-search text-2xl"></i>
+            </div>
+            <input 
+              type="text" 
+              placeholder="Nhập từ khóa (VD: Hủy vé, thanh toán...)"
+              className="w-full bg-transparent outline-none px-4 py-3 text-gray-700 placeholder-gray-400 font-medium text-lg"
+            />
+            <button className="bg-gradient-to-r from-[#e85d04] to-[#dc2f02] hover:shadow-lg hover:shadow-orange-500/30 text-white px-8 py-3 rounded-full font-bold transition-all hover:scale-105 active:scale-95">
+              Tìm kiếm
+            </button>
+          </div>
         </div>
-        <h1 className="text-3xl font-black text-gray-800 dark:text-gray-100">Trung tâm trợ giúp</h1>
-        <p className="mt-2 text-gray-500 dark:text-gray-400">Tìm câu trả lời cho các câu hỏi thường gặp</p>
       </div>
 
-      {/* Steps */}
-      <div className="card mb-8">
-        <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
-          <Bus className="w-5 h-5 text-brand" /> Hướng dẫn đặt vé nhanh
-        </h2>
-        <ol className="space-y-3">
+      <div className="max-w-5xl mx-auto px-4 -mt-16 relative z-20">
+        {/* Feature Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
           {[
-            { title: 'Tìm chuyến xe', desc: 'Nhập điểm đi, điểm đến và ngày khởi hành trên trang chủ.' },
-            { title: 'Chọn ghế ngồi', desc: 'Xem sơ đồ xe, chọn vị trí ghế phù hợp với bạn.' },
-            { title: 'Nhập thông tin hành khách', desc: 'Điền họ tên và số điện thoại cho từng ghế.' },
-            { title: 'Thanh toán', desc: 'Chọn phương thức: ví điện tử, thẻ ngân hàng hoặc tiền mặt tại quầy.' },
-            { title: 'Nhận vé điện tử', desc: 'Vé hiển thị ngay trong mục "Vé của tôi" sau khi thanh toán thành công.' },
-          ].map(({ title, desc }, i) => (
-            <li key={i} className="flex gap-3 items-start">
-              <span className="w-7 h-7 rounded-full bg-[#e85d04] text-white text-sm font-black flex items-center justify-center flex-shrink-0 mt-0.5">{i + 1}</span>
-              <div>
-                <p className="font-bold text-gray-800 dark:text-gray-100">{title}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{desc}</p>
+            { icon: <Bus className="w-6 h-6" />, title: 'Hướng dẫn đặt vé', desc: 'Các bước đơn giản để sở hữu vé xe nhanh chóng.', color: 'text-blue-600', bg: 'bg-blue-100' },
+            { icon: <ShieldCheck className="w-6 h-6" />, title: 'Chính sách hoàn/hủy', desc: 'Quy định về việc hủy vé và thời gian nhận tiền hoàn.', color: 'text-green-600', bg: 'bg-green-100' },
+            { icon: <Zap className="w-6 h-6" />, title: 'Khắc phục sự cố', desc: 'Xử lý các lỗi thường gặp khi thanh toán mua vé.', color: 'text-purple-600', bg: 'bg-purple-100' }
+          ].map((item, idx) => (
+            <div key={idx} className="bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-xl shadow-orange-900/5 hover:-translate-y-2 transition-transform duration-300 border border-gray-100 dark:border-slate-700 group cursor-pointer">
+              <div className={`w-14 h-14 rounded-2xl ${item.bg} ${item.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-300`}>
+                {item.icon}
               </div>
-            </li>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">{item.title}</h3>
+              <p className="text-gray-500 dark:text-gray-400 leading-relaxed">{item.desc}</p>
+            </div>
           ))}
-        </ol>
-      </div>
+        </div>
 
-      {/* FAQ */}
-      <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
-        <HelpCircle className="w-5 h-5 text-brand" /> Câu hỏi thường gặp
-      </h2>
-      <div className="space-y-3">
-        {faqs.map(({ q, a }, i) => (
-          <details key={i} className="card group cursor-pointer">
-            <summary className="flex items-center justify-between font-semibold text-gray-800 dark:text-gray-100 list-none cursor-pointer select-none">
-              <span>{q}</span>
-              <i className="ti ti-chevron-down text-gray-400 group-open:rotate-180 transition-transform duration-200" />
-            </summary>
-            <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 leading-relaxed border-t border-gray-100 dark:border-gray-700 pt-3">{a}</p>
-          </details>
-        ))}
-      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          {/* Main Content Area */}
+          <div className="lg:col-span-2 space-y-10">
+            {/* Steps Guide */}
+            <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-slate-700">
+              <h2 className="text-2xl font-black text-gray-800 dark:text-gray-100 mb-8 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-[#e85d04]">
+                  <Ticket className="w-5 h-5" />
+                </div>
+                Hướng dẫn đặt vé nhanh
+              </h2>
+              <div className="relative border-l-2 border-orange-100 dark:border-slate-700 ml-4 space-y-8">
+                {[
+                  { title: 'Tìm chuyến xe', desc: 'Nhập điểm đi, điểm đến và ngày khởi hành trên trang chủ.' },
+                  { title: 'Chọn ghế ngồi', desc: 'Xem sơ đồ xe, chọn vị trí ghế phù hợp với bạn theo thời gian thực.' },
+                  { title: 'Nhập thông tin hành khách', desc: 'Điền thông tin liên hệ chính xác để nhận vé điện tử.' },
+                  { title: 'Thanh toán an toàn', desc: 'Thanh toán bảo mật qua cổng tích hợp hoặc ví điện tử.' }
+                ].map(({ title, desc }, i) => (
+                  <div key={i} className="relative pl-8">
+                    <span className="absolute -left-[17px] top-1 w-8 h-8 rounded-full bg-[#e85d04] text-white text-sm font-black flex items-center justify-center shadow-lg shadow-orange-500/30 ring-4 ring-white dark:ring-slate-800">
+                      {i + 1}
+                    </span>
+                    <h3 className="font-bold text-lg text-gray-800 dark:text-gray-100 mb-1">{title}</h3>
+                    <p className="text-gray-500 dark:text-gray-400">{desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-      {/* Contact CTA */}
-      <div className="mt-10 card border-orange-200 bg-orange-50 dark:bg-slate-800 text-center">
-        <p className="font-bold text-gray-800 dark:text-gray-100">Không tìm thấy câu trả lời?</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Liên hệ tổng đài hỗ trợ miễn phí</p>
-        <a href="tel:18001234" className="mt-4 inline-flex items-center justify-center gap-2 btn-primary px-8 py-3 text-base">
-          <Phone className="w-5 h-5" /> 1800 1234
-        </a>
+            {/* FAQs */}
+            <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-slate-700">
+              <h2 className="text-2xl font-black text-gray-800 dark:text-gray-100 mb-6 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                  <HelpCircle className="w-5 h-5" />
+                </div>
+                Câu hỏi thường gặp
+              </h2>
+              <div className="space-y-4">
+                {faqs.map(({ q, a }, i) => (
+                  <details key={i} className="group cursor-pointer rounded-2xl bg-gray-50 dark:bg-slate-800/50 p-4 border border-transparent hover:border-gray-200 dark:hover:border-slate-600 transition-colors">
+                    <summary className="flex items-center justify-between font-bold text-gray-800 dark:text-gray-100 list-none select-none">
+                      <span className="pr-4">{q}</span>
+                      <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-700 shadow-sm flex items-center justify-center text-gray-400 group-open:bg-[#e85d04] group-open:text-white transition-all">
+                        <i className="ti ti-chevron-down group-open:rotate-180 transition-transform duration-300" />
+                      </div>
+                    </summary>
+                    <p className="mt-4 text-gray-600 dark:text-gray-300 leading-relaxed border-t border-gray-200/60 dark:border-slate-700 pt-4">
+                      {a}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar CTA */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-24 bg-gradient-to-b from-gray-900 to-slate-800 rounded-3xl p-8 text-center text-white shadow-2xl overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+              
+              <div className="w-20 h-20 mx-auto bg-white/10 rounded-full flex items-center justify-center mb-6 backdrop-blur-md border border-white/20">
+                <Phone className="w-10 h-10 text-orange-400" />
+              </div>
+              <h3 className="text-2xl font-black mb-3">Vẫn cần hỗ trợ?</h3>
+              <p className="text-gray-300 mb-8 leading-relaxed">
+                Đội ngũ tổng đài viên của chúng tôi luôn túc trực 24/7 để giải quyết mọi vấn đề của bạn ngay lập tức.
+              </p>
+              
+              <a href="tel:18001234" className="block w-full bg-gradient-to-r from-[#e85d04] to-[#dc2f02] hover:from-[#dc2f02] hover:to-[#9d0208] text-white py-4 rounded-2xl font-bold text-xl shadow-lg shadow-orange-500/25 transition-all hover:-translate-y-1 active:translate-y-0">
+                Gọi ngay 1800 1234
+              </a>
+              
+              <p className="text-xs text-gray-400 mt-4 uppercase tracking-wider font-semibold">
+                Miễn phí cước gọi
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
