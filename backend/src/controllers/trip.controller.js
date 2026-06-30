@@ -142,7 +142,7 @@ const createTrip = async (req, res, next) => {
     const route = await prisma.route.findFirst({ where: { id: routeId, operatorId, isActive: true } });
     if (!route) return res.status(403).json({ success: false, message: 'Tuyến không thuộc nhà xe của bạn.' });
     const trip = await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${vehicleId}))`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${vehicleId}))`;
       const lockedOverlap = await tx.trip.findFirst({
         where: {
           vehicleId,
@@ -310,7 +310,7 @@ const updateTrip = async (req, res, next) => {
     if (!vehicle) return res.status(403).json({ success: false, message: 'Xe không thuộc nhà xe của bạn.' });
 
     const updatedTrip = await prisma.$transaction(async (tx) => {
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${vehicleId}))`;
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${vehicleId}))`;
       const lockedOverlap = await tx.trip.findFirst({
         where: {
           id: { not: req.params.id },
