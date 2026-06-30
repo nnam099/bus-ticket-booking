@@ -79,7 +79,7 @@ export default function FindTripPage() {
           onSubmit={handleSearch}
           className="mx-auto rounded-3xl bg-white dark:bg-slate-800 p-4 shadow-[0_24px_80px_rgba(232,93,4,0.13),0_4px_24px_rgba(74,59,50,0.07)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)] border border-white/50 dark:border-slate-700"
         >
-          <div className="flex flex-col md:flex-row items-stretch rounded-2xl bg-sand dark:bg-slate-900 border border-mocha-border dark:border-slate-700 overflow-hidden">
+          <div className="flex flex-col md:flex-row items-stretch rounded-2xl bg-sand dark:bg-slate-900 border border-mocha-border dark:border-slate-700">
             {/* Origin */}
             <div className="flex-1">
               <CitySuggestInput
