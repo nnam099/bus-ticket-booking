@@ -356,7 +356,7 @@ export default function TripsPage() {
                   <span className="font-black text-2xl text-[#e85d04]">{Number(trip.basePrice).toLocaleString('vi-VN')}đ</span>
                   
                   <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end mt-1">
-                    {['SCHEDULED', 'DELAYED'].includes(trip.status) && (
+                    {['SCHEDULED', 'DELAYED'].includes(trip.status) && trip._count?.tripSeats === trip.vehicle?.vehicleType?.seatCount && (
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -375,9 +375,6 @@ export default function TripsPage() {
                         Sửa
                       </Button>
                     )}
-                    <Link to={`/operator/trips/${trip.id}/check-in`}>
-                      <Button variant="outline" size="sm" icon={<i className="ti ti-ticket" />}>Soát vé</Button>
-                    </Link>
                     
                     {actions.map(action => {
                       const isDanger = action.status === 'CANCELLED';
