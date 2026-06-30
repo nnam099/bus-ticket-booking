@@ -91,7 +91,7 @@ export default function OperatorDashboard() {
           {stats.operations && (
             <div className="mt-8 space-y-4">
               <h3 className="text-lg font-black text-gray-800 dark:text-white flex items-center gap-2">
-                <i className="ti ti-activity text-[#e85d04]" /> Tình trạng vận hành
+                Tình trạng vận hành
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 {[
