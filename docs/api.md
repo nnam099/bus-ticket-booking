@@ -143,6 +143,15 @@ Payload xác nhận đặt vé:
 | GET | `/admin/reviews/pending` | Admin | Đánh giá chờ duyệt |
 | PATCH | `/admin/reviews/:id/approve` | Admin | Duyệt đánh giá |
 
+## Enterprise TMS (Quản lý Vận tải)
+
+| Method | Endpoint | Auth | Mô tả |
+| --- | --- | --- | --- |
+| GET | `/depots` | Bus operator | Danh sách bến bãi, trạm dừng đỗ |
+| POST | `/schedules` | Bus operator | Quản lý cấu hình sinh chuyến tự động |
+| POST | `/dispatch/vehicles` | Bus operator | Điều phối xe vào bến bãi hoặc chuyến |
+| POST | `/incident/report` | Bus operator, Staff | Báo cáo sự cố trên hành trình (Incident) |
+
 ## WebSocket
 
 Socket URL: `http://localhost:3000`

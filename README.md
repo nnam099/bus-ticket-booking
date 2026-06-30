@@ -19,6 +19,7 @@ Dự án này không chỉ dừng lại ở mức đồ án cơ bản mà đã �
 - **Refund Manager & Transaction Safety:** Quản lý giao dịch và hoàn tiền tự động/thủ công qua Gateway. Xử lý logic chống thất thoát dữ liệu thanh toán khi giao dịch trùng khớp lúc vé vừa hết hạn.
 - **Đồng bộ Realtime (Socket.io):** Hiển thị trạng thái ghế ngay lập tức trên tất cả các thiết bị. Khóa ghế bằng đếm ngược (Countdown Timer) tích hợp chặt chẽ giữa Frontend và Backend.
 - **Tối ưu cơ sở dữ liệu (Database Optimization):** Hệ thống có khả năng tìm kiếm cực nhanh trên khối lượng dữ liệu khổng lồ (seed trước hàng triệu ghế / hàng chục tuyến đường) nhờ hệ thống Database Indexing được thiết kế tối ưu cho luồng tìm kiếm.
+- **Enterprise TMS (Hệ thống Quản lý Vận tải):** Quản lý chuyên sâu các khâu vận hành thực tế như điều phối bến bãi, xử lý sự cố (Trip Incidents), quản lý ca làm việc tài xế và tự động sinh chuyến (CronJob Automation).
 - **Dọn dẹp tự động (Cron Job):** Hệ thống background worker liên tục rà soát và tự động giải phóng các ghế giữ chỗ quá 15 phút, ngăn chặn tận gốc lỗi "vé ma" (Ghost tickets).
 
 ## 🚍 Phân quyền & Chức năng

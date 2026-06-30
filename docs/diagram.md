@@ -134,6 +134,7 @@ Admin
   ├─ GET /api/admin/audit-logs
   ├─ GET /api/admin/reviews/pending
   └─ PATCH /api/admin/reviews/:id/approve
+```
 
 ## Luồng Quản lý Vận tải (TMS - Enterprise)
 
