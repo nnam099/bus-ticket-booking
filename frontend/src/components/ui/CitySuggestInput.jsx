@@ -4,7 +4,12 @@ import { cityOptions, normalizeText } from '../../constants/travel';
 export default function CitySuggestInput({ label, icon, placeholder, value, onInputChange, onSelect }) {
   const [focused, setFocused] = useState(false);
   const query = normalizeText(value.trim());
-  const suggestions = cityOptions.filter((city) => !query || normalizeText(city).includes(query));
+  const suggestions = cityOptions.filter((city) => {
+    if (!query) return true;
+    const normalizedCity = normalizeText(city);
+    const words = normalizedCity.split(' ');
+    return normalizedCity.startsWith(query) || words.some((word) => word.startsWith(query));
+  });
 
   return (
     <div className="relative flex-1 px-5 py-4 border-r-[1.5px] border-mocha-border">
