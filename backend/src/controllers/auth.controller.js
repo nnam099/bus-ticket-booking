@@ -105,8 +105,11 @@ const issueOtp = async ({ user, identifier, purpose }) => {
     await redisClient.del(`otp_attempts:${user.id}:${purpose}`);
   } catch (e) {}
 
-  if (user.email && (!identifier || identifier === user.email)) {
+  const trimmedIdentifier = identifier ? identifier.trim() : null;
+  if (user.email && (!trimmedIdentifier || trimmedIdentifier.toLowerCase() === user.email.toLowerCase())) {
     sendOtpEmail(user.email, code, purpose);
+  } else {
+    console.log(`[DEBUG] Không gửi email vì user.email (${user.email}) khác identifier (${trimmedIdentifier})`);
   }
 };
 
