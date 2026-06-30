@@ -85,6 +85,36 @@ export default function TripsPage() {
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
+  const handleTimeChange = (value, routeId, setFunc, currentForm) => {
+    let newForm = { ...currentForm, departureTime: value };
+    if (value && routeId) {
+      const selectedRoute = routes.find(r => r.id === routeId);
+      if (selectedRoute && selectedRoute.durationMinutes) {
+        const departureDate = new Date(value);
+        if (!isNaN(departureDate.getTime())) {
+          const arrivalDate = new Date(departureDate.getTime() + selectedRoute.durationMinutes * 60000);
+          newForm.estimatedArrival = formatForInput(arrivalDate);
+        }
+      }
+    }
+    setFunc(newForm);
+  };
+
+  const handleRouteSelect = (value, departureTime, setFunc, currentForm) => {
+    let newForm = { ...currentForm, routeId: value };
+    if (value && departureTime) {
+      const selectedRoute = routes.find(r => r.id === value);
+      if (selectedRoute && selectedRoute.durationMinutes) {
+        const departureDate = new Date(departureTime);
+        if (!isNaN(departureDate.getTime())) {
+          const arrivalDate = new Date(departureDate.getTime() + selectedRoute.durationMinutes * 60000);
+          newForm.estimatedArrival = formatForInput(arrivalDate);
+        }
+      }
+    }
+    setFunc(newForm);
+  };
+
   const loadTrips = async () => {
     setError('');
     try {
@@ -221,7 +251,7 @@ export default function TripsPage() {
             <Select 
               label="Tuyến xe" 
               value={form.routeId} 
-              onChange={e => setForm({ ...form, routeId: e.target.value })} 
+              onChange={e => handleRouteSelect(e.target.value, form.departureTime, setForm, form)} 
               required
               options={[
                 { value: '', label: 'Chọn tuyến xe' },
@@ -242,14 +272,15 @@ export default function TripsPage() {
               type="datetime-local" 
               label="Giờ khởi hành" 
               value={form.departureTime} 
-              onChange={e => setForm({ ...form, departureTime: e.target.value })} 
+              onChange={e => handleTimeChange(e.target.value, form.routeId, setForm, form)} 
               required 
             />
             <Input 
               type="datetime-local" 
-              label="Giờ đến dự kiến" 
+              label="Giờ đến dự kiến (Tự động tính)" 
               value={form.estimatedArrival} 
-              onChange={e => setForm({ ...form, estimatedArrival: e.target.value })} 
+              className="bg-gray-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
+              readOnly 
               required 
             />
             <Input 
@@ -378,7 +409,7 @@ export default function TripsPage() {
             <Select 
               label="Tuyến xe" 
               value={editForm.routeId} 
-              onChange={e => setEditForm({ ...editForm, routeId: e.target.value })} 
+              onChange={e => handleRouteSelect(e.target.value, editForm.departureTime, setEditForm, editForm)} 
               required
               options={[
                 { value: '', label: 'Chọn tuyến xe' },
@@ -399,14 +430,15 @@ export default function TripsPage() {
               type="datetime-local" 
               label="Giờ khởi hành" 
               value={editForm.departureTime} 
-              onChange={e => setEditForm({ ...editForm, departureTime: e.target.value })} 
+              onChange={e => handleTimeChange(e.target.value, editForm.routeId, setEditForm, editForm)} 
               required 
             />
             <Input 
               type="datetime-local" 
-              label="Giờ đến dự kiến" 
+              label="Giờ đến dự kiến (Tự động tính)" 
               value={editForm.estimatedArrival} 
-              onChange={e => setEditForm({ ...editForm, estimatedArrival: e.target.value })} 
+              className="bg-gray-100 dark:bg-slate-800 cursor-not-allowed opacity-70"
+              readOnly 
               required 
             />
             <Input 
